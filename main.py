@@ -1,3 +1,4 @@
+from match import Matcher
 from files import importAccounts, importPayments, importWordsToIgnore
 from files import exportAccounts, exportPayments, exportWordsToIgnore
 
@@ -14,8 +15,18 @@ from files import exportAccounts, exportPayments, exportWordsToIgnore
 if __name__ == '__main__':
 
     accounts = importAccounts('Accounts.csv')
-    transactions = importPayments('transactions.csv')
+    transactions = importPayments('Transactions.csv')
     ignore = importWordsToIgnore('WordsToIgnore.csv')
+
+    matcher = Matcher(accounts, ignore)
+    print('Matcher Initialised')
+
+    for transaction in transactions:
+        print('Transaction Accessed')
+        possibilities = matcher.keywordMatch(transaction)
+        matcher.match(transaction, possibilities)
+
+    matcher.unknownWords()
 
     payments = []
     exportAccounts(accounts)

@@ -4,9 +4,11 @@ class Account:
         self.site = site
         self.aliases = aliases
 
-        if len(self.aliases) < 3:
+        if len(self.aliases) == 1:
             toadd = self.name.split(' ')
-            toadd.append(site)
+            toadd.append(str(site))
+            toadd.append(toadd[0].upper())
+            toadd.append(toadd[1].upper())
             self.aliases = toadd
 
     def getAlias(self) -> list[str]:
@@ -18,6 +20,12 @@ class Account:
         else:
             self.aliases.append(alias)
             return True
+
+    def getSite(self) -> str:
+        return self.site
+
+    def getName(self) -> str:
+        return self.name
 
     def __str__(self) -> str:
         return f'{self.site}: {self.name} --> {self.aliases}'

@@ -11,3 +11,6 @@ class Transaction:
 
     def addAccount(self, account: Account):
         self.account = account
+
+    def getAccount(self):
+        return self.account

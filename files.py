@@ -16,7 +16,7 @@ def importPayments(csv: str) -> list[Transaction]:
     cleanbanking(transactions)
     payments = []
     for transaction in transactions.index:
-        date = transactions.loc[transaction]['Date']
+        date = transactions.loc[transaction]['Processed On']
         amount = transactions.loc[transaction]['Amount']
         details = transactions.loc[transaction]['Transaction Details']
         payments.append(Transaction(date, amount, details))
