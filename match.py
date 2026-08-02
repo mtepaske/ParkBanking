@@ -1,31 +1,37 @@
-import pandas as pd
 from account import Account
+from transactions import Transaction
 
-def matchTransactions(transactions: pd.DataFrame, accounts: list[Account], wordsToIgnore: list[str]) -> Account|None:
-    for transaction in transactions.index:
-        description = transactions.loc[transaction]['Transaction Details'].split(' ')
+
+class Matcher:
+
+    def __init__(self, accounts: list[Account], ignore: list[str]):
+        self.accounts = accounts
+        self.ignore = ignore
+        self.unkown = []
+
+    def cleanDesc(self, description: list[str]) -> list[str]:
         for word in description:
-            if word in wordsToIgnore:
-                print(f'{word} removed')
+            if word in self.ignore:
                 description.remove(word)
-        match = keywordMatch(description, accounts)
-        if match == None:
+        return description
+
+    def keywordMatch(self, transaction: Transaction):
+        possible = []
+        details = self.cleanDesc(transaction.details)
+        for word in details:
+            for account in self.accounts:
+                if word in account.aliases:
+                    possible.append(account)
+                else:
+                    self.unkown.append(word)
+        return possible
+
+    def match(self, transaction: Transaction, possibilities:
+              list[Account | None]):
+        if possibilities[0] is None:
+            print('No Possible Matches Found')
+        elif len(possibilities) == 1:
+            transaction.addAccount(possibilities[0])
+        else:
             pass
-
-def keywordMatch(description: list[str], accounts: list[Account], wordsToIgnore: list[str]) -> Account|None:
-    wordsToAdd = []
-    for word in description:
-        print(f'WORD TO MATCH: {word}')
-        for account in accounts:
-#           print(f'ACCOUNT TO MATCH: {account}')
-            aliases = account.getAlias()
-            if word in aliases:
-                return account
-        user = input(f'Add {word} to Words To Ignore? (y/n)')
-        if user == 'y':
-            wordsToAdd.append(wordsToAdd)
-    addToIgnore(wordsToAdd, wordsToIgnore)
-    return None
-
-def addToIgnore(words: list[str], wordsToIgnore: list[str]):
-    return wordsToIgnore.extend(words)
+#           Insert user choice here

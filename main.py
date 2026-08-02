@@ -12,11 +12,11 @@ from files import exportAccounts, exportPayments, exportWordsToIgnore
 # Export csv of matched payments
 
 if __name__ == '__main__':
-    
+
     accounts = importAccounts('Accounts.csv')
     transactions = importPayments('transactions.csv')
     ignore = importWordsToIgnore('WordsToIgnore.csv')
-    
+
     payments = []
     exportAccounts(accounts)
     exportPayments(payments)

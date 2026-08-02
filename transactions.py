@@ -1,5 +1,5 @@
-import pandas as pd
 from account import Account
+
 
 class Transaction:
 
@@ -7,12 +7,7 @@ class Transaction:
         self.date = date
         self.amount = amount
         self.account = None
+        self.details = details.split(' ')
 
     def addAccount(self, account: Account):
-        self.account = Account
-
-    def cleanDetails(self, details: str):
-        detailsList = details.split(' ')
-        
-        
-
+        self.account = account
