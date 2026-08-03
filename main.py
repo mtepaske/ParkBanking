@@ -19,16 +19,13 @@ if __name__ == '__main__':
     ignore = importWordsToIgnore('WordsToIgnore.csv')
 
     matcher = Matcher(accounts, ignore)
-    print('Matcher Initialised')
 
     for transaction in transactions:
-        print('Transaction Accessed')
         possibilities = matcher.keywordMatch(transaction)
         matcher.match(transaction, possibilities)
 
     matcher.unknownWords()
 
-    payments = []
     exportAccounts(accounts)
-    exportPayments(payments)
+    exportPayments(transactions, 'Test.csv')
     exportWordsToIgnore(ignore)

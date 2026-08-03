@@ -11,6 +11,17 @@ class Transaction:
 
     def addAccount(self, account: Account):
         self.account = account
+#       print(f'{account} Added to transaction')
 
     def getAccount(self):
         return self.account
+
+    def toDict(self) -> None | dict:
+        if self.account is None:
+            return None
+        return {
+            'Date': self.date,
+            'Site': self.account.getSite(),
+            'Name': self.account.getName(),
+            'Amount': self.amount
+        }

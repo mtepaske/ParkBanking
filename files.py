@@ -42,11 +42,22 @@ def importWordsToIgnore(csv: str) -> list[str]:
 
 
 def exportAccounts(accounts: list[Account]):
-    pass
+    rows = [
+        a.toDict()
+        for a in accounts
+    ]
+    df = pd.DataFrame(rows)
+    df.to_csv('Accounts.csv', index=False)
 
 
-def exportPayments(payments):
-    pass
+def exportPayments(payments: list[Transaction], filename: str):
+    rows = [
+        t.toDict()
+        for t in payments
+        if t.getAccount() is not None
+    ]
+    df = pd.DataFrame(rows)
+    df.to_csv(filename, index=False)
 
 
 def exportWordsToIgnore(words: list[str]):

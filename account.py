@@ -16,9 +16,11 @@ class Account:
 
     def addAlias(self, alias: str) -> bool:
         if alias in self.aliases:
+            print(f'{alias} is already an alias for Site {self.site}')
             return False
         else:
             self.aliases.append(alias)
+            print(f'{alias} added as alias for Site {self.site}')
             return True
 
     def getSite(self) -> str:
@@ -29,3 +31,10 @@ class Account:
 
     def __str__(self) -> str:
         return f'{self.site}: {self.name} --> {self.aliases}'
+
+    def toDict(self) -> dict:
+        return {
+            'Name': self.name,
+            'Site': self.site,
+            'Aliases': ','.join(self.aliases)
+        }
