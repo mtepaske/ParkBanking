@@ -21,7 +21,7 @@ class Account:
         self.aliases = aliases
 
         if len(self.aliases) == 1:
-            toadd = self.name.split(' ')
+            toadd = self.name.split(" ")
             toadd.append(str(site))
             toadd.append(toadd[0].upper())
             toadd.append(toadd[1].upper())
@@ -46,11 +46,11 @@ class Account:
             False: If alias already connected
         """
         if alias in self.aliases:
-            print(f'{alias} is already an alias for Site {self.site}')
+            print(f"{alias} is already an alias for Site {self.site}")
             return False
         else:
             self.aliases.append(alias)
-            print(f'{alias} added as alias for Site {self.site}')
+            print(f"{alias} added as alias for Site {self.site}")
             return True
 
     def getSite(self) -> str:
@@ -75,11 +75,7 @@ class Account:
         Returns:
             (dict) A dictionary representing the account
         """
-        return {
-            'Name': self.name,
-            'Site': self.site,
-            'Aliases': ','.join(self.aliases)
-        }
+        return {"Name": self.name, "Site": self.site, "Aliases": ",".join(self.aliases)}
 
     def __str__(self) -> str:
         """Prints Account as string
@@ -87,4 +83,4 @@ class Account:
         Returns:
             (str) A string representing the Account
         """
-        return f'{self.site}: {self.name} --> {self.aliases}'
+        return f"{self.site}: {self.name} --> {self.aliases}"

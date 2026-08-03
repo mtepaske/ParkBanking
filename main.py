@@ -1,6 +1,12 @@
+from files import (
+    exportAccounts,
+    exportPayments,
+    exportWordsToIgnore,
+    importAccounts,
+    importPayments,
+    importWordsToIgnore,
+)
 from match import Matcher
-from files import importAccounts, importPayments, importWordsToIgnore
-from files import exportAccounts, exportPayments, exportWordsToIgnore
 
 # Import Data [x]
 # Clearn Data [x]
@@ -12,11 +18,11 @@ from files import exportAccounts, exportPayments, exportWordsToIgnore
 # Add any new alias's to accounts
 # Export csv of matched payments
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    accounts = importAccounts('Accounts.csv')
-    transactions = importPayments('Transactions.csv')
-    ignore = importWordsToIgnore('WordsToIgnore.csv')
+    accounts = importAccounts("Accounts.csv")
+    transactions = importPayments("Transactions.csv")
+    ignore = importWordsToIgnore("WordsToIgnore.csv")
 
     matcher = Matcher(accounts, ignore)
 
@@ -27,5 +33,5 @@ if __name__ == '__main__':
     matcher.unknownWords()
 
     exportAccounts(accounts)
-    exportPayments(transactions, 'Test.csv')
+    exportPayments(transactions, "Test.csv")
     exportWordsToIgnore(ignore)

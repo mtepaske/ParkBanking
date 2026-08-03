@@ -24,7 +24,7 @@ class Transaction:
         self.date = date
         self.amount = amount
         self.account = None
-        self.details = details.split(' ')
+        self.details = details.split(" ")
 
     def addAccount(self, account: Account):
         """Adds an account to the transaction
@@ -33,7 +33,6 @@ class Transaction:
             account: (Account) Account to add to the transaction
         """
         self.account = account
-#       print(f'{account} Added to transaction')
 
     def getAccount(self):
         """Gets the account matched to the transaction
@@ -52,8 +51,8 @@ class Transaction:
         if self.account is None:
             return None
         return {
-            'Date': self.date,
-            'Site': self.account.getSite(),
-            'Name': self.account.getName(),
-            'Amount': self.amount
+            "Date": self.date,
+            "Site": self.account.getSite(),
+            "Name": self.account.getName(),
+            "Amount": self.amount,
         }

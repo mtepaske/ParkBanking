@@ -1,4 +1,5 @@
 import pandas as pd
+
 from account import Account
 from transactions import Transaction
 
@@ -12,10 +13,20 @@ def cleanbanking(csv: pd.DataFrame) -> pd.DataFrame:
     Returns:
         csv: (pd.DataFrame) A pandas data frame after cleaning
     """
-    csv.drop(labels=['Date', 'Account Number', 'Unnamed: 3', 'Merchant Name',
-                     'Balance', 'Transaction Type', 'Category'],
-             axis=1, inplace=True)
-    csv.drop(csv[csv['Amount'] < 0].index, inplace=True, errors='ignore')
+    csv.drop(
+        labels=[
+            "Date",
+            "Account Number",
+            "Unnamed: 3",
+            "Merchant Name",
+            "Balance",
+            "Transaction Type",
+            "Category",
+        ],
+        axis=1,
+        inplace=True,
+    )
+    csv.drop(csv[csv["Amount"] < 0].index, inplace=True, errors="ignore")
     return csv
 
 
@@ -32,9 +43,9 @@ def importPayments(csv: str) -> list[Transaction]:
     cleanbanking(transactions)
     payments = []
     for transaction in transactions.index:
-        date = transactions.loc[transaction]['Processed On']
-        amount = transactions.loc[transaction]['Amount']
-        details = transactions.loc[transaction]['Transaction Details']
+        date = transactions.loc[transaction]["Processed On"]
+        amount = transactions.loc[transaction]["Amount"]
+        details = transactions.loc[transaction]["Transaction Details"]
         payments.append(Transaction(date, amount, details))
     return payments
 
@@ -48,11 +59,11 @@ def importAccounts(csv: str) -> list[Account]:
     Returns:
         (list[Account]) A list of accounts
     """
-    accountscsv = pd.read_csv(csv, index_col='Site')
+    accountscsv = pd.read_csv(csv, index_col="Site")
     accounts = []
     for site in accountscsv.index:
-        name = accountscsv.loc[site]['Name']
-        aliases = accountscsv.loc[site]['Aliases'].split(',')
+        name = accountscsv.loc[site]["Name"]
+        aliases = accountscsv.loc[site]["Aliases"].split(",")
         accounts.append(Account(site, name, aliases))
     return accounts
 
@@ -69,7 +80,7 @@ def importWordsToIgnore(csv: str) -> list[str]:
     wordsToIgnoreDF = pd.read_csv(csv)
     wordsToIgnore = []
     for word in wordsToIgnoreDF.index:
-        wordsToIgnore.append(wordsToIgnoreDF.loc[word]['Words'])
+        wordsToIgnore.append(wordsToIgnoreDF.loc[word]["Words"])
     return wordsToIgnore
 
 
@@ -79,12 +90,9 @@ def exportAccounts(accounts: list[Account]):
     Args:
         accounts: (list[Account]) A list of accounts
     """
-    rows = [
-        a.toDict()
-        for a in accounts
-    ]
+    rows = [a.toDict() for a in accounts]
     df = pd.DataFrame(rows)
-    df.to_csv('Accounts.csv', index=False)
+    df.to_csv("Accounts.csv", index=False)
 
 
 def exportPayments(payments: list[Transaction], filename: str):
@@ -94,11 +102,7 @@ def exportPayments(payments: list[Transaction], filename: str):
         payments: (list[Transaction]) A list of transactions with matched accounts
         filename: (str) The name of the file on export
     """
-    rows = [
-        t.toDict()
-        for t in payments
-        if t.getAccount() is not None
-    ]
+    rows = [t.toDict() for t in payments if t.getAccount() is not None]
     df = pd.DataFrame(rows)
     df.to_csv(filename, index=False)
 
@@ -109,5 +113,5 @@ def exportWordsToIgnore(words: list[str]):
     Args:
         words: (list[str]) A list of words to ignore while matching
     """
-    df = pd.DataFrame({'Words': words})
-    df.to_csv('WordsToIgnore.csv', index=False)
+    df = pd.DataFrame({"Words": words})
+    df.to_csv("WordsToIgnore.csv", index=False)
