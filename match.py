@@ -107,6 +107,7 @@ class Matcher:
         Args:
             transaction: (Transaction) The transaction to be matched
         """
+        print(f"Details: {transaction.details}")
         print("Which Account does this payment belong to?")
         choice = self.accountPicker()
         transaction.addAccount(choice)
@@ -126,6 +127,7 @@ class Matcher:
             print(f"Match found: {possibilities[0]}")
         else:
             amount = len(possibilities)
+            print(f"Details: {transaction.details}")
             print(f"{amount} Possible Choices Found")
             choice = self.accountPicker(possibilities)
             transaction.addAccount(choice)
