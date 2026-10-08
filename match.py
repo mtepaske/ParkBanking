@@ -93,9 +93,8 @@ class Matcher:
                     found = True
                     if account not in possible:
                         possible.append(account)
-            if found is False:
-                if word not in self.unknown:
-                    self.unknown.append(word)
+            if found is False and word not in self.unknown:
+                self.unknown.append(word)
         if len(possible) == 0:
             return None
         else:

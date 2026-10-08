@@ -1,3 +1,9 @@
+import datetime as dt
+import shutil
+from zoneinfo import ZoneInfo
+
+from dateutil.relativedelta import relativedelta
+
 from files import (
     exportAccounts,
     exportPayments,
@@ -22,6 +28,14 @@ if __name__ == "__main__":
 
     matcher.unknownWords()
 
+    last_month = (
+        dt.datetime.now(ZoneInfo("Australia/Melbourne")) - relativedelta(months=1)
+    ).strftime("%B")
+
+    this_year = dt.datetime.now(ZoneInfo("Australia/Melbourne")).strftime("%Y")
+
+    shutil.copy2("Transactions.csv", f"{last_month}{this_year}Raw.csv")
+
     exportAccounts(accounts)
-    exportPayments(transactions, "Test.csv")
+    exportPayments(transactions, f"{last_month} {this_year}.csv")
     exportWordsToIgnore(ignore)
