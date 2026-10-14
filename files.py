@@ -2,6 +2,7 @@ import csv
 from decimal import Decimal
 
 from account import Account
+from balance import Balance
 from transactions import Transaction
 
 
@@ -50,6 +51,12 @@ def importWordsToIgnore(filepath: str) -> list[str]:
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         return [row["Words"] for row in reader]
+
+
+def import_balances(filepath: str) -> list[Balance]:
+    with open(filepath, newline="", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file)
+        return [Balance.from_csv(row) for row in reader]
 
 
 def exportAccounts(accounts: list[Account]) -> None:
@@ -101,3 +108,18 @@ def exportWordsToIgnore(words: list[str]) -> None:
         writer.writerow(["Words"])
         for word in words:
             writer.writerow([word])
+
+
+def export_balances(balances: list[Balance]) -> None:
+    fieldnames = [
+        "Site",
+        "Annual Fee",
+        "Remaining from this FY",
+        "Outstanding from previous FYs",
+        "Pay Frequency",
+    ]
+    with open("Balances.csv", "w", newline="", encoding="utf-8-sig") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        for balance in balances:
+            writer.writerow(balance.to_dict())

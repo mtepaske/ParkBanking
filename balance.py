@@ -31,17 +31,19 @@ class Balance:
 
     def __init__(
         self,
-        site: int,
-        annual: float,
-        remaining: float,
-        outstanding: float,
-        pay_period: Literal["m", "q", "a"],
+        site: int | str,
+        annual: float | str,
+        remaining: float | str,
+        outstanding: float | str,
+        pay_period: Literal["m", "q", "a"] | str,
     ) -> None:
         self.credit = Decimal("0.00")
         self.site = site
         self.annual = self.money(annual)
         self.remaining = self.money(remaining)
         self.outstanding = self.money(outstanding)
+        if pay_period is not Literal["m", "q", "a"]:
+            raise ValueError("Pay Frequency not defined, must be 'm', 'q', or 'a'")
         match pay_period:
             case "m":
                 self.num_of_payments = 12
@@ -49,10 +51,23 @@ class Balance:
                 self.num_of_payments = 4
             case "a":
                 self.num_of_payments = 1
+        self.pay_frequency = pay_period
 
     @classmethod
-    def from_csv(cls, filepath: str):
-        pass
+    def from_csv(cls, row: dict[str, str]) -> Balance:
+        if row["Pay Frequency"] is not Literal["m", "q", "a"]:
+            raise ValueError("Pay Frequency not defined, must be 'm', 'q', or 'a'")
+        if row["Remaining from this FY"] is None:
+            row["Remaining from this FY"] = row["Annual Fee"]
+        if row["Outstanding from previous FYs"] is None:
+            row["Outstanding from previous FYs"] = "0"
+        return cls(
+            site=row["Site"],
+            annual=row["Annual Fee"],
+            remaining=row["Remaining from this FY"],
+            outstanding=row["Outstanding from previous FYs"],
+            pay_period=row["Pay Frequency"],
+        )
 
     @property
     def balance(self) -> Decimal:
@@ -135,10 +150,9 @@ class Balance:
     def expected_paid(self, as_of_date: date | None = None) -> Decimal:
         count = 0
         month_offset = 0
-        pay_period = self.pay_period(self.num_of_payments)
         if as_of_date is None:
             as_of_date = self.get_today()
-        if pay_period == "Annual":
+        if self.pay_frequency == "a":
             if as_of_date >= date(self.end_of_fy.year, 1, 1):
                 return self.annual
             else:
@@ -151,7 +165,7 @@ class Balance:
                 if due_date >= as_of_date:
                     break
                 count += 1
-                if pay_period == "Quarterly":
+                if self.pay_frequency == "q":
                     month_offset += 3
                 else:
                     month_offset += 1
@@ -161,6 +175,15 @@ class Balance:
         expected = self.expected_paid(as_of_date)
         actual_paid = self.annual - self.remaining
         return actual_paid >= expected
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "Site": str(self.site),
+            "Annual Fee": str(self.annual),
+            "Remaining from this FY": str(self.remaining),
+            "Outstanding from previous FYs": str(self.outstanding),
+            "Pay Frequency": self.pay_frequency,
+        }
 
 
 if __name__ == "__main__":
