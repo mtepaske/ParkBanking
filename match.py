@@ -11,12 +11,15 @@ class Matcher:
         unknown: (list[str]) A list of words that haven't been encountered before
     """
 
-    def __init__(self, accounts: list[Account], ignore: list[str]):
+    def __init__(self, accounts: list[Account], ignore: list[str]) -> None:
         """Initialisaes class
 
         Args:
             accounts: (list[Account]) A list of accounts to match to
             ignore: (list[str]) A list of words to ignore while matching
+
+        Returns:
+            None
         """
         self.accounts = accounts
         self.ignore = ignore
@@ -37,20 +40,23 @@ class Matcher:
                 filtered.append(word)
         return filtered
 
-    def printAccounts(self, accounts: list[Account] | None = None) -> None:
+    @staticmethod
+    def printAccounts(accounts: list[Account]) -> None:
         """Print accounts to the terminal for user input
 
         Args:
             accounts: (list[Account]) A list of accounts to print
+
+        Returns:
+            None
         """
-        if accounts is None:
-            accounts = self.accounts
         index = 1
         for account in accounts:
-            print(f"[{index}] - {account.getName()}, Site {account.getSite()}")
+            print(f"[{index}] - {account.name}, Site {account.site}")
             index += 1
 
-    def accountPicker(self, accounts: list[Account] | None = None) -> Account:
+    @staticmethod
+    def accountPicker(accounts: list[Account]) -> Account:
         """Asks the user to input an account choice
 
         Args:
@@ -59,9 +65,7 @@ class Matcher:
         Returns:
             (Account) The users chosen account
         """
-        if accounts is None:
-            accounts = self.accounts
-        self.printAccounts(accounts)
+        Matcher.printAccounts(accounts)
         while True:
             try:
                 choice = int(input("Which Account? "))
@@ -89,7 +93,7 @@ class Matcher:
         for word in details:
             found = False
             for account in self.accounts:
-                if word in account.getAlias():
+                if word in account.aliases:
                     found = True
                     if account not in possible:
                         possible.append(account)
@@ -105,18 +109,26 @@ class Matcher:
 
         Args:
             transaction: (Transaction) The transaction to be matched
+
+        Returns:
+            None
         """
         print(f"Details: {transaction.details}")
         print("Which Account does this payment belong to?")
-        choice = self.accountPicker()
+        choice = Matcher.accountPicker(self.accounts)
         transaction.addAccount(choice)
 
-    def match(self, transaction: Transaction, possibilities: list[Account] | None):
+    def match(
+        self, transaction: Transaction, possibilities: list[Account] | None
+    ) -> None:
         """Matches transactions if only one possibility was found, or prompts for user choice
 
         Args:
             transaction: (Transacrion) Trascation to match
             possibilities: (list[Account] | None) List of possible accounts if any were found
+
+        Returns:
+            None
         """
         if possibilities is None:
             print("No Possible Matches Found")
@@ -128,28 +140,38 @@ class Matcher:
             amount = len(possibilities)
             print(f"Details: {transaction.details}")
             print(f"{amount} Possible Choices Found")
-            choice = self.accountPicker(possibilities)
+            choice = Matcher.accountPicker(possibilities)
             transaction.addAccount(choice)
 
-    def aliasHandler(self, alias: str):
+    def aliasHandler(self, alias: str) -> None:
         """Handles choosing account to add alias to and adding the alias
 
         Args:
             alias: (str) The alias to add to the account
+
+        Returns:
+            None
         """
-        choice = self.accountPicker()
+        choice = Matcher.accountPicker(self.accounts)
         choice.addAlias(alias)
 
-    def ignoreHandler(self, word: str):
+    def ignoreHandler(self, word: str) -> None:
         """Handles adding words to ignored words
 
         Args:
             word: (str) Word to add to ignored word
+
+        Returns:
+            None
         """
         self.ignore.append(word)
 
-    def unknownWords(self):
-        """Prompts the user for choice on what to do with unknown words"""
+    def unknownWords(self) -> None:
+        """Prompts the user for choice on what to do with unknown words
+
+        Returns:
+            None
+        """
         for word in self.unknown:
             print(f"{word} is an unknown word, what would you like to do with it?")
             while True:

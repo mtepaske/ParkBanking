@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class Account:
     """Stores and manipulates Account information
 
@@ -8,18 +11,20 @@ class Account:
             used for matching
     """
 
-    def __init__(self, site: str, name: str, aliases: list[str]):
+    def __init__(self, site: str, name: str, aliases: list[str]) -> None:
         """Initialises Account object
 
         Args:
             site: (str) Site Number
             name: (str) Name of Site Holder
             aliases: (list[str]) Any keywords connected to the account
+
+        Returns:
+            None
         """
         self.name = name
         self.site = site
         self.aliases = aliases
-
         if len(self.aliases) == 1:
             toadd = self.name.split(" ")
             toadd.append(str(site))
@@ -27,13 +32,19 @@ class Account:
             toadd.append(toadd[1].upper())
             self.aliases = toadd
 
-    def getAlias(self) -> list[str]:
-        """Get list of aliases connected to Account
+    @classmethod
+    def from_csv(cls, row: dict[str, str]) -> Account:
+        """Converts from csv row to and instance of the Account class
+
+        Args:
+            row: (dict[str, str]) A row of the csv file to convert
 
         Returns:
-            list(str) Aliases connected to account
+            None
         """
-        return self.aliases
+        return cls(
+            site=row["Site"], name=row["Name"], aliases=row["Aliases"].split(",")
+        )
 
     def addAlias(self, alias: str) -> bool:
         """Add a new alias to an account
@@ -42,8 +53,7 @@ class Account:
             alias: (str) Alias to add
 
         Returns:
-            True: If alias added
-            False: If alias already connected
+            (bool) True if alias added, False If alias already connected
         """
         if alias in self.aliases:
             print(f"{alias} is already an alias for Site {self.site}")
@@ -53,27 +63,11 @@ class Account:
             print(f"{alias} added as alias for Site {self.site}")
             return True
 
-    def getSite(self) -> str:
-        """Get site number for Account
+    def toDict(self) -> dict[str, str]:
+        """Converts this instance of the Account class into a dictionary for exporting
 
         Returns:
-            (str) Site Number
-        """
-        return self.site
-
-    def getName(self) -> str:
-        """Get Name of site holder for Account
-
-        Returns:
-            (str) Site holder name
-        """
-        return self.name
-
-    def toDict(self) -> dict:
-        """Turn account into a dictonary for exporting
-
-        Returns:
-            (dict) A dictionary representing the account
+            (dict[str, str]) A dictionary representing the account
         """
         return {"Name": self.name, "Site": self.site, "Aliases": ",".join(self.aliases)}
 

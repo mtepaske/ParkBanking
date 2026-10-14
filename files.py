@@ -1,117 +1,103 @@
-import pandas as pd
+import csv
+from decimal import Decimal
 
 from account import Account
 from transactions import Transaction
 
 
-def cleanbanking(csv: pd.DataFrame) -> pd.DataFrame:
-    """Cleans a transaction data and removed irrelavent data
+def importPayments(filepath: str) -> list[Transaction]:
+    """Imports relavent transaction information from a csv as a Transaction class
 
     Args:
-        csv: (pd.DataFrame) A pandas data frame imported form a csv
+        filepath: (str) The name of the file to import
 
     Returns:
-        csv: (pd.DataFrame) A pandas data frame after cleaning
+        (list[Transaction]) A list of imported transactions
     """
-    csv.drop(
-        labels=[
-            "Date",
-            "Account Number",
-            "Unnamed: 3",
-            "Merchant Name",
-            "Balance",
-            "Transaction Type",
-            "Category",
-        ],
-        axis=1,
-        inplace=True,
-    )
-    csv.drop(csv[csv["Amount"] < 0].index, inplace=True, errors="ignore")
-    return csv
+    transactions = []
+    with open(filepath, newline="", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if Decimal(row["Amount"]) < 0:
+                continue
+            transactions.append(Transaction.from_csv(row))
+    return transactions
 
 
-def importPayments(csv: str) -> list[Transaction]:
-    """Import payment data from a CSV file
+def importAccounts(filepath: str) -> list[Account]:
+    """Import a csv containing account information as Account classes
 
     Args:
-        csv: (str) Name of the CSV file to import
+        filepath: (str) The name of the file to import
 
     Returns:
-        (list[Transaction]) A list of payments
+        (list[Account]) A list of imported accounts
     """
-    transactions = pd.read_csv(csv)
-    cleanbanking(transactions)
-    payments = []
-    for transaction in transactions.index:
-        date = transactions.loc[transaction]["Processed On"]
-        amount = transactions.loc[transaction]["Amount"]
-        details = transactions.loc[transaction]["Transaction Details"]
-        payments.append(Transaction(date, amount, details))
-    return payments
+    with open(filepath, newline="", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file)
+        return [Account.from_csv(row) for row in reader]
 
 
-def importAccounts(csv: str) -> list[Account]:
-    """Import account information from a CSV file
+def importWordsToIgnore(filepath: str) -> list[str]:
+    """Import a csv containing words to ignore
 
     Args:
-        csv: (str) Name of the CSV file to import
-
-    Returns:
-        (list[Account]) A list of accounts
-    """
-    accountscsv = pd.read_csv(csv, index_col="Site")
-    accounts = []
-    for site in accountscsv.index:
-        name = accountscsv.loc[site]["Name"]
-        aliases = accountscsv.loc[site]["Aliases"].split(",")
-        accounts.append(Account(site, name, aliases))
-    return accounts
-
-
-def importWordsToIgnore(csv: str) -> list[str]:
-    """Import words to ignore while matching from a CSV file
-
-    Args:
-        csv: (str) Name of the CSV file to import
+        filepath: (str) The name of the file to import
 
     Returns:
         (list[str]) A list of words to ignore
     """
-    wordsToIgnoreDF = pd.read_csv(csv)
-    wordsToIgnore = []
-    for word in wordsToIgnoreDF.index:
-        wordsToIgnore.append(wordsToIgnoreDF.loc[word]["Words"])
-    return wordsToIgnore
+    with open(filepath, newline="", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file)
+        return [row["Words"] for row in reader]
 
 
-def exportAccounts(accounts: list[Account]):
-    """Export a list of accounts to a CSV file
+def exportAccounts(accounts: list[Account]) -> None:
+    """Export updated account information as a csv file
 
     Args:
-        accounts: (list[Account]) A list of accounts
+        accounts: (list[Account]) A list of accounts to export
+
+    Returns:
+        None
     """
-    rows = [a.toDict() for a in accounts]
-    df = pd.DataFrame(rows)
-    df.to_csv("Accounts.csv", index=False)
+    fieldnames = ["Name", "Site", "Aliases"]
+    with open("Accounts.csv", "w", newline="", encoding="utf-8-sig") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        for account in accounts:
+            writer.writerow(account.toDict())
 
 
-def exportPayments(payments: list[Transaction], filename: str):
-    """Export a list of transactions with matched accounts to a CSV file
+def exportPayments(payments: list[Transaction], filename: str) -> None:
+    """Exports cleaned and matched transaction information to a csv file
 
     Args:
-        payments: (list[Transaction]) A list of transactions with matched accounts
-        filename: (str) The name of the file on export
+        payments: (list[Transaction]) A list of transactions to export
+        filename: (str) The name of exported file
+
+    Returns:
+        None
     """
-    rows = [t.toDict() for t in payments if t.getAccount() is not None]
-    df = pd.DataFrame(rows)
-    df.to_csv(filename, index=False)
+    fieldnames = ["Date", "Site", "Name", "Amount"]
+    with open(filename, "w", newline="", encoding="utf-8-sig") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        for transaction in payments:
+            writer.writerow(transaction.toDict())
 
 
-def exportWordsToIgnore(words: list[str]):
-    """Export a list of words to ignore while matching to a CSV file
+def exportWordsToIgnore(words: list[str]) -> None:
+    """Exports a list of words to ignore to a csv file
 
     Args:
-        words: (list[str]) A list of words to ignore while matching
+        words: A list of words to ignore
+
+    Returns:
+        None
     """
-    df = pd.DataFrame({"Words": words})
-    df.to_csv("WordsToIgnore.csv", index=False)
+    with open("WordsToIgnore.csv", "w", newline="", encoding="utf-8-sig") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Words"])
+        for word in words:
+            writer.writerow([word])
