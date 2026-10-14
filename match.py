@@ -47,7 +47,7 @@ class Matcher:
             accounts = self.accounts
         index = 1
         for account in accounts:
-            print(f"[{index}] - {account.getName()}, Site {account.getSite()}")
+            print(f"[{index}] - {account.name}, Site {account.site}")
             index += 1
 
     def accountPicker(self, accounts: list[Account] | None = None) -> Account:
@@ -89,7 +89,7 @@ class Matcher:
         for word in details:
             found = False
             for account in self.accounts:
-                if word in account.getAlias():
+                if word in account.aliases:
                     found = True
                     if account not in possible:
                         possible.append(account)

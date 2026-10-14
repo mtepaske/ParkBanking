@@ -27,14 +27,6 @@ class Account:
             toadd.append(toadd[1].upper())
             self.aliases = toadd
 
-    def getAlias(self) -> list[str]:
-        """Get list of aliases connected to Account
-
-        Returns:
-            list(str) Aliases connected to account
-        """
-        return self.aliases
-
     def addAlias(self, alias: str) -> bool:
         """Add a new alias to an account
 
@@ -52,22 +44,6 @@ class Account:
             self.aliases.append(alias)
             print(f"{alias} added as alias for Site {self.site}")
             return True
-
-    def getSite(self) -> str:
-        """Get site number for Account
-
-        Returns:
-            (str) Site Number
-        """
-        return self.site
-
-    def getName(self) -> str:
-        """Get Name of site holder for Account
-
-        Returns:
-            (str) Site holder name
-        """
-        return self.name
 
     def toDict(self) -> dict:
         """Turn account into a dictonary for exporting

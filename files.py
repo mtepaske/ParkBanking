@@ -102,7 +102,7 @@ def exportPayments(payments: list[Transaction], filename: str):
         payments: (list[Transaction]) A list of transactions with matched accounts
         filename: (str) The name of the file on export
     """
-    rows = [t.toDict() for t in payments if t.getAccount() is not None]
+    rows = [t.toDict() for t in payments if t.account is not None]
     df = pd.DataFrame(rows)
     df.to_csv(filename, index=False)
 

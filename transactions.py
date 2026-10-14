@@ -34,14 +34,6 @@ class Transaction:
         """
         self.account = account
 
-    def getAccount(self):
-        """Gets the account matched to the transaction
-
-        Returns:
-            (Account) Account matched to transaction
-        """
-        return self.account
-
     def toDict(self) -> None | dict:
         """Converts the transaction to a dictionary for exporting
 
@@ -52,7 +44,7 @@ class Transaction:
             return None
         return {
             "Date": self.date,
-            "Site": self.account.getSite(),
-            "Name": self.account.getName(),
+            "Site": self.account.site,
+            "Name": self.account.name,
             "Amount": self.amount,
         }
