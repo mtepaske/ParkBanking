@@ -26,6 +26,12 @@ class Transaction:
         self.account = None
         self.details = details.split(" ")
 
+    @classmethod
+    def from_csv(cls, row):
+        return cls(
+            date=row["Date"], amount=row["Amount"], details=row["Transaction Details"]
+        )
+
     def addAccount(self, account: Account):
         """Adds an account to the transaction
 

@@ -27,6 +27,12 @@ class Account:
             toadd.append(toadd[1].upper())
             self.aliases = toadd
 
+    @classmethod
+    def from_csv(cls, row):
+        return cls(
+            site=row["Site"], name=row["Name"], aliases=row["Aliases"].split(",")
+        )
+
     def addAlias(self, alias: str) -> bool:
         """Add a new alias to an account
 
