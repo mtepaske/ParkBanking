@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from balance import Balance
+
 
 class Account:
     """Stores and manipulates Account information
@@ -31,6 +33,7 @@ class Account:
             toadd.append(toadd[0].upper())
             toadd.append(toadd[1].upper())
             self.aliases = toadd
+        self.balance = None
 
     @classmethod
     def from_csv(cls, row: dict[str, str]) -> Account:
@@ -45,6 +48,9 @@ class Account:
         return cls(
             site=row["Site"], name=row["Name"], aliases=row["Aliases"].split(",")
         )
+
+    def add_balance(self, balance: Balance):
+        self.balance = balance
 
     def addAlias(self, alias: str) -> bool:
         """Add a new alias to an account

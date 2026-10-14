@@ -42,7 +42,7 @@ class Balance:
         self.annual = self.money(annual)
         self.remaining = self.money(remaining)
         self.outstanding = self.money(outstanding)
-        if pay_period is not Literal["m", "q", "a"]:
+        if pay_period != "q" and pay_period != "m" and pay_period != "a":
             raise ValueError("Pay Frequency not defined, must be 'm', 'q', or 'a'")
         match pay_period:
             case "m":
@@ -55,18 +55,21 @@ class Balance:
 
     @classmethod
     def from_csv(cls, row: dict[str, str]) -> Balance:
-        if row["Pay Frequency"] is not Literal["m", "q", "a"]:
-            raise ValueError("Pay Frequency not defined, must be 'm', 'q', or 'a'")
-        if row["Remaining from this FY"] is None:
-            row["Remaining from this FY"] = row["Annual Fee"]
-        if row["Outstanding from previous FYs"] is None:
-            row["Outstanding from previous FYs"] = "0"
+        site = row["Site"]
+        annual = row["Annual Fee"]
+        remaining = row["Remaining from this FY"]
+        outstanding = row["Outstanding from previous FYs"]
+        pay_period = row["Pay Frequency"]
+        if remaining == "":
+            remaining = annual
+        if outstanding == "":
+            outstanding = "0.00"
         return cls(
-            site=row["Site"],
-            annual=row["Annual Fee"],
-            remaining=row["Remaining from this FY"],
-            outstanding=row["Outstanding from previous FYs"],
-            pay_period=row["Pay Frequency"],
+            site,
+            annual,
+            remaining,
+            outstanding,
+            pay_period,
         )
 
     @property
@@ -184,18 +187,3 @@ class Balance:
             "Outstanding from previous FYs": str(self.outstanding),
             "Pay Frequency": self.pay_frequency,
         }
-
-
-if __name__ == "__main__":
-
-    test = Balance(1, 7550, 7550, 0, pay_period="a")
-
-    test.info()
-
-    print(test.expected_paid())
-    print(test.check_on_track())
-
-    test.add_payment(Decimal(2000))
-
-    test.info()
-    print(test.check_on_track())
