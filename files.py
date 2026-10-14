@@ -2,6 +2,7 @@ import csv
 from decimal import Decimal
 
 from account import Account
+from balance import Balance
 from transactions import Transaction
 
 
@@ -52,7 +53,13 @@ def importWordsToIgnore(filepath: str) -> list[str]:
         return [row["Words"] for row in reader]
 
 
-def exportAccounts(accounts: list[Account]) -> None:
+def import_balances(filepath: str) -> list[Balance]:
+    with open(filepath, newline="", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file)
+        return [Balance.from_csv(row) for row in reader]
+
+
+def exportAccounts(accounts: list[Account], filepath: str) -> None:
     """Export updated account information as a csv file
 
     Args:
@@ -62,7 +69,7 @@ def exportAccounts(accounts: list[Account]) -> None:
         None
     """
     fieldnames = ["Name", "Site", "Aliases"]
-    with open("Accounts.csv", "w", newline="", encoding="utf-8-sig") as file:
+    with open(f"{filepath}.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
         for account in accounts:
@@ -80,14 +87,14 @@ def exportPayments(payments: list[Transaction], filename: str) -> None:
         None
     """
     fieldnames = ["Date", "Site", "Name", "Amount"]
-    with open(filename, "w", newline="", encoding="utf-8-sig") as file:
+    with open(f"{filename}.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
         for transaction in payments:
             writer.writerow(transaction.toDict())
 
 
-def exportWordsToIgnore(words: list[str]) -> None:
+def exportWordsToIgnore(words: list[str], filepath: str) -> None:
     """Exports a list of words to ignore to a csv file
 
     Args:
@@ -96,8 +103,23 @@ def exportWordsToIgnore(words: list[str]) -> None:
     Returns:
         None
     """
-    with open("WordsToIgnore.csv", "w", newline="", encoding="utf-8-sig") as file:
+    with open(f"{filepath}.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.writer(file)
         writer.writerow(["Words"])
         for word in words:
             writer.writerow([word])
+
+
+def export_balances(balances: list[Balance], filepath: str) -> None:
+    fieldnames = [
+        "Site",
+        "Annual Fee",
+        "Remaining from this FY",
+        "Outstanding from previous FYs",
+        "Pay Frequency",
+    ]
+    with open(f"{filepath}.csv", "w", newline="", encoding="utf-8-sig") as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        for balance in balances:
+            writer.writerow(balance.to_dict())
