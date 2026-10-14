@@ -51,7 +51,7 @@ class Account:
             print(f"{alias} added as alias for Site {self.site}")
             return True
 
-    def toDict(self) -> dict:
+    def toDict(self) -> dict[str, str]:
         """Turn account into a dictonary for exporting
 
         Returns:

@@ -37,14 +37,12 @@ class Matcher:
                 filtered.append(word)
         return filtered
 
-    def printAccounts(self, accounts: list[Account] | None = None) -> None:
+    def printAccounts(self, accounts: list[Account]) -> None:
         """Print accounts to the terminal for user input
 
         Args:
             accounts: (list[Account]) A list of accounts to print
         """
-        if accounts is None:
-            accounts = self.accounts
         index = 1
         for account in accounts:
             print(f"[{index}] - {account.name}, Site {account.site}")
