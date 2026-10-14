@@ -37,7 +37,8 @@ class Matcher:
                 filtered.append(word)
         return filtered
 
-    def printAccounts(self, accounts: list[Account]) -> None:
+    @staticmethod
+    def printAccounts(accounts: list[Account]) -> None:
         """Print accounts to the terminal for user input
 
         Args:
@@ -48,7 +49,8 @@ class Matcher:
             print(f"[{index}] - {account.name}, Site {account.site}")
             index += 1
 
-    def accountPicker(self, accounts: list[Account] | None = None) -> Account:
+    @staticmethod
+    def accountPicker(accounts: list[Account]) -> Account:
         """Asks the user to input an account choice
 
         Args:
@@ -57,9 +59,7 @@ class Matcher:
         Returns:
             (Account) The users chosen account
         """
-        if accounts is None:
-            accounts = self.accounts
-        self.printAccounts(accounts)
+        Matcher.printAccounts(accounts)
         while True:
             try:
                 choice = int(input("Which Account? "))
@@ -106,7 +106,7 @@ class Matcher:
         """
         print(f"Details: {transaction.details}")
         print("Which Account does this payment belong to?")
-        choice = self.accountPicker()
+        choice = Matcher.accountPicker(self.accounts)
         transaction.addAccount(choice)
 
     def match(self, transaction: Transaction, possibilities: list[Account] | None):
@@ -126,7 +126,7 @@ class Matcher:
             amount = len(possibilities)
             print(f"Details: {transaction.details}")
             print(f"{amount} Possible Choices Found")
-            choice = self.accountPicker(possibilities)
+            choice = Matcher.accountPicker(possibilities)
             transaction.addAccount(choice)
 
     def aliasHandler(self, alias: str):
@@ -135,7 +135,7 @@ class Matcher:
         Args:
             alias: (str) The alias to add to the account
         """
-        choice = self.accountPicker()
+        choice = Matcher.accountPicker(self.accounts)
         choice.addAlias(alias)
 
     def ignoreHandler(self, word: str):
