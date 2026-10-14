@@ -37,7 +37,7 @@ class Account:
 
     @classmethod
     def from_csv(cls, row: dict[str, str]) -> Account:
-        """Converts from csv row to and instance of the Account class
+        """Converts from csv row to an instance of the Account class
 
         Args:
             row: (dict[str, str]) A row of the csv file to convert
