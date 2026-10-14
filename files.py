@@ -1,12 +1,19 @@
 import csv
 from decimal import Decimal
 
-import transactions
 from account import Account
 from transactions import Transaction
 
 
-def importPayments(filepath: str):
+def importPayments(filepath: str) -> list[Transaction]:
+    """Imports relavent transaction information from a csv as a Transaction class
+
+    Args:
+        filepath: (str) The name of the file to import
+
+    Returns:
+        (list[Transaction]) A list of imported transactions
+    """
     transactions = []
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
@@ -18,18 +25,42 @@ def importPayments(filepath: str):
 
 
 def importAccounts(filepath: str) -> list[Account]:
+    """Import a csv containing account information as Account classes
+
+    Args:
+        filepath: (str) The name of the file to import
+
+    Returns:
+        (list[Account]) A list of imported accounts
+    """
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         return [Account.from_csv(row) for row in reader]
 
 
 def importWordsToIgnore(filepath: str) -> list[str]:
+    """Import a csv containing words to ignore
+
+    Args:
+        filepath: (str) The name of the file to import
+
+    Returns:
+        (list[str]) A list of words to ignore
+    """
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         return [row["Words"] for row in reader]
 
 
-def exportAccounts(accounts: list[Account]):
+def exportAccounts(accounts: list[Account]) -> None:
+    """Export updated account information as a csv file
+
+    Args:
+        accounts: (list[Account]) A list of accounts to export
+
+    Returns:
+        None
+    """
     fieldnames = ["Name", "Site", "Aliases"]
     with open("Accounts.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
@@ -38,7 +69,16 @@ def exportAccounts(accounts: list[Account]):
             writer.writerow(account.toDict())
 
 
-def exportPayments(payments: list[Transaction], filename: str):
+def exportPayments(payments: list[Transaction], filename: str) -> None:
+    """Exports cleaned and matched transaction information to a csv file
+
+    Args:
+        payments: (list[Transaction]) A list of transactions to export
+        filename: (str) The name of exported file
+
+    Returns:
+        None
+    """
     fieldnames = ["Date", "Site", "Name", "Amount"]
     with open(filename, "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
@@ -47,16 +87,17 @@ def exportPayments(payments: list[Transaction], filename: str):
             writer.writerow(transaction.toDict())
 
 
-def exportWordsToIgnore(words: list[str]):
+def exportWordsToIgnore(words: list[str]) -> None:
+    """Exports a list of words to ignore to a csv file
+
+    Args:
+        words: A list of words to ignore
+
+    Returns:
+        None
+    """
     with open("WordsToIgnore.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.writer(file)
         writer.writerow(["Words"])
         for word in words:
             writer.writerow([word])
-
-
-if __name__ == "__main__":
-
-    transactions = importPayments("Transactions.csv")
-    for transaction in transactions:
-        print(transaction)

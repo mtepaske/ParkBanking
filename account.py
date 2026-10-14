@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 class Account:
     """Stores and manipulates Account information
 
@@ -8,18 +11,20 @@ class Account:
             used for matching
     """
 
-    def __init__(self, site: str, name: str, aliases: list[str]):
+    def __init__(self, site: str, name: str, aliases: list[str]) -> None:
         """Initialises Account object
 
         Args:
             site: (str) Site Number
             name: (str) Name of Site Holder
             aliases: (list[str]) Any keywords connected to the account
+
+        Returns:
+            None
         """
         self.name = name
         self.site = site
         self.aliases = aliases
-
         if len(self.aliases) == 1:
             toadd = self.name.split(" ")
             toadd.append(str(site))
@@ -28,7 +33,15 @@ class Account:
             self.aliases = toadd
 
     @classmethod
-    def from_csv(cls, row):
+    def from_csv(cls, row: dict[str, str]) -> Account:
+        """Converts from csv row to and instance of the Account class
+
+        Args:
+            row: (dict[str, str]) A row of the csv file to convert
+
+        Returns:
+            None
+        """
         return cls(
             site=row["Site"], name=row["Name"], aliases=row["Aliases"].split(",")
         )
@@ -40,8 +53,7 @@ class Account:
             alias: (str) Alias to add
 
         Returns:
-            True: If alias added
-            False: If alias already connected
+            (bool) True if alias added, False If alias already connected
         """
         if alias in self.aliases:
             print(f"{alias} is already an alias for Site {self.site}")
@@ -52,10 +64,10 @@ class Account:
             return True
 
     def toDict(self) -> dict[str, str]:
-        """Turn account into a dictonary for exporting
+        """Converts this instance of the Account class into a dictionary for exporting
 
         Returns:
-            (dict) A dictionary representing the account
+            (dict[str, str]) A dictionary representing the account
         """
         return {"Name": self.name, "Site": self.site, "Aliases": ",".join(self.aliases)}
 
