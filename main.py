@@ -131,7 +131,7 @@ if __name__ == "__main__":
         account.add_balance(balance)
     print("Accounts and Balances Matched\nProgram Ready")
 
-    transactions = import_payments("test.csv")
+    transactions = import_payments("Transactions.csv")
     print("Imported Transactions")
 
     ignore = import_words_to_ignore("WordsToIgnore.csv")
