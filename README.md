@@ -21,6 +21,8 @@ tracked.
     - [ ] Adding new fees
     - [ ] Tranfer remaining fees to outstanding fees
 - [ ] Refactor main.py to prompt user for steps
+    - [ ] Add ability to preview files
+    - [ ] Add ability to review matches before balance updates
 
 ## Usage
 

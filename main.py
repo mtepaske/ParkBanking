@@ -19,12 +19,6 @@ from files import (
 from match import Matcher
 from transactions import Transaction
 
-"""
-To add
-- Seperation and pausable steps on main.py
-- Rename all functions in snake_case
-"""
-
 
 def start_program():
     pass
@@ -116,6 +110,19 @@ def exit_program(
 
 if __name__ == "__main__":
 
+    while True:
+        test = input("Is this a test run? (y/n):")
+        if test == "y":
+            test = True
+            print("Test Initialised")
+            break
+        elif test == "n":
+            test = False
+            print("Starting Program")
+            break
+        else:
+            print("Choice must be y or n")
+
     accounts = import_accounts("Accounts.csv")
     balances = import_balances("Balances.csv")
     print("Imported Accounts and Balances")
@@ -124,15 +131,18 @@ if __name__ == "__main__":
     for index in range(len(accounts)):
         account = accounts[index]
         balance = balances[index]
-        print(account)
         balance.info()
         if balance.site != account.site:
             raise ValueError("Account and Balance site numbers do not match")
         account.add_balance(balance)
     print("Accounts and Balances Matched\nProgram Ready")
 
-    transactions = import_payments("Transactions.csv")
-    print("Imported Transactions")
+    if test is True:
+        transactions = import_payments("test.csv")
+        print("Imported Test Transactions")
+    else:
+        transactions = import_payments("Transactions.csv")
+        print("Imported Transactions")
 
     ignore = import_words_to_ignore("WordsToIgnore.csv")
     print("Imported Words To Ignore")
@@ -159,14 +169,20 @@ if __name__ == "__main__":
     ).strftime("%B")
     this_year = dt.datetime.now(ZoneInfo("Australia/Melbourne")).strftime("%Y")
     shutil.copy2("Transactions.csv", f"{last_month}{this_year}Raw.csv")
+
+    if test is True:
+        test_str = "test_"
+    else:
+        test_str = ""
+
     export_accounts(accounts, "Accounts")
     print("Accounts saved as Accounts.csv")
-    export_payments(transactions, f"{last_month} {this_year}.csv")
-    print(f"Matched Transactions saved as {last_month} {this_year}.csv")
-    export_words_to_ignore(ignore, "WordsToIgnore")
-    print("Words saved as WordsToIgnore.csv")
-    export_balances(balances, "Balances")
-    print("Updated Balances saved as Balances.csv")
+    export_payments(transactions, f"{test_str}{last_month} {this_year}.csv")
+    print(f"Matched Transactions saved as {test_str}{last_month} {this_year}.csv")
+    export_words_to_ignore(ignore, f"{test_str}WordsToIgnore")
+    print(f"Words saved as {test_str}WordsToIgnore.csv")
+    export_balances(balances, f"{test_str}Balances")
+    print(f"Updated Balances saved as {test_str}Balances.csv")
     print("Files Saved")
 
     print("Exiting Program")
