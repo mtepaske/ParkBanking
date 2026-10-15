@@ -63,11 +63,11 @@ class Balance:
 
     def __init__(
         self,
-        site: int | str,
-        annual: float | str,
-        remaining: float | str,
-        outstanding: float | str,
-        pay_period: Literal["m", "q", "a"] | str,
+        site: str,
+        annual: str,
+        remaining: str,
+        outstanding: str,
+        pay_period: str,
     ) -> None:
         """Initialises the class
 

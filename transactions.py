@@ -49,7 +49,7 @@ class Transaction:
             details=row["Transaction Details"],
         )
 
-    def addAccount(self, account: Account) -> None:
+    def add_account(self, account: Account) -> None:
         """Adds an account to the transaction
 
         Args:
@@ -60,7 +60,7 @@ class Transaction:
         """
         self.account = account
 
-    def toDict(self) -> dict[str, str]:
+    def to_dict(self) -> dict[str, str]:
         """Converts this instance of the Transaction class into a dictionary for exporting
 
         Returns:

@@ -25,7 +25,7 @@ class Matcher:
         self.ignore = ignore
         self.unknown = []
 
-    def cleanDesc(self, description: list[str]) -> list[str]:
+    def clean_desc(self, description: list[str]) -> list[str]:
         """Cleans the transaction details and removes any irrelavent words
 
         Args:
@@ -41,7 +41,7 @@ class Matcher:
         return filtered
 
     @staticmethod
-    def printAccounts(accounts: list[Account]) -> None:
+    def print_accounts(accounts: list[Account]) -> None:
         """Print accounts to the terminal for user input
 
         Args:
@@ -56,7 +56,7 @@ class Matcher:
             index += 1
 
     @staticmethod
-    def accountPicker(accounts: list[Account]) -> Account:
+    def account_picker(accounts: list[Account]) -> Account:
         """Asks the user to input an account choice
 
         Args:
@@ -65,7 +65,7 @@ class Matcher:
         Returns:
             (Account) The users chosen account
         """
-        Matcher.printAccounts(accounts)
+        Matcher.print_accounts(accounts)
         while True:
             try:
                 choice = int(input("Which Account? "))
@@ -78,7 +78,7 @@ class Matcher:
         print(f"You have picked {account}")
         return account
 
-    def keywordMatch(self, transaction: Transaction) -> list[Account] | None:
+    def keyword_match(self, transaction: Transaction) -> list[Account] | None:
         """Matches any relavent words in a transactions details to a account
 
         Args:
@@ -89,7 +89,7 @@ class Matcher:
             (list[Accounts]) If one or matches are found
         """
         possible = []
-        details = self.cleanDesc(transaction.details)
+        details = self.clean_desc(transaction.details)
         for word in details:
             found = False
             for account in self.accounts:
@@ -104,7 +104,7 @@ class Matcher:
         else:
             return possible
 
-    def noMatches(self, transaction: Transaction) -> None:
+    def no_matches(self, transaction: Transaction) -> None:
         """Prompts the user for a account choice when no matches can be found
 
         Args:
@@ -115,8 +115,8 @@ class Matcher:
         """
         print(f"Details: {transaction.details}")
         print("Which Account does this payment belong to?")
-        choice = Matcher.accountPicker(self.accounts)
-        transaction.addAccount(choice)
+        choice = Matcher.account_picker(self.accounts)
+        transaction.add_account(choice)
 
     def match(
         self, transaction: Transaction, possibilities: list[Account] | None
@@ -132,18 +132,18 @@ class Matcher:
         """
         if possibilities is None:
             print("No Possible Matches Found")
-            self.noMatches(transaction)
+            self.no_matches(transaction)
         elif len(possibilities) == 1:
-            transaction.addAccount(possibilities[0])
+            transaction.add_account(possibilities[0])
             print(f"Match found: {possibilities[0]}")
         else:
             amount = len(possibilities)
             print(f"Details: {transaction.details}")
             print(f"{amount} Possible Choices Found")
-            choice = Matcher.accountPicker(possibilities)
-            transaction.addAccount(choice)
+            choice = Matcher.account_picker(possibilities)
+            transaction.add_account(choice)
 
-    def aliasHandler(self, alias: str) -> None:
+    def alias_handler(self, alias: str) -> None:
         """Handles choosing account to add alias to and adding the alias
 
         Args:
@@ -152,10 +152,10 @@ class Matcher:
         Returns:
             None
         """
-        choice = Matcher.accountPicker(self.accounts)
-        choice.addAlias(alias)
+        choice = Matcher.account_picker(self.accounts)
+        choice.add_alias(alias)
 
-    def ignoreHandler(self, word: str) -> None:
+    def ignore_handler(self, word: str) -> None:
         """Handles adding words to ignored words
 
         Args:
@@ -166,7 +166,7 @@ class Matcher:
         """
         self.ignore.append(word)
 
-    def unknownWords(self) -> None:
+    def unknown_words(self) -> None:
         """Prompts the user for choice on what to do with unknown words
 
         Returns:
@@ -185,7 +185,7 @@ class Matcher:
                     break
                 print("Choice invalid, please try again")
             if choice == "i":
-                self.ignoreHandler(word)
+                self.ignore_handler(word)
                 print(f"Ignored words: {self.ignore}")
             elif choice == "a":
-                self.aliasHandler(word)
+                self.alias_handler(word)

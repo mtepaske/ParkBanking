@@ -52,7 +52,7 @@ class Account:
     def add_balance(self, balance: Balance):
         self.balance = balance
 
-    def addAlias(self, alias: str) -> bool:
+    def add_alias(self, alias: str) -> bool:
         """Add a new alias to an account
 
         Args:
@@ -69,7 +69,7 @@ class Account:
             print(f"{alias} added as alias for Site {self.site}")
             return True
 
-    def toDict(self) -> dict[str, str]:
+    def to_dict(self) -> dict[str, str]:
         """Converts this instance of the Account class into a dictionary for exporting
 
         Returns:

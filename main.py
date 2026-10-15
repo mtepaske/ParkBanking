@@ -7,14 +7,14 @@ from dateutil.relativedelta import relativedelta
 from account import Account
 from balance import Balance
 from files import (
+    export_accounts,
     export_balances,
-    exportAccounts,
-    exportPayments,
-    exportWordsToIgnore,
+    export_payments,
+    export_words_to_ignore,
+    import_accounts,
     import_balances,
-    importAccounts,
-    importPayments,
-    importWordsToIgnore,
+    import_payments,
+    import_words_to_ignore,
 )
 from match import Matcher
 from transactions import Transaction
@@ -22,8 +22,6 @@ from transactions import Transaction
 """
 To add
 - Seperation and pausable steps on main.py
-- Add payment function on main.py
-- Document balance.py
 - Rename all functions in snake_case
 """
 
@@ -37,7 +35,7 @@ def user_choice():
 
 
 def import_accounts_and_balances() -> list[Account]:
-    accounts = importAccounts("Accounts.csv")
+    accounts = import_accounts("Accounts.csv")
     balances = import_balances("Balances.csv")
     print("Imported Accounts and Balances")
     if len(balances) != len(accounts):
@@ -54,8 +52,8 @@ def import_accounts_and_balances() -> list[Account]:
     return accounts
 
 
-def import_payments() -> list[Transaction]:
-    transactions = importPayments("Transactions.csv")
+def import_banking() -> list[Transaction]:
+    transactions = import_payments("Transactions.csv")
     print("Imported Transactions")
     return transactions
 
@@ -63,10 +61,10 @@ def import_payments() -> list[Transaction]:
 def match_transactions(
     accounts: list[Account], transactions: list[Transaction]
 ) -> list[str]:
-    ignore = importWordsToIgnore("WordsToIgnore.csv")
+    ignore = import_words_to_ignore("WordsToIgnore.csv")
     matcher = Matcher(accounts, ignore)
     for transaction in transactions:
-        possibilities = matcher.keywordMatch(transaction)
+        possibilities = matcher.keyword_match(transaction)
         matcher.match(transaction, possibilities)
     return ignore
 
@@ -82,7 +80,7 @@ def process_payments(transactions: list[Transaction]):
 
 
 def procces_unknown_words(matcher: Matcher):
-    matcher.unknownWords()
+    matcher.unknown_words()
 
 
 def save_files(
@@ -96,11 +94,11 @@ def save_files(
     ).strftime("%B")
     this_year = dt.datetime.now(ZoneInfo("Australia/Melbourne")).strftime("%Y")
     shutil.copy2("Transactions.csv", f"{last_month}{this_year}Raw.csv")
-    exportAccounts(accounts, "Accounts")
+    export_accounts(accounts, "Accounts")
     print("Accounts saved as Accounts.csv")
-    exportPayments(transactions, f"{last_month} {this_year}.csv")
+    export_payments(transactions, f"{last_month} {this_year}.csv")
     print(f"Matched Transactions saved as {last_month} {this_year}.csv")
-    exportWordsToIgnore(ignore, "WordsToIgnore")
+    export_words_to_ignore(ignore, "WordsToIgnore")
     print("Words saved as WordsToIgnore.csv")
     export_balances(balances, "Balances")
     print("Updated Balances saved as Balances.csv")
@@ -118,7 +116,7 @@ def exit_program(
 
 if __name__ == "__main__":
 
-    accounts = importAccounts("Accounts.csv")
+    accounts = import_accounts("Accounts.csv")
     balances = import_balances("Balances.csv")
     print("Imported Accounts and Balances")
     if len(balances) != len(accounts):
@@ -133,14 +131,14 @@ if __name__ == "__main__":
         account.add_balance(balance)
     print("Accounts and Balances Matched\nProgram Ready")
 
-    transactions = importPayments("test.csv")
+    transactions = import_payments("test.csv")
     print("Imported Transactions")
 
-    ignore = importWordsToIgnore("WordsToIgnore.csv")
+    ignore = import_words_to_ignore("WordsToIgnore.csv")
     print("Imported Words To Ignore")
     matcher = Matcher(accounts, ignore)
     for transaction in transactions:
-        possibilities = matcher.keywordMatch(transaction)
+        possibilities = matcher.keyword_match(transaction)
         matcher.match(transaction, possibilities)
     print("Transactions Matched")
 
@@ -153,7 +151,7 @@ if __name__ == "__main__":
             transaction.account.balance.add_payment(transaction.amount)
     print("Payments Proccesed")
 
-    matcher.unknownWords()
+    matcher.unknown_words()
     print("Unknown Words Matched")
 
     last_month = (
@@ -161,11 +159,11 @@ if __name__ == "__main__":
     ).strftime("%B")
     this_year = dt.datetime.now(ZoneInfo("Australia/Melbourne")).strftime("%Y")
     shutil.copy2("Transactions.csv", f"{last_month}{this_year}Raw.csv")
-    exportAccounts(accounts, "Accounts")
+    export_accounts(accounts, "Accounts")
     print("Accounts saved as Accounts.csv")
-    exportPayments(transactions, f"{last_month} {this_year}.csv")
+    export_payments(transactions, f"{last_month} {this_year}.csv")
     print(f"Matched Transactions saved as {last_month} {this_year}.csv")
-    exportWordsToIgnore(ignore, "WordsToIgnore")
+    export_words_to_ignore(ignore, "WordsToIgnore")
     print("Words saved as WordsToIgnore.csv")
     export_balances(balances, "Balances")
     print("Updated Balances saved as Balances.csv")
