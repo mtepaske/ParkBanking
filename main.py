@@ -43,6 +43,11 @@ state: AppState = {
 
 
 def start_program() -> argparse.Namespace:
+    """Begins the program by checking for test flags
+
+    Returns:
+        Namespace
+    """
     parser = argparse.ArgumentParser(
         description="Manage Caravan Park Transactions and Accounts"
     )
@@ -56,6 +61,14 @@ def start_program() -> argparse.Namespace:
 
 
 def show_menu(test: bool = False) -> None:
+    """Shows a menu with available actions to user
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     while True:
         available_actions = [
             (name, action) for name, action in actions.items() if action["available"]
@@ -71,6 +84,14 @@ def show_menu(test: bool = False) -> None:
 
 
 def import_accounts_and_balances() -> tuple[list[Account], list[Balance]]:
+    """Imports accounts and balances files
+
+    Returns:
+        (tuple[list[Account], list[Balances]]) A tuple containing imported accounts and imported balances
+
+    Raises:
+        ValueError: If the accounts and balances are different sizes, or if the site numbers dot match
+    """
     accounts = import_accounts("Accounts.csv")
     balances = import_balances("Balances.csv")
     print("Imported Accounts and Balances")
@@ -90,12 +111,28 @@ def import_accounts_and_balances() -> tuple[list[Account], list[Balance]]:
 
 
 def import_accounts_and_balances_action(test: bool = False) -> None:
+    """Helper function to call import_accounts_and_balances
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     acts_and_bal = import_accounts_and_balances()
     state["accounts"] = acts_and_bal[0]
     state["balances"] = acts_and_bal[1]
 
 
 def import_banking(test: bool = False) -> list[Transaction]:
+    """Import banking raw banking information
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        (list[Transaction]) A list of all the relavent transactions
+    """
     if test:
         transactions = import_payments("test.csv")
     else:
@@ -108,12 +145,29 @@ def import_banking(test: bool = False) -> list[Transaction]:
 
 
 def import_banking_action(test: bool = False) -> None:
+    """Helper function to call import_banking
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     state["transactions"] = import_banking(test)
 
 
 def match_transactions(
     accounts: list[Account], transactions: list[Transaction]
 ) -> tuple[list[str], Matcher]:
+    """Matches transactions to accounts using the Matcher class
+
+    Args:
+        accounts: (list[Account]) A list of accounts to match to
+        transactions: (list[Transaction]) A list of transactions to match
+
+    Returns:
+        (tuple[list[str], Matcher]) A tuple containing a list of words to ignore, and the instance of the matcher class
+    """
     ignore = import_words_to_ignore("WordsToIgnore.csv")
     matcher = Matcher(accounts, ignore)
     for transaction in transactions:
@@ -127,6 +181,14 @@ def match_transactions(
 
 
 def match_transactions_action(test: bool = False) -> None:
+    """Helper function to call match_transactions
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     if state["accounts"] is not None and state["transactions"] is not None:
         matched_info = match_transactions(state["accounts"], state["transactions"])
         state["words_to_ignore"] = matched_info[0]
@@ -136,6 +198,11 @@ def match_transactions_action(test: bool = False) -> None:
 
 
 def review_matches() -> None:
+    """Prints a list of matched transactions and the matched accounts for proofing
+
+    Returns:
+        None
+    """
     if state["transactions"] is None:
         print("Transactions are not imported")
         return
@@ -159,6 +226,14 @@ def review_matches() -> None:
 
 
 def process_payments(transactions: list[Transaction]) -> None:
+    """Procces the matched transactions and update account balances
+
+    Args:
+        transactions: (list[Transaction]) A list of the matched transactions
+
+    Raises:
+        ValueError: If a transaction hasn't been matched or if an account has no balance instance
+    """
     for transaction in transactions:
         if transaction.account is None:
             raise ValueError("Transaction not matched")
@@ -170,17 +245,41 @@ def process_payments(transactions: list[Transaction]) -> None:
 
 
 def process_payments_action(test: bool = False) -> None:
+    """Helper function to call process_payments
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     if state["transactions"] is not None:
         process_payments(state["transactions"])
 
 
 def procces_unknown_words(matcher: Matcher) -> None:
+    """Proccess any unknown words from the matching process
+
+    Args:
+        matcher: (Matcher) The instance of the Matcher classes used
+
+    Returns:
+        None
+    """
     matcher.unknown_words()
     state["words_to_ignore"] = matcher.ignore
     actions["Proccess Unknown Words"]["available"] = False
 
 
 def procces_unknown_words_action(test: bool = False) -> None:
+    """Helper function to call procces_unknown_words
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     if state["matcher"] is not None and state["words_to_ignore"] is not None:
         procces_unknown_words(state["matcher"])
 
@@ -192,6 +291,18 @@ def save_files(
     balances: list[Balance] | None,
     test: bool = False,
 ) -> None:
+    """Saves all relevant information as csv files
+
+    Args:
+        transactions: (list[Transaction]) A list of transactions
+        accounts: (list[Account]) A list of accounts
+        ignore: (list[str]) A list of words to ignore
+        balances: (list[Balance]) A list of balance information
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     if test:
         test_flag = "test_"
     else:
@@ -225,6 +336,14 @@ def save_files(
 
 
 def save_files_action(test: bool = False) -> None:
+    """Helper function to call save_files
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     transactions = state["transactions"]
     accounts = state["accounts"]
     ignore = state["words_to_ignore"]
@@ -233,6 +352,14 @@ def save_files_action(test: bool = False) -> None:
 
 
 def exit_program(test: bool = False) -> None:
+    """Exits the program
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     save_files_action(test)
     print("Exiting Program")
     sys.exit(0)
