@@ -172,6 +172,9 @@ class Matcher:
         Returns:
             None
         """
+        if self.unknown is None:
+            print("No unknown words to proccess")
+            return
         for word in self.unknown:
             print(f"{word} is an unknown word, what would you like to do with it?")
             while True:
@@ -189,3 +192,4 @@ class Matcher:
                 print(f"Ignored words: {self.ignore}")
             elif choice == "a":
                 self.alias_handler(word)
+        self.unknown = None
