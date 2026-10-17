@@ -12,7 +12,6 @@ tracked.
 - [ ] Add ability to add accounts from app
 - [ ] Add ability to select transaction file import
 - [ ] Add date object rather then string for date sorting
-- [ ] Add ability to name accounts export before exporting
 - [ ] Add GUI
 - [ ] Add handling of Cash deposits
 - [ ] Add ability to export credit on balances as negative value on remianing
@@ -20,9 +19,12 @@ tracked.
 - [ ] Add support for new financial year
     - [ ] Adding new fees
     - [ ] Tranfer remaining fees to outstanding fees
-- [ ] Refactor main.py to prompt user for steps
+- [x] Refactor main.py to prompt user for steps
     - [ ] Add ability to preview files
-    - [ ] Add ability to review matches before balance updates
+    - [x] Add ability to review matches before balance updates
+- [ ] Add Database storage through SQlite3
+    - [ ] Add ability to read from database and import from csv
+    - [ ] Add ability to export active accounts and balances to csv
 
 ## Usage
 
