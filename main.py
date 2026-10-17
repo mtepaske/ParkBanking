@@ -1,7 +1,9 @@
 import argparse
 import datetime as dt
 import shutil
+import sqlite3
 import sys
+from pathlib import Path
 from typing import TypedDict
 from zoneinfo import ZoneInfo
 
@@ -9,6 +11,13 @@ from dateutil.relativedelta import relativedelta
 
 from account import Account
 from balance import Balance
+from database import (
+    AccountRepository,
+    AliasRepository,
+    BalanceRepository,
+    IgnoreRepository,
+    initialise_database,
+)
 from files import (
     export_accounts,
     export_balances,
@@ -41,6 +50,8 @@ state: AppState = {
     "payments": None,
 }
 
+DB_PATH = Path(__file__).resolve().parent / "parkbanking.bd"
+
 
 def start_program() -> argparse.Namespace:
     """Begins the program by checking for test flags
@@ -58,6 +69,19 @@ def start_program() -> argparse.Namespace:
     else:
         print("Starting program")
     return args
+
+
+def connect(db_path=DB_PATH):
+    connection = sqlite3.connect(db_path)
+    connection.execute("PRAGMA fereihn_keys = ON")
+    connection.row_factory = sqlite3.Row
+    return connection
+
+
+def read_from_db(
+    repo: AccountRepository | BalanceRepository | IgnoreRepository | AliasRepository,
+):
+    return repo.get_all()
 
 
 def show_menu(test: bool = False) -> None:
@@ -385,6 +409,14 @@ actions = {
 }
 
 if __name__ == "__main__":
+
+    connection = connect(DB_PATH)
+    initialise_database(connection)
+
+    accounts_repo = AccountRepository(connection)
+    balance_repo = BalanceRepository(connection)
+    ignore_repo = IgnoreRepository(connection)
+    alias_repo = AliasRepository(connection)
 
     args = start_program()
     while True:

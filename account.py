@@ -7,23 +7,35 @@ class Account:
     """Stores and manipulates Account information
 
     Attributes:
+        id: (int) A unique identifier for database operations
         name: (str) Name of account holder
         site: (str) Site number
-        aliases: (list[str]) Any keywords connected to the account,
-            used for matching
+        aliases: (list[str]) Any keywords connected to the account, used for matching
+        balance: (Balance) The account balance information
+        active: (bool) The active status of this account
     """
 
-    def __init__(self, site: str, name: str, aliases: list[str]) -> None:
+    def __init__(
+        self,
+        site: str | int,
+        name: str,
+        aliases: list[str],
+        account_id: int | None = None,
+        active: bool = True,
+    ) -> None:
         """Initialises Account object
 
         Args:
             site: (str) Site Number
             name: (str) Name of Site Holder
             aliases: (list[str]) Any keywords connected to the account
+            account_id: (int | None) A unique identifier for database operations. Defaults to None if new account
+            active: (bool) The active status of this account. Defaults to True
 
         Returns:
             None
         """
+        self.id = account_id
         self.name = name
         self.site = site
         self.aliases = aliases
@@ -34,6 +46,7 @@ class Account:
             toadd.append(toadd[1].upper())
             self.aliases = toadd
         self.balance = None
+        self.active = active
 
     @classmethod
     def from_csv(cls, row: dict[str, str]) -> Account:
@@ -75,7 +88,11 @@ class Account:
         Returns:
             (dict[str, str]) A dictionary representing the account
         """
-        return {"Name": self.name, "Site": self.site, "Aliases": ",".join(self.aliases)}
+        return {
+            "Name": self.name,
+            "Site": str(self.site),
+            "Aliases": ",".join(self.aliases),
+        }
 
     def __str__(self) -> str:
         """Prints Account as string

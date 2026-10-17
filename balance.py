@@ -85,7 +85,7 @@ class Balance:
             None
         """
         self.credit = Decimal("0.00")
-        self.site = site
+        self.site = site  # Remove since adding account id to link to accounts
         self.annual = self.money(annual)
         self.remaining = self.money(remaining)
         self.outstanding = self.money(outstanding)
