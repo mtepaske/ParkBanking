@@ -63,11 +63,13 @@ class Balance:
 
     def __init__(
         self,
+        account_id: int,
         site: str,
         annual: str,
         remaining: str,
         outstanding: str,
         pay_period: str,
+        id: int | None = None,
     ) -> None:
         """Initialises the class
 
@@ -84,6 +86,8 @@ class Balance:
         Returns:
             None
         """
+        self.id = id
+        self.account_id = account_id
         self.credit = Decimal("0.00")
         self.site = site  # Remove since adding account id to link to accounts
         self.annual = self.money(annual)
@@ -110,6 +114,8 @@ class Balance:
         Returns:
             None
         """
+        id = int(row["ID"])
+        account_id = int(row["Account ID"])
         site = row["Site"]
         annual = row["Annual Fee"]
         remaining = row["Remaining from this FY"]
@@ -120,11 +126,13 @@ class Balance:
         if outstanding == "":
             outstanding = "0.00"
         return cls(
+            account_id,
             site,
             annual,
             remaining,
             outstanding,
             pay_period,
+            id,
         )
 
     @property
@@ -323,6 +331,8 @@ class Balance:
             (dict[str, str]) A dictionary representing the balance
         """
         return {
+            "ID": str(self.id),
+            "Account ID": str(self.account_id),
             "Site": str(self.site),
             "Annual Fee": str(self.annual),
             "Remaining from this FY": str(self.remaining),

@@ -36,7 +36,7 @@ def import_accounts(filepath: str) -> list[Account]:
     """
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
-        return [Account.from_csv(row) for row in reader]
+        return [Account.from_csv(row) for row in reader if row["Active"] == "1"]
 
 
 def import_words_to_ignore(filepath: str) -> list[str]:

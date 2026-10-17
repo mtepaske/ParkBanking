@@ -56,10 +56,14 @@ class Account:
             row: (dict[str, str]) A row of the csv file to convert
 
         Returns:
-            None
+            (Account) An instanve of the account class
         """
         return cls(
-            site=row["Site"], name=row["Name"], aliases=row["Aliases"].split(",")
+            site=row["Site"],
+            name=row["Name"],
+            aliases=row["Aliases"].split(","),
+            account_id=int(row["Account ID"]),
+            active=bool(row["Active"]),
         )
 
     def add_balance(self, balance: Balance):
@@ -89,9 +93,11 @@ class Account:
             (dict[str, str]) A dictionary representing the account
         """
         return {
+            "ID": str(self.id),
             "Name": self.name,
             "Site": str(self.site),
             "Aliases": ",".join(self.aliases),
+            "Active": str(self.active),
         }
 
     def __str__(self) -> str:

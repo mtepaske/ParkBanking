@@ -13,7 +13,6 @@ from account import Account
 from balance import Balance
 from database import (
     AccountRepository,
-    AliasRepository,
     BalanceRepository,
     IgnoreRepository,
     initialise_database,
@@ -73,13 +72,17 @@ def start_program() -> argparse.Namespace:
 
 def connect(db_path=DB_PATH):
     connection = sqlite3.connect(db_path)
-    connection.execute("PRAGMA fereihn_keys = ON")
+    connection.execute("PRAGMA fereign_keys = ON")
     connection.row_factory = sqlite3.Row
     return connection
 
 
+def disconnect(connection: sqlite3.Connection) -> None:
+    connection.close()
+
+
 def read_from_db(
-    repo: AccountRepository | BalanceRepository | IgnoreRepository | AliasRepository,
+    repo: AccountRepository | BalanceRepository | IgnoreRepository,
 ):
     return repo.get_all()
 
@@ -416,7 +419,6 @@ if __name__ == "__main__":
     accounts_repo = AccountRepository(connection)
     balance_repo = BalanceRepository(connection)
     ignore_repo = IgnoreRepository(connection)
-    alias_repo = AliasRepository(connection)
 
     args = start_program()
     while True:
