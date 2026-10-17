@@ -58,6 +58,7 @@ class Account:
         Returns:
             (Account) An instanve of the account class
         """
+        # Have to change for if there is no entry in rows to add active = 1 and account_id = None
         return cls(
             site=row["Site"],
             name=row["Name"],

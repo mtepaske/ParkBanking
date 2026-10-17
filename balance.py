@@ -114,6 +114,8 @@ class Balance:
         Returns:
             None
         """
+        # Refactor for empty rows. ID = None, account_id = None
+        # Change neg remaining to mean credit
         id = int(row["ID"])
         account_id = int(row["Account ID"])
         site = row["Site"]
@@ -330,6 +332,7 @@ class Balance:
         Returns:
             (dict[str, str]) A dictionary representing the balance
         """
+        # Credit should show as negative outstanding amount
         return {
             "ID": str(self.id),
             "Account ID": str(self.account_id),

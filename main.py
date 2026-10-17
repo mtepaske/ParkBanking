@@ -70,7 +70,7 @@ def start_program() -> argparse.Namespace:
     return args
 
 
-def connect(db_path=DB_PATH):
+def connect(db_path=DB_PATH) -> sqlite3.Connection:
     connection = sqlite3.connect(db_path)
     connection.execute("PRAGMA fereign_keys = ON")
     connection.row_factory = sqlite3.Row
@@ -82,9 +82,9 @@ def disconnect(connection: sqlite3.Connection) -> None:
 
 
 def read_from_db(
-    repo: AccountRepository | BalanceRepository | IgnoreRepository,
-):
-    return repo.get_all()
+    repo: AccountRepository | BalanceRepository,
+) -> list[Account] | list[Balance]:
+    return repo.get_active()
 
 
 def show_menu(test: bool = False) -> None:
@@ -110,6 +110,13 @@ def show_menu(test: bool = False) -> None:
             print("Invalid choice. Please choose from list")
 
 
+def load_from_db() -> None:
+    # Load active accounts, balance, and words to ignore from database
+    # For this to work i need to pass it needs access to the repositories
+    # Should add repositories to a state dictionary
+    pass
+
+
 def import_accounts_and_balances() -> tuple[list[Account], list[Balance]]:
     """Imports accounts and balances files
 
@@ -119,6 +126,8 @@ def import_accounts_and_balances() -> tuple[list[Account], list[Balance]]:
     Raises:
         ValueError: If the accounts and balances are different sizes, or if the site numbers dot match
     """
+    # Change the way importing works. Want to be able to import from csvs but not by default.
+    # Importing csvs should update database not overwrite it.
     accounts = import_accounts("Accounts.csv")
     balances = import_balances("Balances.csv")
     print("Imported Accounts and Balances")
@@ -330,6 +339,8 @@ def save_files(
     Returns:
         None
     """
+    # Saving files should turn into an optional thing, and should only save accounts and balances as csvs
+    # Should still export transactions to csv by default
     if test:
         test_flag = "test_"
     else:
@@ -388,6 +399,7 @@ def exit_program(test: bool = False) -> None:
         None
     """
     save_files_action(test)
+    disconnect(connection)
     print("Exiting Program")
     sys.exit(0)
 
@@ -410,6 +422,7 @@ actions = {
     "Save Files": {"available": True, "function": save_files_action},
     "Exit Program": {"available": True, "function": exit_program},
 }
+# Change to reflect database implimentation and new actions
 
 if __name__ == "__main__":
 
