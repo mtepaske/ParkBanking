@@ -63,11 +63,13 @@ class Balance:
 
     def __init__(
         self,
+        account_id: int | None,
         site: str,
         annual: str,
         remaining: str,
         outstanding: str,
         pay_period: str,
+        id: int | None = None,
     ) -> None:
         """Initialises the class
 
@@ -84,8 +86,12 @@ class Balance:
         Returns:
             None
         """
+        self.id = id
+        self.account_id = account_id
         self.credit = Decimal("0.00")
-        self.site = site
+        if len(site) == 1:
+            site = f"0{site}"
+        self.site = site  # Remove since adding account id to link to accounts
         self.annual = self.money(annual)
         self.remaining = self.money(remaining)
         self.outstanding = self.money(outstanding)
@@ -110,6 +116,16 @@ class Balance:
         Returns:
             None
         """
+        # Refactor for empty rows. ID = None, account_id = None
+        # Change neg remaining to mean credit
+        if row["ID"] == "None":
+            id = None
+        else:
+            id = int(row["ID"])
+        if row["Account ID"] == "None":
+            account_id = None
+        else:
+            account_id = int(row["Account ID"])
         site = row["Site"]
         annual = row["Annual Fee"]
         remaining = row["Remaining from this FY"]
@@ -120,11 +136,13 @@ class Balance:
         if outstanding == "":
             outstanding = "0.00"
         return cls(
+            account_id,
             site,
             annual,
             remaining,
             outstanding,
             pay_period,
+            id,
         )
 
     @property
@@ -322,10 +340,16 @@ class Balance:
         Returns:
             (dict[str, str]) A dictionary representing the balance
         """
+        # Credit should show as negative outstanding amount
         return {
+            "ID": str(self.id),
+            "Account ID": str(self.account_id),
             "Site": str(self.site),
             "Annual Fee": str(self.annual),
             "Remaining from this FY": str(self.remaining),
             "Outstanding from previous FYs": str(self.outstanding),
             "Pay Frequency": self.pay_frequency,
         }
+
+    def __str__(self) -> str:
+        return f"Balance for {self.site} -> Annual = {self.annual}, Remaining = {self.remaining}, Outstanding = {self.outstanding}, Pay Frequency = {self.pay_frequency}"

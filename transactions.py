@@ -68,7 +68,7 @@ class Transaction:
         """
         return {
             "Date": self.date,
-            "Site": (self.account.site if self.account is not None else "??"),
+            "Site": (str(self.account.site) if self.account is not None else "??"),
             "Name": (self.account.name if self.account is not None else "Unmatched"),
             "Amount": str(self.amount),
         }

@@ -48,6 +48,7 @@ def import_words_to_ignore(filepath: str) -> list[str]:
     Returns:
         (list[str]) A list of words to ignore
     """
+    # Should remove after first run as removing option to import from csv file
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         return [row["Words"] for row in reader]
@@ -68,7 +69,7 @@ def export_accounts(accounts: list[Account], filepath: str) -> None:
     Returns:
         None
     """
-    fieldnames = ["Name", "Site", "Aliases"]
+    fieldnames = ["ID", "Active", "Name", "Site", "Aliases"]
     with open(f"{filepath}.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
@@ -103,6 +104,7 @@ def export_words_to_ignore(words: list[str], filepath: str) -> None:
     Returns:
         None
     """
+    # Should remove as removing ability to export ignore to csv
     with open(f"{filepath}.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.writer(file)
         writer.writerow(["Words"])
@@ -113,6 +115,8 @@ def export_words_to_ignore(words: list[str], filepath: str) -> None:
 def export_balances(balances: list[Balance], filepath: str) -> None:
     fieldnames = [
         "Site",
+        "ID",
+        "Account ID",
         "Annual Fee",
         "Remaining from this FY",
         "Outstanding from previous FYs",

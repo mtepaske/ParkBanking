@@ -22,9 +22,12 @@ tracked.
 - [x] Refactor main.py to prompt user for steps
     - [ ] Add ability to preview files
     - [x] Add ability to review matches before balance updates
-- [ ] Add Database storage through SQlite3
-    - [ ] Add ability to read from database and import from csv
-    - [ ] Add ability to export active accounts and balances to csv
+- [x] Add Database storage through SQlite3
+    - [x] Add ability to read from database and import from csv
+    - [x] Add ability to export active accounts and balances to csv
+- [ ] Add ability to load previously matched transactions for paymnet processing
+- [ ] Add ability to rematch specific transactions
+- [ ] Change to see amount and date of transactions when reviewing or matching
 
 ## Usage
 
