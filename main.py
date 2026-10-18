@@ -64,6 +64,8 @@ repos: AppRepos = {
 
 DB_PATH = Path(__file__).resolve().parent / "parkbanking.db"
 
+# Words to ignore not being imported from CSV for first run
+
 
 def start_program() -> argparse.Namespace:
     """Begins the program by checking for test flags
@@ -111,10 +113,12 @@ def show_menu(test: bool = False) -> None:
             print(f"{i} -> {name}")
         try:
             choice = int(input("Choose an action: "))
+            print(choice - 1)
             name, action = available_actions[choice - 1]
-            return action["function"](test)
+            break
         except (ValueError, IndexError):
             print("Invalid choice. Please choose from list")
+    return action["function"](test)
 
 
 def load_from_db(
@@ -232,6 +236,7 @@ def import_accounts_from_csv() -> tuple[list[Account], list[Balance]]:
     actions["Import Accounts & Balances From CSV"]["available"] = False
     actions["Load Accounts From Database"]["available"] = False
     actions["Save To Database"]["available"] = True
+    actions["Export Accounts To CSV"]["available"] = True
     if state["transactions"] is not None:
         actions["Match Transactions to Accounts"]["available"] = True
     return (accounts, balances)
@@ -316,7 +321,13 @@ def match_transactions_action(test: bool = False) -> None:
     Returns:
         None
     """
-
+    ignore = state["words_to_ignore"]
+    if ignore is None:
+        print("Words to Ignore Empty. Importing from CSV")
+        try:
+            ignore = import_words_to_ignore("WordsToIgnore.csv")
+        except FileNotFoundError:
+            print("No WordsToIgnore CSV File")
     if (
         state["accounts"] is not None
         and state["transactions"] is not None

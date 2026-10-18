@@ -69,7 +69,7 @@ def export_accounts(accounts: list[Account], filepath: str) -> None:
     Returns:
         None
     """
-    fieldnames = ["Name", "Site", "Aliases"]
+    fieldnames = ["ID", "Active", "Name", "Site", "Aliases"]
     with open(f"{filepath}.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
@@ -115,6 +115,8 @@ def export_words_to_ignore(words: list[str], filepath: str) -> None:
 def export_balances(balances: list[Balance], filepath: str) -> None:
     fieldnames = [
         "Site",
+        "ID",
+        "Account ID",
         "Annual Fee",
         "Remaining from this FY",
         "Outstanding from previous FYs",

@@ -63,7 +63,7 @@ class Balance:
 
     def __init__(
         self,
-        account_id: int,
+        account_id: int | None,
         site: str,
         annual: str,
         remaining: str,
@@ -116,8 +116,14 @@ class Balance:
         """
         # Refactor for empty rows. ID = None, account_id = None
         # Change neg remaining to mean credit
-        id = int(row["ID"])
-        account_id = int(row["Account ID"])
+        if row["ID"] == "None":
+            id = None
+        else:
+            id = int(row["ID"])
+        if row["Account ID"] == "None":
+            account_id = None
+        else:
+            account_id = int(row["Account ID"])
         site = row["Site"]
         annual = row["Annual Fee"]
         remaining = row["Remaining from this FY"]
@@ -342,3 +348,6 @@ class Balance:
             "Outstanding from previous FYs": str(self.outstanding),
             "Pay Frequency": self.pay_frequency,
         }
+
+    def __str__(self) -> str:
+        return f"Balance for {self.site} -> Annual = {self.annual}, Remaining = {self.remaining}, Outstanding = {self.outstanding}, Pay Frequency = {self.pay_frequency}"

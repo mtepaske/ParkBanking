@@ -108,6 +108,8 @@ class AccountRepository(Repository):
 
     def insert_one(self, account: Account) -> None:
         with self.connection as connection:
+            print(account.active)
+            print(int(account.active))
             if account.id is None:
                 cursor = connection.execute(
                     """
@@ -165,6 +167,8 @@ class AccountRepository(Repository):
     def insert_all(self, accounts: list[Account]) -> None:
         with self.connection as connection:
             for account in accounts:
+                print(account.active)
+                print(int(account.active))
                 if account.id is None:
                     cursor = connection.execute(
                         """
@@ -275,13 +279,13 @@ class BalanceRepository(Repository):
             """).fetchall()
         return [
             Balance(
-                row["id"],
                 row["account_id"],
                 row["site_number"],
                 row["annual"],
                 row["remaining"],
                 row["outstanding"],
                 row["pay_period"],
+                row["id"],
             )
             for row in rows
         ]
@@ -345,9 +349,9 @@ class BalanceRepository(Repository):
                         """,
                         (
                             balance.account_id,
-                            balance.annual,
-                            balance.remaining,
-                            balance.outstanding,
+                            str(balance.annual),
+                            str(balance.remaining),
+                            str(balance.outstanding),
                             balance.pay_frequency,
                         ),
                     )
@@ -365,9 +369,9 @@ class BalanceRepository(Repository):
                         """,
                         (
                             balance.account_id,
-                            balance.annual,
-                            balance.remaining,
-                            balance.outstanding,
+                            str(balance.annual),
+                            str(balance.remaining),
+                            str(balance.outstanding),
                             balance.pay_frequency,
                             balance.id,
                         ),

@@ -59,13 +59,26 @@ class Account:
             (Account) An instanve of the account class
         """
         # Have to change for if there is no entry in rows to add active = 1 and account_id = None
-        return cls(
-            site=row["Site"],
-            name=row["Name"],
-            aliases=row["Aliases"].split(","),
-            account_id=int(row["Account ID"]),
-            active=bool(row["Active"]),
-        )
+        if row["Active"] == "1" or row["Active"] == "None" or row["Active"] == "True":
+            active = True
+        else:
+            active = False
+        if row["ID"] == "None":
+            return cls(
+                site=row["Site"],
+                name=row["Name"],
+                aliases=row["Aliases"].split(","),
+                account_id=None,
+                active=active,
+            )
+        else:
+            return cls(
+                site=row["Site"],
+                name=row["Name"],
+                aliases=row["Aliases"].split(","),
+                account_id=int(row["ID"]),
+                active=active,
+            )
 
     def add_balance(self, balance: Balance) -> None:
         self.balance = balance
@@ -95,12 +108,17 @@ class Account:
         Returns:
             (dict[str, str]) A dictionary representing the account
         """
+        print(f"{self.name} -> {self.active}")
+        if self.active == True:
+            active = "1"
+        else:
+            active = "0"
         return {
             "ID": str(self.id),
             "Name": self.name,
             "Site": str(self.site),
             "Aliases": ",".join(self.aliases),
-            "Active": str(self.active),
+            "Active": active,
         }
 
     def __str__(self) -> str:
