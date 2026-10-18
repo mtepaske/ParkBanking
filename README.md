@@ -14,7 +14,7 @@ tracked.
 - [ ] Add ability to select transaction file import
 - [ ] Add date object rather then string for date sorting
 - [ ] Add GUI
-- [ ] Add handling of Cash deposits - Filter out entries with desciption CASH
+- [x] Add handling of Cash deposits - Filter out entries with desciption CASH
 - [ ] Add ability to export credit on balances as negative value on remianing
       fees - Change to_dict in balance.py to convert credit into negative on
       remaining. Refactor from_csv and get_all and get_active to reflect change

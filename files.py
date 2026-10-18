@@ -21,6 +21,8 @@ def import_payments(filepath: str) -> list[Transaction]:
         for row in reader:
             if Decimal(row["Amount"]) < 0:
                 continue
+            if row["Transaction Details"] == "CASH":
+                continue
             transactions.append(Transaction.from_csv(row))
     return transactions
 
