@@ -21,7 +21,6 @@ from files import (
     export_accounts,
     export_balances,
     export_payments,
-    export_words_to_ignore,
     import_accounts,
     import_balances,
     import_payments,
@@ -48,6 +47,20 @@ state: AppState = {
     "matcher": None,
     "payments": None,
 }
+
+
+class AppRepos(TypedDict):
+    account_repo: AccountRepository | None
+    balance_repo: BalanceRepository | None
+    ignore_repo: IgnoreRepository | None
+
+
+repos: AppRepos = {
+    "account_repo": None,
+    "balance_repo": None,
+    "ignore_repo": None,
+}
+
 
 DB_PATH = Path(__file__).resolve().parent / "parkbanking.bd"
 
@@ -81,12 +94,6 @@ def disconnect(connection: sqlite3.Connection) -> None:
     connection.close()
 
 
-def read_from_db(
-    repo: AccountRepository | BalanceRepository,
-) -> list[Account] | list[Balance]:
-    return repo.get_active()
-
-
 def show_menu(test: bool = False) -> None:
     """Shows a menu with available actions to user
 
@@ -110,14 +117,92 @@ def show_menu(test: bool = False) -> None:
             print("Invalid choice. Please choose from list")
 
 
-def load_from_db() -> None:
-    # Load active accounts, balance, and words to ignore from database
-    # For this to work i need to pass it needs access to the repositories
-    # Should add repositories to a state dictionary
-    pass
+def load_from_db(
+    account_repo: AccountRepository,
+    balance_repo: BalanceRepository,
+    ignore_repo: IgnoreRepository,
+) -> None:
+    accounts = account_repo.get_active()
+    balances = balance_repo.get_active()
+    for account in accounts:
+        for balance in balances:
+            if account.id == balance.account_id:
+                account.add_balance(balance)
+                break
+        if account.balance is None:
+            raise ValueError(f"Could not find matching balance for {account}")
+    state["words_to_ignore"] = ignore_repo.get_all()
+    print("Accounts loaded")
 
 
-def import_accounts_and_balances() -> tuple[list[Account], list[Balance]]:
+def load_from_db_action() -> None:
+    account_repo = repos["account_repo"]
+    balance_repo = repos["balance_repo"]
+    ignore_repo = repos["ignore_repo"]
+    if account_repo is not None:
+        state["accounts"] = account_repo.get_active()
+    else:
+        print("Account Repository Not Loaded")
+    if balance_repo is not None:
+        state["balances"] = balance_repo.get_active()
+    else:
+        print("Balance Repository Not Loaded")
+    if ignore_repo is not None:
+        ignore = ignore_repo.get_all()
+        if len(ignore) == 0:
+            print("Ignore Repository is Empty. Importing From CSV")
+            try:
+                ignore = import_words_to_ignore("WordsToIgnore.csv")
+            except FileNotFoundError:
+                print("No WordsToIgnore CSV File")
+        else:
+            state["words_to_ignore"] = ignore
+    else:
+        print("Ignore Repository Not Loaded")
+
+
+def save_to_db(
+    accounts: list[Account] | None,
+    balances: list[Balance] | None,
+    ignore: list[str] | None,
+    account_repo: AccountRepository | None,
+    balance_repo: BalanceRepository | None,
+    ignore_repo: IgnoreRepository | None,
+) -> None:
+    if accounts is not None:
+        if account_repo is not None:
+            account_repo.insert_all(accounts)
+        else:
+            print("Accounts Repository Not Loaded")
+    else:
+        print("No Accounts Loaded")
+    if balances is not None:
+        if balance_repo is not None:
+            balance_repo.insert_all(balances)
+        else:
+            print("Balance Repository Not Loaded")
+    else:
+        print("No Accounts Loaded")
+    if ignore is not None:
+        if ignore_repo is not None:
+            ignore_repo.replace_all(ignore)
+        else:
+            print("Ignore Repository Not Loaded")
+    else:
+        print("No Words to Ignore Loaded")
+
+
+def save_to_db_action(test: bool = False) -> None:
+    accounts = state["accounts"]
+    balances = state["balances"]
+    ignore = state["words_to_ignore"]
+    account_repo = repos["account_repo"]
+    balance_repo = repos["balance_repo"]
+    ignore_repo = repos["ignore_repo"]
+    save_to_db(accounts, balances, ignore, account_repo, balance_repo, ignore_repo)
+
+
+def import_accounts_from_csv() -> tuple[list[Account], list[Balance]]:
     """Imports accounts and balances files
 
     Returns:
@@ -131,22 +216,22 @@ def import_accounts_and_balances() -> tuple[list[Account], list[Balance]]:
     accounts = import_accounts("Accounts.csv")
     balances = import_balances("Balances.csv")
     print("Imported Accounts and Balances")
-    if len(balances) != len(accounts):
-        raise ValueError("Accounts and Balances do not match")
-    for index in range(len(accounts)):
-        account = accounts[index]
-        balance = balances[index]
-        if balance.site != account.site:
-            raise ValueError("Account and Balance site numbers do not match")
-        account.add_balance(balance)
-    print("Accounts and Balances Matched")
+    for account in accounts:
+        for balance in balances:
+            if account.site == balance.site:
+                account.add_balance(balance)
+                break
+        if account.balance is None:
+            raise ValueError(f"Could not find matching balance for {account}")
+    print("Accounts loaded")
+
     actions["Import Accounts & Balances"]["available"] = False
     if state["transactions"] is not None:
         actions["Match Transactions to Accounts"]["available"] = True
     return (accounts, balances)
 
 
-def import_accounts_and_balances_action(test: bool = False) -> None:
+def import_accounts_from_csv_action(test: bool = False) -> None:
     """Helper function to call import_accounts_and_balances
 
     Args:
@@ -155,7 +240,7 @@ def import_accounts_and_balances_action(test: bool = False) -> None:
     Returns:
         None
     """
-    acts_and_bal = import_accounts_and_balances()
+    acts_and_bal = import_accounts_from_csv()
     state["accounts"] = acts_and_bal[0]
     state["balances"] = acts_and_bal[1]
 
@@ -320,27 +405,38 @@ def procces_unknown_words_action(test: bool = False) -> None:
         procces_unknown_words(state["matcher"])
 
 
-def save_files(
-    transactions: list[Transaction] | None,
-    accounts: list[Account] | None,
-    ignore: list[str] | None,
-    balances: list[Balance] | None,
-    test: bool = False,
-) -> None:
-    """Saves all relevant information as csv files
+def export_accounts_to_csv(
+    accounts: list[Account] | None, balances: list[Balance] | None, test: bool = False
+):
+    if test:
+        test_flag = "test_"
+    else:
+        test_flag = ""
+    last_month = (
+        dt.datetime.now(ZoneInfo("Australia/Melbourne")) - relativedelta(months=1)
+    ).strftime("%B")
+    this_year = dt.datetime.now(ZoneInfo("Australia/Melbourne")).strftime("%Y")
+    if accounts is not None:
+        export_accounts(accounts, f"{test_flag}{last_month} {this_year} - Accounts")
+        print(f"Accounts saved as {test_flag}{last_month} {this_year} - Accounts.csv")
+    else:
+        print("No Accounts Loaded")
+    if balances is not None:
+        export_balances(balances, f"{test_flag}{last_month} {this_year} - Balances")
+        print(f"Balances saved as {test_flag}{last_month} {this_year} - Balances.csv")
+    else:
+        print("No Balances Loaded")
 
-    Args:
-        transactions: (list[Transaction]) A list of transactions
-        accounts: (list[Account]) A list of accounts
-        ignore: (list[str]) A list of words to ignore
-        balances: (list[Balance]) A list of balance information
-        test: (bool) True when in test mode, False otherwise
 
-    Returns:
-        None
-    """
-    # Saving files should turn into an optional thing, and should only save accounts and balances as csvs
-    # Should still export transactions to csv by default
+def export_accounts_to_csv_action(test: bool = False):
+    accounts = state["accounts"]
+    balances = state["balances"]
+    export_accounts_to_csv(accounts, balances, test)
+
+
+def export_transactions_to_csv(
+    transactions: list[Transaction] | None, test: bool = False
+):
     if test:
         test_flag = "test_"
     else:
@@ -350,43 +446,16 @@ def save_files(
     ).strftime("%B")
     this_year = dt.datetime.now(ZoneInfo("Australia/Melbourne")).strftime("%Y")
     shutil.copy2("Transactions.csv", f"{test_flag}{last_month}{this_year}Raw.csv")
-    if accounts is not None:
-        export_accounts(accounts, f"{test_flag}Accounts")
-        print("Accounts saved as Accounts.csv")
-    else:
-        print("Accounts not imported")
     if transactions is not None:
         export_payments(transactions, f"{test_flag}{last_month} {this_year}.csv")
         print(f"Matched payments saved as {last_month} {this_year}.csv")
     else:
-        print("Transactions not imported")
-    if ignore is not None:
-        export_words_to_ignore(ignore, f"{test_flag}WordsToIgnore")
-        print("Words saved as WordsToIgnore.csv")
-    else:
-        print("Words To Ignore not imported")
-    if balances is not None:
-        export_balances(balances, f"{test_flag}Balances")
-        print("Updated Balances saved as Balances.csv")
-    else:
-        print("Balances not imported")
-    print("Files Saved")
+        print("No Transactions Loaded")
 
 
-def save_files_action(test: bool = False) -> None:
-    """Helper function to call save_files
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
+def export_transactions_to_csv_action(test: bool = False):
     transactions = state["transactions"]
-    accounts = state["accounts"]
-    ignore = state["words_to_ignore"]
-    balance = state["balances"]
-    save_files(transactions, accounts, ignore, balance, test)
+    export_transactions_to_csv(transactions, test)
 
 
 def exit_program(test: bool = False) -> None:
@@ -398,16 +467,19 @@ def exit_program(test: bool = False) -> None:
     Returns:
         None
     """
-    save_files_action(test)
     disconnect(connection)
     print("Exiting Program")
     sys.exit(0)
 
 
 actions = {
-    "Import Accounts & Balances": {
+    "Import Accounts & Balances From CSV": {
         "available": True,
-        "function": import_accounts_and_balances_action,
+        "function": import_accounts_from_csv_action,
+    },
+    "Load Accounts From Database": {
+        "available": True,
+        "function": load_from_db_action,
     },
     "Import Banking Data": {"available": True, "function": import_banking_action},
     "Match Transactions to Accounts": {
@@ -419,7 +491,14 @@ actions = {
         "available": False,
         "function": procces_unknown_words_action,
     },
-    "Save Files": {"available": True, "function": save_files_action},
+    "Export Transactions to CSV": {
+        "available": True,
+        "function": export_transactions_to_csv_action,
+    },
+    "Export Accounts To CSV": {
+        "available": True,
+        "function": export_accounts_to_csv_action,
+    },
     "Exit Program": {"available": True, "function": exit_program},
 }
 # Change to reflect database implimentation and new actions
@@ -429,9 +508,9 @@ if __name__ == "__main__":
     connection = connect(DB_PATH)
     initialise_database(connection)
 
-    accounts_repo = AccountRepository(connection)
-    balance_repo = BalanceRepository(connection)
-    ignore_repo = IgnoreRepository(connection)
+    repos["account_repo"] = AccountRepository(connection)
+    repos["balance_repo"] = BalanceRepository(connection)
+    repos["ignore_repo"] = IgnoreRepository(connection)
 
     args = start_program()
     while True:
