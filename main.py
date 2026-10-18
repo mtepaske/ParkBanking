@@ -64,8 +64,6 @@ repos: AppRepos = {
 
 DB_PATH = Path(__file__).resolve().parent / "parkbanking.db"
 
-# Words to ignore not being imported from CSV for first run
-
 
 def start_program() -> argparse.Namespace:
     """Begins the program by checking for test flags
@@ -406,26 +404,49 @@ def review_matches() -> None:
     Returns:
         None
     """
+    index = 1
+    if state["matcher"] is None:
+        print("Matcher not started")
+        return
     if state["transactions"] is None:
         print("Transactions are not imported")
         return
-    for transaction in state["transactions"]:
-        account = transaction.account
-        if account is None:
-            print("Transaction has not being matched")
-            print(f"{transaction.date}, ${transaction.amount}, {transaction.details}")
-            continue
-        print(
-            f"{account.site}: {account.name} -> {transaction.amount} - {transaction.details}"
-        )
+    if state["accounts"] is None:
+        print("Accounts not loaded")
+        return
     while True:
-        choice = input("Are all the transactions matched correctly?: (y/n)")
-        if choice == "y":
-            print("Transactions macthed successfully")
-            return
-        else:
-            print("Transaction matching failed. Terminal failure. Exiting program")
-            exit_program()
+        for transaction in state["transactions"]:
+            account = transaction.account
+            if account is None:
+                print("Transaction has not being matched")
+                print(
+                    f"{transaction.date}, ${transaction.amount}, {transaction.details}"
+                )
+                continue
+            print(
+                f"{account.site}: {account.name} -> {transaction.amount} - {transaction.details}"
+            )
+            index += 1
+        while True:
+            choice = input("Are all the transactions matched correctly?: (y/n)")
+            if choice == "y":
+                print("Transactions macthed successfully")
+                return
+            elif choice == "n":
+                while True:
+                    match_to_change = int(input("Which match?: "))
+                    try:
+                        transaction_to_change = state["transactions"][
+                            match_to_change - 1
+                        ]
+                        state["matcher"].change_match(
+                            transaction_to_change, state["accounts"]
+                        )
+                        break
+                    except (IndexError, KeyError):
+                        print("Must choose from the available indexes")
+            else:
+                print("Please choose y or n")
 
 
 def process_payments(transactions: list[Transaction]) -> None:

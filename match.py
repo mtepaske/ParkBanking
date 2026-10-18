@@ -97,7 +97,10 @@ class Matcher:
                     found = True
                     if account not in possible:
                         possible.append(account)
-            if found is False and word not in self.unknown:
+            if found is False and self.unknown is not None:
+                for unknown in self.unknown:
+                    if word == unknown:
+                        break
                 self.unknown.append(word)
         if len(possible) == 0:
             return None
@@ -113,7 +116,9 @@ class Matcher:
         Returns:
             None
         """
-        print(f"Details: {transaction.details}")
+        print(
+            f"Date: {transaction.date}, Amount: {transaction.amount}, Details: {transaction.details}"
+        )
         print("Which Account does this payment belong to?")
         choice = Matcher.account_picker(self.accounts)
         transaction.add_account(choice)
@@ -142,6 +147,10 @@ class Matcher:
             print(f"{amount} Possible Choices Found")
             choice = Matcher.account_picker(possibilities)
             transaction.add_account(choice)
+
+    def change_match(self, transaction: Transaction, accounts: list[Account]):
+        choice = Matcher.account_picker(accounts)
+        transaction.add_account(choice)
 
     def alias_handler(self, alias: str) -> None:
         """Handles choosing account to add alias to and adding the alias

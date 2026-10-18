@@ -9,13 +9,15 @@ tracked.
 
 ## To Do
 
-- [ ] Add ability to add accounts from app
+- [ ] Add ability to add accounts from app - Function in main.py that adds a
+      dictionary and use the from_csv in accounts.py
 - [ ] Add ability to select transaction file import
 - [ ] Add date object rather then string for date sorting
 - [ ] Add GUI
-- [ ] Add handling of Cash deposits
+- [ ] Add handling of Cash deposits - Filter out entries with desciption CASH
 - [ ] Add ability to export credit on balances as negative value on remianing
-      fees
+      fees - Change to_dict in balance.py to convert credit into negative on
+      remaining. Refactor from_csv and get_all and get_active to reflect change
 - [ ] Add support for new financial year
     - [ ] Adding new fees
     - [ ] Tranfer remaining fees to outstanding fees
@@ -25,9 +27,13 @@ tracked.
 - [x] Add Database storage through SQlite3
     - [x] Add ability to read from database and import from csv
     - [x] Add ability to export active accounts and balances to csv
-- [ ] Add ability to load previously matched transactions for paymnet processing
-- [ ] Add ability to rematch specific transactions
-- [ ] Change to see amount and date of transactions when reviewing or matching
+- [ ] Add ability to load previously matched transactions for paymnet
+      processing - Add from_csv and import_matched functions to transactions and
+      main.py
+- [x] Add ability to rematch specific transactions - Add addition to n option in
+      review mathces to call accout_picker
+- [x] Change to see amount and date of transactions when reviewing or matching -
+      Add ability into review transactions
 
 ## Usage
 
