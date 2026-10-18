@@ -67,6 +67,12 @@ def import_balances(filepath: str) -> list[Balance]:
         return [Balance.from_csv(row) for row in reader]
 
 
+def import_matched(filepath: str, accounts: list[Account]) -> list[Transaction]:
+    with open(filepath, newline="", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file)
+        return [Transaction.from_matched(row, accounts) for row in reader]
+
+
 def export_accounts(accounts: list[Account], filepath: str) -> None:
     """Export updated account information as a csv file
 

@@ -27,7 +27,7 @@ tracked.
 - [x] Add Database storage through SQlite3
     - [x] Add ability to read from database and import from csv
     - [x] Add ability to export active accounts and balances to csv
-- [ ] Add ability to load previously matched transactions for paymnet
+- [x] Add ability to load previously matched transactions for paymnet
       processing - Add from_csv and import_matched functions to transactions and
       main.py
 - [x] Add ability to rematch specific transactions - Add addition to n option in

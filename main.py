@@ -23,6 +23,7 @@ from files import (
     export_payments,
     import_accounts,
     import_balances,
+    import_matched,
     import_payments,
     import_words_to_ignore,
 )
@@ -174,6 +175,7 @@ def load_from_db(
     print("Accounts loaded")
     actions["Import Accounts & Balances From CSV"]["available"] = False
     actions["Load Accounts From Database"]["available"] = False
+    actions["Import Previously Matched Transactions"]["available"] = True
     actions["Export Accounts To CSV"]["available"] = True
     actions["Save To Database"]["available"] = True
     if state["transactions"] is not None:
@@ -287,6 +289,7 @@ def import_accounts_from_csv() -> tuple[list[Account], list[Balance]]:
     print("Accounts loaded")
     actions["Import Accounts & Balances From CSV"]["available"] = False
     actions["Load Accounts From Database"]["available"] = False
+    actions["Import Previously Matched Transactions"]["available"] = True
     actions["Save To Database"]["available"] = True
     actions["Export Accounts To CSV"]["available"] = True
     if state["transactions"] is not None:
@@ -323,6 +326,7 @@ def import_banking(test: bool = False) -> list[Transaction]:
         transactions = import_payments("Transactions.csv")
     print("Imported Transactions")
     actions["Import Banking Data"]["available"] = False
+    actions["Import Previously Matched Transactions"]["available"] = False
     if state["accounts"] is not None and state["balances"] is not None:
         actions["Match Transactions to Accounts"]["available"] = True
     return transactions
@@ -338,6 +342,32 @@ def import_banking_action(test: bool = False) -> None:
         None
     """
     state["transactions"] = import_banking(test)
+
+
+def import_mached_transactions(filepath: str, test: bool = False):
+    if state["accounts"] is None:
+        print("Accounts not loaded")
+        return
+    if test:
+        transactions = import_matched("test_matched.csv", state["accounts"])
+    else:
+        try:
+            transactions = import_matched(filepath, state["accounts"])
+        except FileNotFoundError:
+            print("Filepath not valid")
+            return
+    actions["Import Banking Data"]["available"] = False
+    actions["Import Previously Matched Transactions"]["available"] = False
+    actions["Proccess Payments"]["available"] = True
+    actions["Export Transactions to CSV"]["available"] = True
+    return transactions
+
+
+def import_mached_transactions_action(test: bool = False):
+    filepath = input(
+        "Whats the name of the file containing matched transaction information?"
+    )
+    state["transactions"] = import_mached_transactions(filepath, test)
 
 
 def match_transactions(
@@ -633,6 +663,10 @@ actions = {
         "function": load_from_db_action,
     },
     "Import Banking Data": {"available": True, "function": import_banking_action},
+    "Import Previously Matched Transactions": {
+        "available": False,
+        "function": import_mached_transactions_action,
+    },
     "Match Transactions to Accounts": {
         "available": False,
         "function": match_transactions_action,

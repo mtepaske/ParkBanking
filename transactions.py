@@ -49,6 +49,14 @@ class Transaction:
             details=row["Transaction Details"],
         )
 
+    @classmethod
+    def from_matched(cls, row: dict[str, str], accounts: list[Account]) -> Transaction:
+        transaction = cls(row["Date"], Decimal(row["Amount"]), "previously matched")
+        for account in accounts:
+            if account.site == row["Site"]:
+                transaction.add_account(account)
+        return transaction
+
     def add_account(self, account: Account) -> None:
         """Adds an account to the transaction
 
