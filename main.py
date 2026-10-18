@@ -86,6 +86,14 @@ def start_program() -> argparse.Namespace:
 
 
 def connect(db_path=DB_PATH) -> sqlite3.Connection:
+    """Connect to the database
+
+    Args:
+        db_path: (Path) The pathway to the database
+
+    Returns:
+        (Connection) The connection object of the database
+    """
     connection = sqlite3.connect(db_path)
     connection.execute("PRAGMA foreign_keys = ON")
     connection.row_factory = sqlite3.Row
@@ -93,6 +101,13 @@ def connect(db_path=DB_PATH) -> sqlite3.Connection:
 
 
 def disconnect(connection: sqlite3.Connection) -> None:
+    """Close the connection to a database
+
+    Args:
+        connection: (Connection) The connection to the database
+    Returns:
+        None
+    """
     connection.close()
 
 
@@ -125,6 +140,19 @@ def load_from_db(
     balance_repo: BalanceRepository,
     ignore_repo: IgnoreRepository,
 ) -> None:
+    """Load data from a database
+
+    Args:
+        account_repo: (AccountRepository) The account repository
+        balance_repo: (BalanceRepository) The balance repository
+        ignore_repo: (IgnoreRepository) The ignore repository
+    Returns:
+        None
+
+    Raises:
+        ValueError: If no matching balance can be found for an account
+        FileNotFoundError: If no CSV file containing words to ignore can be found
+    """
     accounts = account_repo.get_active()
     balances = balance_repo.get_active()
     for account in accounts:
@@ -143,6 +171,7 @@ def load_from_db(
             ignore = import_words_to_ignore("WordsToIgnore.csv")
         except FileNotFoundError:
             print("No WordsToIgnore CSV File")
+            return
     state["words_to_ignore"] = ignore
     print("Accounts loaded")
     actions["Import Accounts & Balances From CSV"]["available"] = False
@@ -154,6 +183,13 @@ def load_from_db(
 
 
 def load_from_db_action(test: bool = False) -> None:
+    """Helper action to call load_from_db
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+    Returns:
+        None
+    """
     account_repo = repos["account_repo"]
     balance_repo = repos["balance_repo"]
     ignore_repo = repos["ignore_repo"]
@@ -177,6 +213,18 @@ def save_to_db(
     balance_repo: BalanceRepository | None,
     ignore_repo: IgnoreRepository | None,
 ) -> None:
+    """Save loaded data into the repository
+
+    Args:
+        accounts: (list[Account]) A list of loaded accounts
+        balances: (list[Balance]) A list of loaded balances
+        ignore: (list[str]) A list of loaded words to ignore
+        account_repo: (AccountRepository) The account repository
+        balance_repo: (BalanceRepository) The balance repository
+        ignore_repo: (IgnoreRepository) The ignore repository
+    Returns:
+        None
+    """
     if accounts is not None:
         if account_repo is not None:
             account_repo.insert_all(accounts)
@@ -202,6 +250,13 @@ def save_to_db(
 
 
 def save_to_db_action(test: bool = False) -> None:
+    """Helper action to call save_to_db
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+    Returns:
+        None
+    """
     accounts = state["accounts"]
     balances = state["balances"]
     ignore = state["words_to_ignore"]
@@ -319,6 +374,9 @@ def match_transactions_action(test: bool = False) -> None:
 
     Returns:
         None
+
+    Raises:
+        FileNotFoundError: If no file containing words to ignore can be found
     """
     ignore = state["words_to_ignore"]
     if ignore is None:
@@ -327,6 +385,7 @@ def match_transactions_action(test: bool = False) -> None:
             ignore = import_words_to_ignore("WordsToIgnore.csv")
         except FileNotFoundError:
             print("No WordsToIgnore CSV File")
+            return
     if (
         state["accounts"] is not None
         and state["transactions"] is not None
@@ -374,6 +433,9 @@ def process_payments(transactions: list[Transaction]) -> None:
 
     Args:
         transactions: (list[Transaction]) A list of the matched transactions
+
+    Returns:
+        None
 
     Raises:
         ValueError: If a transaction hasn't been matched or if an account has no balance instance
@@ -431,6 +493,16 @@ def procces_unknown_words_action(test: bool = False) -> None:
 def export_accounts_to_csv(
     accounts: list[Account] | None, balances: list[Balance] | None, test: bool = False
 ):
+    """Export loaded data into a csv file
+
+    Args:
+        accounts: (list[Account]) The loaded account data
+        balances: (list[Balances]) The loaded balance data
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     if test:
         test_flag = "test_"
     else:
@@ -461,6 +533,14 @@ def export_accounts_to_csv(
 
 
 def export_accounts_to_csv_action(test: bool = False):
+    """Helper function to call export_accounts_to_csv
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     accounts = state["accounts"]
     balances = state["balances"]
     export_accounts_to_csv(accounts, balances, test)
@@ -469,6 +549,15 @@ def export_accounts_to_csv_action(test: bool = False):
 def export_transactions_to_csv(
     transactions: list[Transaction] | None, test: bool = False
 ):
+    """Exports matched transactions to a csv file
+
+    Args:
+        transactions: (list[Transaction] | None) A list of loaded transactions
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     if test:
         test_flag = "test_"
     else:
@@ -488,6 +577,14 @@ def export_transactions_to_csv(
 
 
 def export_transactions_to_csv_action(test: bool = False):
+    """Helper function to call export_transactions_to_csv
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     transactions = state["transactions"]
     export_transactions_to_csv(transactions, test)
 
@@ -535,7 +632,6 @@ actions = {
     },
     "Exit Program": {"available": True, "function": exit_program},
 }
-# Change to reflect database implimentation and new actions
 
 if __name__ == "__main__":
 

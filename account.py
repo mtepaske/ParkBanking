@@ -60,7 +60,6 @@ class Account:
         Returns:
             (Account) An instanve of the account class
         """
-        # Have to change for if there is no entry in rows to add active = 1 and account_id = None
         if row["Active"] == "1" or row["Active"] == "None" or row["Active"] == "True":
             active = True
         else:
@@ -83,6 +82,14 @@ class Account:
             )
 
     def add_balance(self, balance: Balance) -> None:
+        """Adds a balance to the account
+
+        Args:
+            balance: (Balance) The balance to add
+
+        Returns:
+            None
+        """
         self.balance = balance
         if self.id is not None:
             self.balance.account_id = self.id

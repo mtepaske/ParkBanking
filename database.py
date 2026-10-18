@@ -5,6 +5,14 @@ from balance import Balance
 
 
 def initialise_database(connection: sqlite3.Connection) -> None:
+    """Create tables in database if none exist
+
+    Args:
+        connection: (Connection) The database connection
+
+    Returns:
+        None
+    """
     with connection:
         connection.execute("""
             CREATE TABLE IF NOT EXISTS accounts (
@@ -48,18 +56,57 @@ def initialise_database(connection: sqlite3.Connection) -> None:
 
 
 class Repository:
+    """Establishes database logic and methods
+
+    Attributes:
+        connection: (Connection) The database connection
+    """
+
     def __init__(self, connection: sqlite3.Connection) -> None:
+        """Initialises the repository
+
+        Args:
+            connection: (Connection) The database connection
+
+        Returns:
+            None
+        """
         self.connection = connection
 
     def execute(self, query: str, parameters: tuple = ()) -> sqlite3.Cursor:
+        """Execute an SQL query
+
+        Args:
+            query: (str) The query to execute
+            parameters: (tuple) The parameters
+
+        Returns:
+            (Cursor)
+        """
         return self.connection.execute(query, parameters)
 
     def executemany(self, query: str, parameters) -> sqlite3.Cursor:
+        """Execute many SQL query
+
+        Args:
+            query: (str) The query to execute
+            parameters: (tuple) The parameters
+
+        Returns:
+            (Cursor)
+        """
         return self.connection.executemany(query, parameters)
 
 
 class AccountRepository(Repository):
+    """An account repository"""
+
     def get_all(self) -> list[Account]:
+        """Gets all account in the database
+
+        Returns:
+            (list[Account]) All accounts in the database
+        """
         rows = self.connection.execute("""
             SELECT * 
             FROM accounts 
@@ -77,6 +124,11 @@ class AccountRepository(Repository):
         ]
 
     def get_active(self) -> list[Account]:
+        """Gets only the active accounts
+
+        Returns:
+            (list[Account]) A list of active accounts
+        """
         rows = self.connection.execute("""
             SELECT * 
             FROM accounts 
@@ -95,6 +147,14 @@ class AccountRepository(Repository):
         ]
 
     def get_aliases(self, account_id: int) -> list[str]:
+        """Gets the aliases associated with an account id
+
+        Args:
+            account_id: (int) The id for the account to grab aliases for
+
+        Returns:
+            (list[str]) A list of aliases for the account
+        """
         rows = self.connection.execute(
             """
             SELECT alias 
@@ -107,6 +167,14 @@ class AccountRepository(Repository):
         return [row["alias"] for row in rows]
 
     def insert_one(self, account: Account) -> None:
+        """Inserts one account into the database
+
+        Args:
+            account: (Account) The account to insert
+
+        Returns:
+            None
+        """
         with self.connection as connection:
             if account.id is None:
                 cursor = connection.execute(
@@ -163,6 +231,14 @@ class AccountRepository(Repository):
                 )
 
     def insert_all(self, accounts: list[Account]) -> None:
+        """Insert a list of accounts into the repository
+
+        Args:
+            accounts: (list[Account]) The list of accounts to insert
+
+        Returns:
+            None
+        """
         with self.connection as connection:
             for account in accounts:
                 if account.id is None:
@@ -221,6 +297,14 @@ class AccountRepository(Repository):
                     )
 
     def save_aliases(self, account: Account) -> None:
+        """Save aliases to the database
+
+        Args:
+            account: (Account) The accounts aliases to add
+
+        Returns:
+            None
+        """
         with self.connection as connection:
             connection.execute(
                 """
@@ -243,7 +327,14 @@ class AccountRepository(Repository):
 
 
 class BalanceRepository(Repository):
+    """A balance repository"""
+
     def get_all(self) -> list[Balance]:
+        """Gets all the balances in the repository
+
+        Returns:
+            (list[Balance]) A list of all balances in the database
+        """
         rows = self.connection.execute("""
             SELECT balances.*, accounts.site_number 
             FROM balances 
@@ -265,6 +356,11 @@ class BalanceRepository(Repository):
         ]
 
     def get_active(self) -> list[Balance]:
+        """Gets all the balances connected to active accounts in the database
+
+        Returns:
+            (list[Balance]) A list of active balances
+        """
         rows = self.connection.execute("""
             SELECT balances.*, accounts.site_number
             FROM balances 
@@ -287,6 +383,14 @@ class BalanceRepository(Repository):
         ]
 
     def insert_one(self, balance: Balance) -> None:
+        """Inserts one balance into the database
+
+        Args:
+            balance: (Balance) The balance to add
+
+        Returns:
+            None
+        """
         with self.connection as connection:
             if balance.id is None:
                 cursor = connection.execute(
@@ -330,6 +434,14 @@ class BalanceRepository(Repository):
                 )
 
     def insert_all(self, balances: list[Balance]) -> None:
+        """Insert a list of balances into the database
+
+        Args:
+            balances: (list[Balance]) A list of balances to add
+
+        Returns:
+            None
+        """
         with self.connection as connection:
             for balance in balances:
                 if balance.id is None:
@@ -375,13 +487,28 @@ class BalanceRepository(Repository):
 
 
 class IgnoreRepository(Repository):
+    """An ignore repository"""
+
     def get_all(self) -> list[str]:
+        """Gets all words in the repository
+
+        Returns:
+            (list[str]) A list of words from the repository
+        """
         return [row["word"] for row in self.execute("""
             SELECT * 
             FROM ignore
             """).fetchall()]
 
     def replace_all(self, words: list[str]) -> None:
+        """Replaes all words in the repository
+
+        Args:
+            words: (list[str]) A list of words to add back in
+
+        Return:
+            None
+        """
         with self.connection:
             self.execute("""
                 DELETE FROM ignore

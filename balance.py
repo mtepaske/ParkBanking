@@ -7,16 +7,18 @@ from zoneinfo import ZoneInfo
 
 
 class Balance:
-    """Tracks account balance information
+    """Tracks balance information
 
     Attributes:
-        CENT: (decimal) A class constant for determining value rounding significance
-        credit: (str) Represents the amount of credit on an account
-        site: (str) The site number assigned to the account
-        annual: (str) The annual fees for the site
-        remaining: (str) The remaining annual fees left to pay
-        outstanding: (str) The outstanding fees from previous financial years
-        pay_frequency: ('m', 'q', 'a') The indicated pay frequency
+        CENT: (decimal) Used for rounding monetary amounts
+        id: (int | None) Used for database storage and access
+        account_id: (int | None) Used for database storage and access
+        credit: (decimal) The credit for the balance
+        site: (str) The site number of the balance
+        annual: (decimal) The annual fees for the site
+        remaining: (decimal) The remaining fees for the financial year
+        outstanding: (decimal) The outstanding fees from previous financial years
+        pay_frequency: (m, a, q) The indicated payment frequency
     """
 
     CENT = Decimal("0.01")
@@ -74,11 +76,13 @@ class Balance:
         """Initialises the class
 
         Args:
+            account_id: (int | None) The account id that this balance belongs to
             site: (str) The site number assigned to the account
             annual: (str) The annual fees for the site
             remaining: (str) The remaining annual fees left to pay
             outstanding: (str) The outstanding fees from previous financial years
             pay_frequency: ('m', 'q', 'a') The indicated pay frequency
+            id: (int | None) The database entry id
 
         Raises:
             ValueError: If pay frequency is invalid. Must be 'm', 'q', or 'a'
@@ -116,8 +120,6 @@ class Balance:
         Returns:
             None
         """
-        # Refactor for empty rows. ID = None, account_id = None
-        # Change neg remaining to mean credit
         if row["ID"] == "None":
             id = None
         else:

@@ -48,13 +48,20 @@ def import_words_to_ignore(filepath: str) -> list[str]:
     Returns:
         (list[str]) A list of words to ignore
     """
-    # Should remove after first run as removing option to import from csv file
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         return [row["Words"] for row in reader]
 
 
 def import_balances(filepath: str) -> list[Balance]:
+    """Imports a csv containing balance information
+
+    Args:
+        filepath: (str) The name of the file to import
+
+    Returns:
+        (list[Balance]) A list of balances
+    """
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         return [Balance.from_csv(row) for row in reader]
@@ -99,12 +106,11 @@ def export_words_to_ignore(words: list[str], filepath: str) -> None:
     """Exports a list of words to ignore to a csv file
 
     Args:
-        words: A list of words to ignore
+        words: (list[str]) A list of words to ignore
 
     Returns:
         None
     """
-    # Should remove as removing ability to export ignore to csv
     with open(f"{filepath}.csv", "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.writer(file)
         writer.writerow(["Words"])
