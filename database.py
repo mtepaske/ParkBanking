@@ -131,6 +131,8 @@ class AccountRepository(Repository):
                     """,
                     [(account.id, alias) for alias in account.aliases],
                 )
+                if account.balance is not None and account.id is not None:
+                    account.balance.account_id = account.id
             else:
                 connection.execute(
                     """
@@ -186,6 +188,8 @@ class AccountRepository(Repository):
                         """,
                         [(account.id, alias) for alias in account.aliases],
                     )
+                    if account.balance is not None and account.id is not None:
+                        account.balance.account_id = account.id
                 else:
                     connection.execute(
                         """

@@ -67,8 +67,10 @@ class Account:
             active=bool(row["Active"]),
         )
 
-    def add_balance(self, balance: Balance):
+    def add_balance(self, balance: Balance) -> None:
         self.balance = balance
+        if self.id is not None:
+            self.balance.account_id = self.id
 
     def add_alias(self, alias: str) -> bool:
         """Add a new alias to an account
