@@ -17,7 +17,7 @@ class Account:
 
     def __init__(
         self,
-        site: str | int,
+        site: str,
         name: str,
         aliases: list[str],
         account_id: int | None = None,
@@ -37,6 +37,8 @@ class Account:
         """
         self.id = account_id
         self.name = name
+        if len(site) == 1:
+            site = f"0{site}"
         self.site = site
         self.aliases = aliases
         if len(self.aliases) == 1:
@@ -108,7 +110,6 @@ class Account:
         Returns:
             (dict[str, str]) A dictionary representing the account
         """
-        print(f"{self.name} -> {self.active}")
         if self.active == True:
             active = "1"
         else:

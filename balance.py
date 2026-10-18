@@ -89,6 +89,8 @@ class Balance:
         self.id = id
         self.account_id = account_id
         self.credit = Decimal("0.00")
+        if len(site) == 1:
+            site = f"0{site}"
         self.site = site  # Remove since adding account id to link to accounts
         self.annual = self.money(annual)
         self.remaining = self.money(remaining)

@@ -113,7 +113,6 @@ def show_menu(test: bool = False) -> None:
             print(f"{i} -> {name}")
         try:
             choice = int(input("Choose an action: "))
-            print(choice - 1)
             name, action = available_actions[choice - 1]
             break
         except (ValueError, IndexError):

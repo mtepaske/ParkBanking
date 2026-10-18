@@ -108,8 +108,6 @@ class AccountRepository(Repository):
 
     def insert_one(self, account: Account) -> None:
         with self.connection as connection:
-            print(account.active)
-            print(int(account.active))
             if account.id is None:
                 cursor = connection.execute(
                     """
@@ -167,8 +165,6 @@ class AccountRepository(Repository):
     def insert_all(self, accounts: list[Account]) -> None:
         with self.connection as connection:
             for account in accounts:
-                print(account.active)
-                print(int(account.active))
                 if account.id is None:
                     cursor = connection.execute(
                         """
