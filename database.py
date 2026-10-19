@@ -228,8 +228,10 @@ class AccountRepository(Repository):
                     """,
                     [(account.id, alias) for alias in account.aliases],
                 )
-                if account.balance is not None and account.id is not None:
-                    account.balance.account_id = account.id
+                assert account.balance is not None
+                assert account.id is not None
+                account.balance.account_id = account.id
+                assert account.balance.account_id is not None
             else:
                 connection.execute(
                     """
@@ -293,8 +295,10 @@ class AccountRepository(Repository):
                         """,
                         [(account.id, alias) for alias in account.aliases],
                     )
-                    if account.balance is not None and account.id is not None:
-                        account.balance.account_id = account.id
+                    assert account.balance is not None
+                    assert account.id is not None
+                    account.balance.account_id = account.id
+                    assert account.balance.account_id is not None
                 else:
                     connection.execute(
                         """
@@ -421,6 +425,9 @@ class BalanceRepository(Repository):
             None
         """
         with self.connection as connection:
+            if balance.account_id is None:
+                print(f"{balance}\nCould not be interted becasue it has no account ID")
+                return
             if balance.id is None:
                 cursor = connection.execute(
                     """
@@ -473,6 +480,11 @@ class BalanceRepository(Repository):
         """
         with self.connection as connection:
             for balance in balances:
+                if balance.account_id is None:
+                    print(
+                        f"{balance}\nCould not be interted becasue it has no account ID"
+                    )
+                    continue
                 if balance.id is None:
                     cursor = connection.execute(
                         """

@@ -174,7 +174,7 @@ def load_from_db_action(test: bool = False) -> None:
 def save_to_db(
     accounts: list[Account],
     balances: list[Balance],
-    ignore: list[str],
+    ignore: list[str] | None,
     account_repo: AccountRepository,
     balance_repo: BalanceRepository,
     ignore_repo: IgnoreRepository,
@@ -192,8 +192,12 @@ def save_to_db(
         None
     """
     account_repo.insert_all(accounts)
+    print("Accounts Successfully Inserted")
     balance_repo.insert_all(balances)
-    ignore_repo.replace_all(ignore)
+    print("Balances Successfully Interted")
+    if ignore is not None:
+        ignore_repo.replace_all(ignore)
+        print("Words To Ignore Successfully Inserted")
 
 
 def save_to_db_action(test: bool = False) -> None:
@@ -212,7 +216,6 @@ def save_to_db_action(test: bool = False) -> None:
     ignore_repo = repos["ignore_repo"]
     assert accounts is not None
     assert balances is not None
-    assert ignore is not None
     assert account_repo is not None
     assert balance_repo is not None
     assert ignore_repo is not None
@@ -456,6 +459,7 @@ def import_mached_transactions(filepath: str, test: bool = False):
         except FileNotFoundError:
             print("Filepath not valid")
             return
+    review_matches(transactions, accounts)
     return transactions
 
 
@@ -468,10 +472,12 @@ def import_mached_transactions_action(test: bool = False):
     Returns:
         None
     """
-    filepath = get_input(
-        "Whats the name of the file containing matched transaction information?"
-    )
-    state["transactions"] = import_mached_transactions(filepath, test)
+    while True:
+        filepath = get_input(
+            "Whats the name of the file containing matched transaction information?"
+        )
+        state["transactions"] = import_mached_transactions(filepath, test)
+        break
     actions["Import Banking Data"]["available"] = False
     actions["Import Previously Matched Transactions"]["available"] = False
     actions["Proccess Payments"]["available"] = True
@@ -495,7 +501,7 @@ def match_transactions(
     for transaction in transactions:
         possibilities = matcher.keyword_match(transaction)
         matcher.match(transaction, possibilities)
-    review_matches(matcher, transactions, accounts)
+    review_matches(transactions, accounts)
     return matcher
 
 
@@ -530,9 +536,7 @@ def match_transactions_action(test: bool = False) -> None:
     actions["Export Transactions to CSV"]["available"] = True
 
 
-def review_matches(
-    matcher: Matcher, transactions: list[Transaction], accounts: list[Account]
-) -> None:
+def review_matches(transactions: list[Transaction], accounts: list[Account]) -> None:
     """Prints a list of matched transactions and the matched accounts for proofing
 
     Args:
@@ -546,23 +550,23 @@ def review_matches(
     index = 1
     while True:
         for transaction in transactions:
-            account = transaction.account
-            assert account is not None
-            print(
-                f"{account.site}: {account.name} -> {transaction.amount} - {transaction.details}"
-            )
+            if transaction.account is None:
+                print(f"[{index}] - No Match -> {transaction}")
+            else:
+                account = transaction.account
+                print(f"[{index}] - {account.site}: {account.name} -> {transaction}")
             index += 1
         while True:
-            choice = input("Are all the transactions matched correctly?: (y/n)")
+            choice = get_input("Are all the transactions matched correctly? (y/n)")
             if choice == "y":
                 print("Transactions matched successfully")
                 return
             elif choice == "n":
                 while True:
-                    match_to_change = int(input("Which match?: "))
+                    match_to_change = int(get_input("Which match?"))
                     try:
                         transaction_to_change = transactions[match_to_change - 1]
-                        matcher.change_match(transaction_to_change, accounts)
+                        Matcher.change_match(transaction_to_change, accounts)
                         break
                     except (IndexError, KeyError):
                         print("Must choose from the available indexes")
@@ -580,7 +584,8 @@ def process_payments(transactions: list[Transaction]) -> None:
         None
     """
     for transaction in transactions:
-        assert transaction.account is not None
+        if transaction.account is None:
+            continue
         assert transaction.account.balance is not None
         transaction.account.balance.add_payment(transaction.amount)
 
@@ -598,6 +603,7 @@ def process_payments_action(test: bool = False) -> None:
     assert transactions is not None
     process_payments(transactions)
     actions["Proccess Payments"]["available"] = False
+    actions["Import Previously Matched Transactions"]["available"] = True
 
 
 def procces_unknown_words(matcher: Matcher) -> list[str]:

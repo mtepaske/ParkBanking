@@ -439,4 +439,4 @@ class Balance:
         }
 
     def __str__(self) -> str:
-        return f"Balance for {self.site} -> Annual = {self.annual}, Remaining = {self.remaining}, Outstanding = {self.outstanding}, Pay Frequency = {self.pay_frequency}"
+        return f"Balance for {self.site} with Account ID {self.account_id} -> Annual = {self.annual}, Remaining = {self.remaining}, Outstanding = {self.outstanding}, Pay Frequency = {self.pay_frequency}"

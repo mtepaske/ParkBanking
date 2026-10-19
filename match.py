@@ -1,5 +1,6 @@
 from account import Account
 from transactions import Transaction
+from user import get_input
 
 
 class Matcher:
@@ -10,6 +11,11 @@ class Matcher:
         ignore: (list[str]) A list of words to ignore while matching
         unknown: (list[str]) A list of words that haven't been encountered before
     """
+
+    @staticmethod
+    def change_match(transaction: Transaction, accounts: list[Account]):
+        choice = Matcher.account_picker(accounts)
+        transaction.add_account(choice)
 
     def __init__(self, accounts: list[Account], ignore: list[str]) -> None:
         """Initialisaes class
@@ -71,14 +77,15 @@ class Matcher:
             (Account) The users chosen account
         """
         Matcher.print_accounts(accounts)
+        print("[n] - No Account")
         while True:
             try:
-                choice = int(input("Which Account? "))
-                account = accounts[choice - 1]
+                choice = get_input("Which Account?")
+                if choice == "n":
+                    print("No match for this transaction")
+                account = accounts[int(choice) - 1]
                 break
-            except ValueError:
-                print("Choice must be a number")
-            except IndexError:
+            except (IndexError, ValueError):
                 print("Choice must be a valid index")
         print(f"You have picked {account}")
         return account
@@ -153,10 +160,6 @@ class Matcher:
             choice = Matcher.account_picker(possibilities)
             transaction.add_account(choice)
 
-    def change_match(self, transaction: Transaction, accounts: list[Account]):
-        choice = Matcher.account_picker(accounts)
-        transaction.add_account(choice)
-
     def alias_handler(self, alias: str) -> None:
         """Handles choosing account to add alias to and adding the alias
 
@@ -192,11 +195,11 @@ class Matcher:
         for word in self.unknown:
             print(f"{word} is an unknown word, what would you like to do with it?")
             while True:
-                choice = input(
+                choice = get_input(
                     "[i] - Add to ignored words\n"
                     "[a] - Add as an alias\n"
                     "[s] - skip\n"
-                    "What is your choice? "
+                    "What is your choice?"
                 )
                 if choice in ["i", "a", "s"]:
                     break

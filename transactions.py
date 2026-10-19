@@ -55,6 +55,7 @@ class Transaction:
         for account in accounts:
             if account.site == row["Site"]:
                 transaction.add_account(account)
+                break
         return transaction
 
     def add_account(self, account: Account) -> None:
