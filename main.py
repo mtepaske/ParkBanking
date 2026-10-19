@@ -225,9 +225,6 @@ def import_accounts_from_csv() -> tuple[list[Account], list[Balance]]:
 
     Returns:
         (tuple[list[Account], list[Balances]]) A tuple containing imported accounts and imported balances
-
-    Raises:
-        ValueError: If the accounts and balances are different sizes, or if the site numbers dot match
     """
     # Importing csvs should update database not overwrite it.
     accounts = import_accounts("Accounts.csv")
@@ -271,7 +268,15 @@ def import_accounts_from_csv_action(test: bool = False) -> None:
         actions["Match Transactions to Accounts"]["available"] = True
 
 
-def show_accounts(accounts: list[Account]):
+def show_accounts(accounts: list[Account]) -> None:
+    """Shows all loaded accounts
+
+    Args:
+        accounts: (list[Account]) A list of accounts to show
+
+    Returns:
+        None
+    """
     print("ACCOUNTS")
     Matcher.print_accounts(accounts)
     print("[b] -> Back")
@@ -292,12 +297,28 @@ def show_accounts(accounts: list[Account]):
     edit_account(account)
 
 
-def show_accounts_action(test: bool = False):
+def show_accounts_action(test: bool = False) -> None:
+    """Helper function to call show_accounts
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     assert state["accounts"] is not None
     show_accounts(state["accounts"])
 
 
-def edit_account(account: Account):
+def edit_account(account: Account) -> None:
+    """Shows a list of options for editing a certain account
+
+    Args:
+        account: (Account) The account to edit
+
+    Returns:
+        None
+    """
     if account.balance is not None:
         balance = account.balance
         attributes = {
@@ -377,6 +398,15 @@ def import_banking_action(test: bool = False) -> None:
 
 
 def import_mached_transactions(filepath: str, test: bool = False):
+    """Imports a csv file containing previously matched transactions
+
+    Args:
+        filepath: (str) The path of the file
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     accounts = state["accounts"]
     assert accounts is not None
     if test:
@@ -391,6 +421,14 @@ def import_mached_transactions(filepath: str, test: bool = False):
 
 
 def import_mached_transactions_action(test: bool = False):
+    """Helper action to call import_mached_transactions
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
     filepath = get_input(
         "Whats the name of the file containing matched transaction information?"
     )
@@ -409,9 +447,10 @@ def match_transactions(
     Args:
         accounts: (list[Account]) A list of accounts to match to
         transactions: (list[Transaction]) A list of transactions to match
+        ignore: (list[str]) A list of words to ignore
 
     Returns:
-        (tuple[list[str], Matcher]) A tuple containing a list of words to ignore, and the instance of the matcher class
+        (Matcher) The matcher used to match transactions to accounts
     """
     matcher = Matcher(accounts, ignore)
     for transaction in transactions:
@@ -429,9 +468,6 @@ def match_transactions_action(test: bool = False) -> None:
 
     Returns:
         None
-
-    Raises:
-        FileNotFoundError: If no file containing words to ignore can be found
     """
     accounts = state["accounts"]
     balances = state["balances"]
@@ -459,6 +495,11 @@ def review_matches(
     matcher: Matcher, transactions: list[Transaction], accounts: list[Account]
 ) -> None:
     """Prints a list of matched transactions and the matched accounts for proofing
+
+    Args:
+        matcher: (Matcher) The instance of matcher used to match transactions to accounts
+        transactions: (list[Transaction]) The list of transactions to review
+        accounts: (list[Accounts]) The list of accounts that could be matched against
 
     Returns:
         None
@@ -498,9 +539,6 @@ def process_payments(transactions: list[Transaction]) -> None:
 
     Returns:
         None
-
-    Raises:
-        ValueError: If a transaction hasn't been matched or if an account has no balance instance
     """
     for transaction in transactions:
         assert transaction.account is not None

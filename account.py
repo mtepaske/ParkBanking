@@ -31,7 +31,7 @@ class Account:
         Args:
             site: (str) Site Number
             name: (str) Name of Site Holder
-            aliases: (list[str]) Any keywords connected to the account
+            aliases: (list[str] | None) Any keywords connected to the account. Defaults to None
             account_id: (int | None) A unique identifier for database operations. Defaults to None if new account
             active: (bool) The active status of this account. Defaults to True
 
@@ -98,7 +98,15 @@ class Account:
         if self.id is not None:
             self.balance.account_id = self.id
 
-    def change_site(self, new_site: str | None = None):
+    def change_site(self, new_site: str | None = None) -> None:
+        """Changes the site number
+
+        Args:
+            new_site: (str | None) New site number to change to. If None is given prompts user for input
+
+        Returns:
+            None
+        """
         if new_site is None:
             while True:
                 try:
@@ -114,7 +122,15 @@ class Account:
             self.balance.change_site(new_site)
         print(f"Site number for {self.name} changed from {old_site} to {self.site}")
 
-    def change_name(self, new_name: str | None = None):
+    def change_name(self, new_name: str | None = None) -> None:
+        """Changes the name of the account
+
+        Args:
+            new_name: (str | None) New name to change to. If None is given prompts user for input
+
+        Returns:
+            None
+        """
         if new_name is None:
             while True:
                 new_name = get_input("Enter new name")
@@ -128,6 +144,11 @@ class Account:
         print(f"Name for site {self.site} changed from {old_name} to {self.name}")
 
     def switch_active(self) -> None:
+        """Switches the active status of the account
+
+        Returns:
+            None
+        """
         if self.active is False:
             old_active = self.active
             self.active = True
