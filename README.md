@@ -9,7 +9,7 @@ tracked.
 
 ## To Do
 
-- [ ] Add ability to add accounts from app - Function in main.py that adds a
+- [x] Add ability to add accounts from app - Function in main.py that adds a
       dictionary and use the from_csv in accounts.py - [ ] Add ability to edit
       accounts
 - [ ] Add ability to select transaction file import

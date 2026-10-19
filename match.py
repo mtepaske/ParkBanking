@@ -57,7 +57,7 @@ class Matcher:
             index += 1
             balance = account.balance
             print(
-                f"    Annual Fees: {balance.annual}, Remaining: {balance.remaining}, Outstanding: {balance.outstanding}, Behind: {balance.check_on_track()}"
+                f"    Annual Fees: {balance.annual}, Remaining: {balance.remaining}, Outstanding: {balance.outstanding}, On Track: {balance.check_on_track()}"
             )
 
     @staticmethod

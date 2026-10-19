@@ -268,7 +268,7 @@ def import_accounts_from_csv_action(test: bool = False) -> None:
         actions["Match Transactions to Accounts"]["available"] = True
 
 
-def show_accounts(accounts: list[Account]) -> None:
+def show_accounts(accounts: list[Account], balances: list[Balance]) -> None:
     """Shows all loaded accounts
 
     Args:
@@ -279,12 +279,17 @@ def show_accounts(accounts: list[Account]) -> None:
     """
     print("ACCOUNTS")
     Matcher.print_accounts(accounts)
+    print("[a] - Add New Account")
     print("[b] -> Back")
     while True:
         try:
-            choice = input("Which Account? ")
+            choice = get_input("Which Account?")
             if choice == "b":
                 print("Back")
+                return
+            elif choice == "a":
+                print("Adding Account")
+                add_account(accounts, balances)
                 return
             else:
                 account = accounts[int(choice) - 1]
@@ -306,8 +311,11 @@ def show_accounts_action(test: bool = False) -> None:
     Returns:
         None
     """
-    assert state["accounts"] is not None
-    show_accounts(state["accounts"])
+    accounts = state["accounts"]
+    balances = state["balances"]
+    assert accounts is not None
+    assert balances is not None
+    show_accounts(accounts, balances)
 
 
 def edit_account(account: Account) -> None:
@@ -362,6 +370,37 @@ def edit_account(account: Account) -> None:
         except (ValueError, IndexError):
             print("Invalid choice. Please choose from list")
     return action["function"]()
+
+
+def add_account(accounts: list[Account], balances: list[Balance]) -> None:
+    """Adds a new user account based on user input
+
+    Args:
+        accounts: (list[Account]) The list of current accounts
+        balances: (list[Balance]) The list of current balances
+
+    Returns:
+        None
+    """
+    while True:
+        try:
+            site = get_input("Site Number")
+            int(site)
+            break
+        except ValueError:
+            print("Please enter a number")
+    name = get_input("Account Holder Name")
+    new_account = Account(site, name)
+    for account in accounts:
+        assert account.balance is not None
+        if account.site == new_account.site and account.active:
+            new_balance = Balance(
+                account.id, new_account.site, str(account.balance.annual), "0", "0", "m"
+            )
+            account.switch_active()
+            new_account.add_balance(new_balance)
+            balances.append(new_balance)
+    accounts.append(new_account)
 
 
 def import_banking(test: bool = False) -> list[Transaction]:

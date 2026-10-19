@@ -415,6 +415,8 @@ class Balance:
         Returns:
             (bool) True if on track. False if behind on payments
         """
+        if self.outstanding != self.money(0):
+            return False
         expected = self.expected_paid(as_of_date)
         actual_paid = self.annual - self.remaining
         return actual_paid >= expected
