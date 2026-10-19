@@ -110,6 +110,8 @@ class Account:
         old_site = self.site
         self.site = new_site
         self.aliases.append(new_site)
+        if self.balance is not None:
+            self.balance.change_site(new_site)
         print(f"Site number for {self.name} changed from {old_site} to {self.site}")
 
     def change_name(self, new_name: str | None = None):

@@ -317,9 +317,19 @@ def edit_account(account: Account):
         attributes = {
             "Site Number": {"value": account.site, "function": account.change_site},
             "Name": {"value": account.name, "function": account.change_name},
-            "Annual Fees": {"value": balance.annual, "function": balance},
-            "Remaining Fees": {"value": balance.remaining, "function": balance},
-            "Outstanding Fees": {"value": balance.outstanding, "function": balance},
+            "Annual Fees": {"value": balance.annual, "function": balance.change_annual},
+            "Remaining Fees": {
+                "value": balance.remaining,
+                "function": balance.change_remaining,
+            },
+            "Outstanding Fees": {
+                "value": balance.outstanding,
+                "function": balance.change_outstanding,
+            },
+            "Pay Frequency": {
+                "value": balance.pay_frequency,
+                "function": balance.change_payfrequency,
+            },
             "Active": {"value": account.active, "function": account.switch_active},
         }
     else:

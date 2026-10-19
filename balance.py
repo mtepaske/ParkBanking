@@ -5,6 +5,8 @@ from decimal import ROUND_HALF_UP, Decimal
 from typing import Literal
 from zoneinfo import ZoneInfo
 
+from user import get_input
+
 
 class Balance:
     """Tracks balance information
@@ -99,7 +101,7 @@ class Balance:
         self.annual = self.money(annual)
         self.remaining = self.money(remaining)
         self.outstanding = self.money(outstanding)
-        if pay_period != "q" and pay_period != "m" and pay_period != "a":
+        if pay_period not in ["a", "m", "q"]:
             raise ValueError("Pay Frequency not defined, must be 'm', 'q', or 'a'")
         match pay_period:
             case "m":
@@ -245,6 +247,87 @@ class Balance:
         print(f"  Outstanding From Previous Years: {self.outstanding}")
         print(
             f"  {period} Payment: {self.calc_payments(self.annual, self.num_of_payments)}"
+        )
+
+    def change_site(self, new_site: str | None = None):
+        if new_site is None:
+            while True:
+                try:
+                    new_site = get_input("Enter new site number")
+                    int(new_site)
+                    break
+                except ValueError:
+                    print("Must enter number")
+        self.site = new_site
+
+    def change_annual(self, new_amount: str | None = None):
+        if new_amount is None:
+            while True:
+                try:
+                    new_amount = get_input("Enter new amount")
+                    assert new_amount is not None
+                    self.money(new_amount)
+                    break
+                except ValueError:
+                    print("Must enter monetary value if the form of 123.45")
+        old_amount = self.annual
+        self.annual = self.money(new_amount)
+        print(
+            f"Annual amount for {self.site} changed from {old_amount} to {self.annual}"
+        )
+
+    def change_remaining(self, new_amount: str | None = None):
+        if new_amount is None:
+            while True:
+                try:
+                    new_amount = get_input("Enter new amount")
+                    assert new_amount is not None
+                    self.money(new_amount)
+                    break
+                except ValueError:
+                    print("Must enter monetary value if the form of 123.45")
+        old_amount = self.remaining
+        self.remaining = self.money(new_amount)
+        print(
+            f"Remaining amount for {self.site} changed from {old_amount} to {self.remaining}"
+        )
+
+    def change_outstanding(self, new_amount: str | None = None):
+        if new_amount is None:
+            while True:
+                try:
+                    new_amount = get_input("Enter new amount")
+                    assert new_amount is not None
+                    self.money(new_amount)
+                    break
+                except ValueError:
+                    print("Must enter monetary value if the form of 123.45")
+        old_amount = self.outstanding
+        self.outstanding = self.money(new_amount)
+        print(
+            f"Outstanding amount for {self.site} changed from {old_amount} to {self.outstanding}"
+        )
+
+    def change_payfrequency(self, new_frequency: str | None = None):
+        if new_frequency is None:
+            while True:
+                new_frequency = get_input("Enter new frequency (a, m, q)")
+                if new_frequency not in ["a", "m", "q"]:
+                    print("Must enter q, m, or a")
+                else:
+                    break
+        old_frequency = self.pay_frequency
+        old_num_payments = self.num_of_payments
+        self.pay_frequency = new_frequency
+        match new_frequency:
+            case "m":
+                self.num_of_payments = 12
+            case "q":
+                self.num_of_payments = 4
+            case "a":
+                self.num_of_payments = 1
+        print(
+            f"Pay frequency for {self.site} changed from {old_frequency}({old_num_payments} Payments) to {self.pay_frequency}({self.num_of_payments} Payments)"
         )
 
     def calc_payments(self, amount: Decimal, num_of_payments: int = 0) -> Decimal:
