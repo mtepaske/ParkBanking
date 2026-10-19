@@ -1,7 +1,36 @@
 import sqlite3
+from pathlib import Path
 
 from account import Account
 from balance import Balance
+
+DB_PATH = Path(__file__).resolve().parent / "parkbanking.db"
+
+
+def connect(db_path=DB_PATH) -> sqlite3.Connection:
+    """Connect to the database
+
+    Args:
+        db_path: (Path) The pathway to the database
+
+    Returns:
+        (Connection) The connection object of the database
+    """
+    connection = sqlite3.connect(db_path)
+    connection.execute("PRAGMA foreign_keys = ON")
+    connection.row_factory = sqlite3.Row
+    return connection
+
+
+def disconnect(connection: sqlite3.Connection) -> None:
+    """Close the connection to a database
+
+    Args:
+        connection: (Connection) The connection to the database
+    Returns:
+        None
+    """
+    connection.close()
 
 
 def initialise_database(connection: sqlite3.Connection) -> None:

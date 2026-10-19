@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from balance import Balance
+from user import get_input
 
 
 class Account:
@@ -15,11 +16,13 @@ class Account:
         active: (bool) The active status of this account
     """
 
+    aliases: list[str]
+
     def __init__(
         self,
-        site: str,
+        site: str | int,
         name: str,
-        aliases: list[str],
+        aliases: list[str] | None = None,
         account_id: int | None = None,
         active: bool = True,
     ) -> None:
@@ -37,16 +40,17 @@ class Account:
         """
         self.id = account_id
         self.name = name
-        if len(site) == 1:
-            site = f"0{site}"
-        self.site = site
-        self.aliases = aliases
-        if len(self.aliases) == 1:
-            toadd = self.name.split(" ")
-            toadd.append(str(site))
-            toadd.append(toadd[0].upper())
-            toadd.append(toadd[1].upper())
-            self.aliases = toadd
+        self.site = str(site)
+        if len(self.site) == 1:
+            self.site = f"0{self.site}"
+        self.aliases = aliases if aliases is not None else []
+        if len(self.aliases) == 0:
+            names = self.name.split(" ")
+            for alias in names:
+                self.aliases.append(alias)
+                self.aliases.append(alias.upper())
+            self.aliases.append(self.site)
+            self.aliases.append(str(site))
         self.balance = None
         self.active = active
 
@@ -93,6 +97,42 @@ class Account:
         self.balance = balance
         if self.id is not None:
             self.balance.account_id = self.id
+
+    def change_site(self, new_site: str | None = None):
+        if new_site is None:
+            while True:
+                try:
+                    new_site = get_input("Enter new site number")
+                    int(new_site)
+                    break
+                except ValueError:
+                    print("Must enter number")
+        old_site = self.site
+        self.site = new_site
+        self.aliases.append(new_site)
+        print(f"Site number for {self.name} changed from {old_site} to {self.site}")
+
+    def change_name(self, new_name: str | None = None):
+        if new_name is None:
+            while True:
+                new_name = get_input("Enter new name")
+                break
+        old_name = self.name
+        self.name = new_name
+        new_name_split = new_name.split(" ")
+        for name in new_name_split:
+            self.aliases.append(name)
+            self.aliases.append(name.upper())
+        print(f"Name for site {self.site} changed from {old_name} to {self.name}")
+
+    def switch_active(self) -> None:
+        if self.active is False:
+            old_active = self.active
+            self.active = True
+        else:
+            old_active = self.active
+            self.active = False
+        print(f"Active switched from {old_active} to {self.active}")
 
     def add_alias(self, alias: str) -> bool:
         """Add a new alias to an account

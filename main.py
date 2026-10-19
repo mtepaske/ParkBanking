@@ -1,9 +1,7 @@
 import argparse
 import datetime as dt
 import shutil
-import sqlite3
 import sys
-from pathlib import Path
 from typing import TypedDict
 from zoneinfo import ZoneInfo
 
@@ -12,9 +10,12 @@ from dateutil.relativedelta import relativedelta
 from account import Account
 from balance import Balance
 from database import (
+    DB_PATH,
     AccountRepository,
     BalanceRepository,
     IgnoreRepository,
+    connect,
+    disconnect,
     initialise_database,
 )
 from files import (
@@ -63,9 +64,6 @@ repos: AppRepos = {
 }
 
 
-DB_PATH = Path(__file__).resolve().parent / "parkbanking.db"
-
-
 def start_program() -> argparse.Namespace:
     """Begins the program by checking for test flags
 
@@ -82,32 +80,6 @@ def start_program() -> argparse.Namespace:
     else:
         print("Starting program")
     return args
-
-
-def connect(db_path=DB_PATH) -> sqlite3.Connection:
-    """Connect to the database
-
-    Args:
-        db_path: (Path) The pathway to the database
-
-    Returns:
-        (Connection) The connection object of the database
-    """
-    connection = sqlite3.connect(db_path)
-    connection.execute("PRAGMA foreign_keys = ON")
-    connection.row_factory = sqlite3.Row
-    return connection
-
-
-def disconnect(connection: sqlite3.Connection) -> None:
-    """Close the connection to a database
-
-    Args:
-        connection: (Connection) The connection to the database
-    Returns:
-        None
-    """
-    connection.close()
 
 
 def show_menu(test: bool = False) -> None:
@@ -175,6 +147,7 @@ def load_from_db(
     print("Accounts loaded")
     actions["Import Accounts & Balances From CSV"]["available"] = False
     actions["Load Accounts From Database"]["available"] = False
+    actions["View Accounts"]["available"] = True
     actions["Import Previously Matched Transactions"]["available"] = True
     actions["Export Accounts To CSV"]["available"] = True
     actions["Save To Database"]["available"] = True
@@ -289,6 +262,7 @@ def import_accounts_from_csv() -> tuple[list[Account], list[Balance]]:
     print("Accounts loaded")
     actions["Import Accounts & Balances From CSV"]["available"] = False
     actions["Load Accounts From Database"]["available"] = False
+    actions["View Accounts"]["available"] = True
     actions["Import Previously Matched Transactions"]["available"] = True
     actions["Save To Database"]["available"] = True
     actions["Export Accounts To CSV"]["available"] = True
@@ -309,6 +283,68 @@ def import_accounts_from_csv_action(test: bool = False) -> None:
     acts_and_bal = import_accounts_from_csv()
     state["accounts"] = acts_and_bal[0]
     state["balances"] = acts_and_bal[1]
+
+
+def show_accounts(accounts: list[Account]):
+    print("ACCOUNTS")
+    Matcher.print_accounts(accounts)
+    print("[b] -> Back")
+    while True:
+        try:
+            choice = input("Which Account? ")
+            if choice == "b":
+                print("Back")
+                return
+            else:
+                account = accounts[int(choice) - 1]
+                break
+        except ValueError:
+            print("Choice must be a number")
+        except IndexError:
+            print("Choice must be a valid index")
+    print(f"You have picked {account}")
+    edit_account(account)
+
+
+def show_accounts_action(test: bool = False):
+    assert state["accounts"] is not None
+    show_accounts(state["accounts"])
+
+
+def edit_account(account: Account):
+    if account.balance is not None:
+        balance = account.balance
+        attributes = {
+            "Site Number": {"value": account.site, "function": account.change_site},
+            "Name": {"value": account.name, "function": account.change_name},
+            "Annual Fees": {"value": balance.annual, "function": balance},
+            "Remaining Fees": {"value": balance.remaining, "function": balance},
+            "Outstanding Fees": {"value": balance.outstanding, "function": balance},
+            "Active": {"value": account.active, "function": account.switch_active},
+        }
+    else:
+        attributes = {
+            "Site Number": {"value": account.site, "function": account.change_site},
+            "Name": {"value": account.name, "function": account.change_name},
+            "Active": {"value": account.active, "function": account.switch_active},
+        }
+    print(f"Editing Account: {account.site}, {account.name}")
+    while True:
+        editable = [(name, action) for name, action in attributes.items()]
+        for i, (name, action) in enumerate(editable, start=1):
+            print(f"[{i}] - {name}: {action['value']}")
+        print("[b] - Back")
+        try:
+            choice = input("What would you like to change?")
+            if choice == "b":
+                print("Back")
+                return
+            else:
+                name, action = editable[int(choice) - 1]
+                break
+        except (ValueError, IndexError):
+            print("Invalid choice. Please choose from list")
+    return action["function"]()
 
 
 def import_banking(test: bool = False) -> list[Transaction]:
@@ -662,6 +698,7 @@ actions = {
         "available": True,
         "function": load_from_db_action,
     },
+    "View Accounts": {"available": False, "function": show_accounts_action},
     "Import Banking Data": {"available": True, "function": import_banking_action},
     "Import Previously Matched Transactions": {
         "available": False,

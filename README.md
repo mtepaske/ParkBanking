@@ -10,7 +10,8 @@ tracked.
 ## To Do
 
 - [ ] Add ability to add accounts from app - Function in main.py that adds a
-      dictionary and use the from_csv in accounts.py
+      dictionary and use the from_csv in accounts.py - [ ] Add ability to edit
+      accounts
 - [ ] Add ability to select transaction file import
 - [ ] Add date object rather then string for date sorting
 - [ ] Add GUI
@@ -21,6 +22,7 @@ tracked.
 - [ ] Add support for new financial year
     - [ ] Adding new fees
     - [ ] Tranfer remaining fees to outstanding fees
+- [ ] Add site class and site tracking
 - [x] Refactor main.py to prompt user for steps
     - [ ] Add ability to preview files
     - [x] Add ability to review matches before balance updates
