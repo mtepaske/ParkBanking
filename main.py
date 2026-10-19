@@ -30,6 +30,7 @@ from files import (
 )
 from match import Matcher
 from transactions import Transaction
+from user import get_input
 
 
 class AppState(TypedDict):
@@ -98,7 +99,7 @@ def show_menu(test: bool = False) -> None:
         for i, (name, action) in enumerate(available_actions, start=1):
             print(f"{i} -> {name}")
         try:
-            choice = int(input("Choose an action: "))
+            choice = int(get_input("Choose an action"))
             name, action = available_actions[choice - 1]
             break
         except (ValueError, IndexError):
@@ -110,19 +111,16 @@ def load_from_db(
     account_repo: AccountRepository,
     balance_repo: BalanceRepository,
     ignore_repo: IgnoreRepository,
-) -> None:
+) -> tuple[list[Account], list[Balance], list[str]]:
     """Load data from a database
 
     Args:
         account_repo: (AccountRepository) The account repository
         balance_repo: (BalanceRepository) The balance repository
         ignore_repo: (IgnoreRepository) The ignore repository
-    Returns:
-        None
 
-    Raises:
-        ValueError: If no matching balance can be found for an account
-        FileNotFoundError: If no CSV file containing words to ignore can be found
+    Returns:
+        (tuple[list[Account], list[Balance], list[str]]) A tuple containing the information loaded from the database
     """
     accounts = account_repo.get_active()
     balances = balance_repo.get_active()
@@ -132,27 +130,18 @@ def load_from_db(
                 account.add_balance(balance)
                 break
         if account.balance is None:
-            raise ValueError(f"Could not find matching balance for {account}")
-    state["accounts"] = accounts
-    state["balances"] = balances
+            print(
+                f"Could not find matching balance for {account}\nAssigning default balance"
+            )
+            balance = Balance(account.id, account.site, "7550", "7550", "0", "m")
+            balances.append(balance)
+            account.add_balance(balance)
     ignore = ignore_repo.get_all()
     if len(ignore) == 0:
         print("Ignore Repository is Empty. Importing From CSV")
-        try:
-            ignore = import_words_to_ignore("WordsToIgnore.csv")
-        except FileNotFoundError:
-            print("No WordsToIgnore CSV File")
-            return
-    state["words_to_ignore"] = ignore
+        ignore = import_words_to_ignore("WordsToIgnore.csv")
     print("Accounts loaded")
-    actions["Import Accounts & Balances From CSV"]["available"] = False
-    actions["Load Accounts From Database"]["available"] = False
-    actions["View Accounts"]["available"] = True
-    actions["Import Previously Matched Transactions"]["available"] = True
-    actions["Export Accounts To CSV"]["available"] = True
-    actions["Save To Database"]["available"] = True
-    if state["transactions"] is not None:
-        actions["Match Transactions to Accounts"]["available"] = True
+    return (accounts, balances, ignore)
 
 
 def load_from_db_action(test: bool = False) -> None:
@@ -166,25 +155,29 @@ def load_from_db_action(test: bool = False) -> None:
     account_repo = repos["account_repo"]
     balance_repo = repos["balance_repo"]
     ignore_repo = repos["ignore_repo"]
-    if account_repo is None:
-        print("Account Repository Not Loaded")
-        return
-    if balance_repo is None:
-        print("Balance Repository Not Loaded")
-        return
-    if ignore_repo is None:
-        print("Ignore Repository Not Loaded")
-        return
-    load_from_db(account_repo, balance_repo, ignore_repo)
+    assert account_repo is not None
+    assert balance_repo is not None
+    assert ignore_repo is not None
+    state["accounts"], state["balances"], state["words_to_ignore"] = load_from_db(
+        account_repo, balance_repo, ignore_repo
+    )
+    actions["Import Accounts & Balances From CSV"]["available"] = False
+    actions["Load Accounts From Database"]["available"] = False
+    actions["View Accounts"]["available"] = True
+    actions["Import Previously Matched Transactions"]["available"] = True
+    actions["Export Accounts To CSV"]["available"] = True
+    actions["Save To Database"]["available"] = True
+    if state["transactions"] is not None:
+        actions["Match Transactions to Accounts"]["available"] = True
 
 
 def save_to_db(
-    accounts: list[Account] | None,
-    balances: list[Balance] | None,
-    ignore: list[str] | None,
-    account_repo: AccountRepository | None,
-    balance_repo: BalanceRepository | None,
-    ignore_repo: IgnoreRepository | None,
+    accounts: list[Account],
+    balances: list[Balance],
+    ignore: list[str],
+    account_repo: AccountRepository,
+    balance_repo: BalanceRepository,
+    ignore_repo: IgnoreRepository,
 ) -> None:
     """Save loaded data into the repository
 
@@ -198,28 +191,9 @@ def save_to_db(
     Returns:
         None
     """
-    if accounts is not None:
-        if account_repo is not None:
-            account_repo.insert_all(accounts)
-        else:
-            print("Accounts Repository Not Loaded")
-    else:
-        print("No Accounts Loaded")
-    if balances is not None:
-        if balance_repo is not None:
-            balance_repo.insert_all(balances)
-        else:
-            print("Balance Repository Not Loaded")
-    else:
-        print("No Accounts Loaded")
-    if ignore is not None:
-        if ignore_repo is not None:
-            ignore_repo.replace_all(ignore)
-        else:
-            print("Ignore Repository Not Loaded")
-    else:
-        print("No Words to Ignore Loaded")
-    actions["Save To Database"]["available"] = False
+    account_repo.insert_all(accounts)
+    balance_repo.insert_all(balances)
+    ignore_repo.replace_all(ignore)
 
 
 def save_to_db_action(test: bool = False) -> None:
@@ -236,7 +210,14 @@ def save_to_db_action(test: bool = False) -> None:
     account_repo = repos["account_repo"]
     balance_repo = repos["balance_repo"]
     ignore_repo = repos["ignore_repo"]
+    assert accounts is not None
+    assert balances is not None
+    assert ignore is not None
+    assert account_repo is not None
+    assert balance_repo is not None
+    assert ignore_repo is not None
     save_to_db(accounts, balances, ignore, account_repo, balance_repo, ignore_repo)
+    actions["Save To Database"]["available"] = False
 
 
 def import_accounts_from_csv() -> tuple[list[Account], list[Balance]]:
@@ -258,16 +239,13 @@ def import_accounts_from_csv() -> tuple[list[Account], list[Balance]]:
                 account.add_balance(balance)
                 break
         if account.balance is None:
-            raise ValueError(f"Could not find matching balance for {account}")
+            print(
+                f"Could not find matching balance for {account}\nAssigning default balance"
+            )
+            balance = Balance(account.id, account.site, "7550", "7550", "0", "m")
+            balances.append(balance)
+            account.add_balance(balance)
     print("Accounts loaded")
-    actions["Import Accounts & Balances From CSV"]["available"] = False
-    actions["Load Accounts From Database"]["available"] = False
-    actions["View Accounts"]["available"] = True
-    actions["Import Previously Matched Transactions"]["available"] = True
-    actions["Save To Database"]["available"] = True
-    actions["Export Accounts To CSV"]["available"] = True
-    if state["transactions"] is not None:
-        actions["Match Transactions to Accounts"]["available"] = True
     return (accounts, balances)
 
 
@@ -283,6 +261,14 @@ def import_accounts_from_csv_action(test: bool = False) -> None:
     acts_and_bal = import_accounts_from_csv()
     state["accounts"] = acts_and_bal[0]
     state["balances"] = acts_and_bal[1]
+    actions["Import Accounts & Balances From CSV"]["available"] = False
+    actions["Load Accounts From Database"]["available"] = False
+    actions["View Accounts"]["available"] = True
+    actions["Import Previously Matched Transactions"]["available"] = True
+    actions["Save To Database"]["available"] = True
+    actions["Export Accounts To CSV"]["available"] = True
+    if state["transactions"] is not None:
+        actions["Match Transactions to Accounts"]["available"] = True
 
 
 def show_accounts(accounts: list[Account]):
@@ -371,10 +357,6 @@ def import_banking(test: bool = False) -> list[Transaction]:
     else:
         transactions = import_payments("Transactions.csv")
     print("Imported Transactions")
-    actions["Import Banking Data"]["available"] = False
-    actions["Import Previously Matched Transactions"]["available"] = False
-    if state["accounts"] is not None and state["balances"] is not None:
-        actions["Match Transactions to Accounts"]["available"] = True
     return transactions
 
 
@@ -388,37 +370,40 @@ def import_banking_action(test: bool = False) -> None:
         None
     """
     state["transactions"] = import_banking(test)
+    actions["Import Banking Data"]["available"] = False
+    actions["Import Previously Matched Transactions"]["available"] = False
+    if state["accounts"] is not None and state["balances"] is not None:
+        actions["Match Transactions to Accounts"]["available"] = True
 
 
 def import_mached_transactions(filepath: str, test: bool = False):
-    if state["accounts"] is None:
-        print("Accounts not loaded")
-        return
+    accounts = state["accounts"]
+    assert accounts is not None
     if test:
-        transactions = import_matched("test_matched.csv", state["accounts"])
+        transactions = import_matched("test_matched.csv", accounts)
     else:
         try:
-            transactions = import_matched(filepath, state["accounts"])
+            transactions = import_matched(filepath, accounts)
         except FileNotFoundError:
             print("Filepath not valid")
             return
-    actions["Import Banking Data"]["available"] = False
-    actions["Import Previously Matched Transactions"]["available"] = False
-    actions["Proccess Payments"]["available"] = True
-    actions["Export Transactions to CSV"]["available"] = True
     return transactions
 
 
 def import_mached_transactions_action(test: bool = False):
-    filepath = input(
+    filepath = get_input(
         "Whats the name of the file containing matched transaction information?"
     )
     state["transactions"] = import_mached_transactions(filepath, test)
+    actions["Import Banking Data"]["available"] = False
+    actions["Import Previously Matched Transactions"]["available"] = False
+    actions["Proccess Payments"]["available"] = True
+    actions["Export Transactions to CSV"]["available"] = True
 
 
 def match_transactions(
     accounts: list[Account], transactions: list[Transaction], ignore: list[str]
-) -> tuple[list[str], Matcher]:
+) -> Matcher:
     """Matches transactions to accounts using the Matcher class
 
     Args:
@@ -432,12 +417,8 @@ def match_transactions(
     for transaction in transactions:
         possibilities = matcher.keyword_match(transaction)
         matcher.match(transaction, possibilities)
-    review_matches()
-    actions["Match Transactions to Accounts"]["available"] = False
-    actions["Proccess Payments"]["available"] = True
-    actions["Proccess Unknown Words"]["available"] = True
-    actions["Export Transactions to CSV"]["available"] = True
-    return (ignore, matcher)
+    review_matches(matcher, transactions, accounts)
+    return matcher
 
 
 def match_transactions_action(test: bool = False) -> None:
@@ -452,53 +433,41 @@ def match_transactions_action(test: bool = False) -> None:
     Raises:
         FileNotFoundError: If no file containing words to ignore can be found
     """
+    accounts = state["accounts"]
+    balances = state["balances"]
+    transactions = state["transactions"]
     ignore = state["words_to_ignore"]
     if ignore is None:
-        print("Words to Ignore Empty. Importing from CSV")
-        try:
+        ignore_repo = repos["ignore_repo"]
+        assert ignore_repo is not None
+        ignore = ignore_repo.get_all()
+        if len(ignore) == 0:
+            print("Words to Ignore Empty. Importing from CSV")
             ignore = import_words_to_ignore("WordsToIgnore.csv")
-        except FileNotFoundError:
-            print("No WordsToIgnore CSV File")
-            return
-    if (
-        state["accounts"] is not None
-        and state["transactions"] is not None
-        and state["words_to_ignore"] is not None
-    ):
-        matched_info = match_transactions(
-            state["accounts"], state["transactions"], state["words_to_ignore"]
-        )
-        state["words_to_ignore"] = matched_info[0]
-        state["matcher"] = matched_info[1]
-    else:
-        print("Accounts, Transactions, and Words to Ignore Not All Imported")
+    assert accounts is not None
+    assert balances is not None
+    assert transactions is not None
+    assert ignore is not None
+    state["matcher"] = match_transactions(accounts, transactions, ignore)
+    actions["Match Transactions to Accounts"]["available"] = False
+    actions["Proccess Payments"]["available"] = True
+    actions["Proccess Unknown Words"]["available"] = True
+    actions["Export Transactions to CSV"]["available"] = True
 
 
-def review_matches() -> None:
+def review_matches(
+    matcher: Matcher, transactions: list[Transaction], accounts: list[Account]
+) -> None:
     """Prints a list of matched transactions and the matched accounts for proofing
 
     Returns:
         None
     """
     index = 1
-    if state["matcher"] is None:
-        print("Matcher not started")
-        return
-    if state["transactions"] is None:
-        print("Transactions are not imported")
-        return
-    if state["accounts"] is None:
-        print("Accounts not loaded")
-        return
     while True:
-        for transaction in state["transactions"]:
+        for transaction in transactions:
             account = transaction.account
-            if account is None:
-                print("Transaction has not being matched")
-                print(
-                    f"{transaction.date}, ${transaction.amount}, {transaction.details}"
-                )
-                continue
+            assert account is not None
             print(
                 f"{account.site}: {account.name} -> {transaction.amount} - {transaction.details}"
             )
@@ -506,18 +475,14 @@ def review_matches() -> None:
         while True:
             choice = input("Are all the transactions matched correctly?: (y/n)")
             if choice == "y":
-                print("Transactions macthed successfully")
+                print("Transactions matched successfully")
                 return
             elif choice == "n":
                 while True:
                     match_to_change = int(input("Which match?: "))
                     try:
-                        transaction_to_change = state["transactions"][
-                            match_to_change - 1
-                        ]
-                        state["matcher"].change_match(
-                            transaction_to_change, state["accounts"]
-                        )
+                        transaction_to_change = transactions[match_to_change - 1]
+                        matcher.change_match(transaction_to_change, accounts)
                         break
                     except (IndexError, KeyError):
                         print("Must choose from the available indexes")
@@ -538,13 +503,9 @@ def process_payments(transactions: list[Transaction]) -> None:
         ValueError: If a transaction hasn't been matched or if an account has no balance instance
     """
     for transaction in transactions:
-        if transaction.account is None:
-            raise ValueError("Transaction not matched")
-        elif transaction.account.balance is None:
-            raise ValueError("Account has no balance")
-        else:
-            transaction.account.balance.add_payment(transaction.amount)
-    actions["Proccess Payments"]["available"] = False
+        assert transaction.account is not None
+        assert transaction.account.balance is not None
+        transaction.account.balance.add_payment(transaction.amount)
 
 
 def process_payments_action(test: bool = False) -> None:
@@ -556,11 +517,13 @@ def process_payments_action(test: bool = False) -> None:
     Returns:
         None
     """
-    if state["transactions"] is not None:
-        process_payments(state["transactions"])
+    transactions = state["transactions"]
+    assert transactions is not None
+    process_payments(transactions)
+    actions["Proccess Payments"]["available"] = False
 
 
-def procces_unknown_words(matcher: Matcher) -> None:
+def procces_unknown_words(matcher: Matcher) -> list[str]:
     """Proccess any unknown words from the matching process
 
     Args:
@@ -570,8 +533,8 @@ def procces_unknown_words(matcher: Matcher) -> None:
         None
     """
     matcher.unknown_words()
-    state["words_to_ignore"] = matcher.ignore
-    actions["Proccess Unknown Words"]["available"] = False
+    ignore = matcher.ignore
+    return ignore
 
 
 def procces_unknown_words_action(test: bool = False) -> None:
@@ -583,12 +546,14 @@ def procces_unknown_words_action(test: bool = False) -> None:
     Returns:
         None
     """
-    if state["matcher"] is not None and state["words_to_ignore"] is not None:
-        procces_unknown_words(state["matcher"])
+    matcher = state["matcher"]
+    assert matcher is not None
+    state["words_to_ignore"] = procces_unknown_words(matcher)
+    actions["Proccess Unknown Words"]["available"] = False
 
 
 def export_accounts_to_csv(
-    accounts: list[Account] | None, balances: list[Balance] | None, test: bool = False
+    accounts: list[Account], balances: list[Balance], test: bool = False
 ):
     """Export loaded data into a csv file
 
@@ -609,24 +574,10 @@ def export_accounts_to_csv(
     )
     last_month = last_month_date.strftime("%B")
     last_month_year = last_month_date.strftime("%Y")
-    if accounts is not None:
-        export_accounts(
-            accounts, f"{test_flag}{last_month} {last_month_year} - Accounts"
-        )
-        print(
-            f"Accounts saved as {test_flag}{last_month} {last_month_year} - Accounts.csv"
-        )
-    else:
-        print("No Accounts Loaded")
-    if balances is not None:
-        export_balances(
-            balances, f"{test_flag}{last_month} {last_month_year} - Balances"
-        )
-        print(
-            f"Balances saved as {test_flag}{last_month} {last_month_year} - Balances.csv"
-        )
-    else:
-        print("No Balances Loaded")
+    export_accounts(accounts, f"{test_flag}{last_month} {last_month_year} - Accounts")
+    print(f"Accounts saved as {test_flag}{last_month} {last_month_year} - Accounts.csv")
+    export_balances(balances, f"{test_flag}{last_month} {last_month_year} - Balances")
+    print(f"Balances saved as {test_flag}{last_month} {last_month_year} - Balances.csv")
 
 
 def export_accounts_to_csv_action(test: bool = False):
@@ -640,12 +591,12 @@ def export_accounts_to_csv_action(test: bool = False):
     """
     accounts = state["accounts"]
     balances = state["balances"]
+    assert accounts is not None
+    assert balances is not None
     export_accounts_to_csv(accounts, balances, test)
 
 
-def export_transactions_to_csv(
-    transactions: list[Transaction] | None, test: bool = False
-):
+def export_transactions_to_csv(transactions: list[Transaction], test: bool = False):
     """Exports matched transactions to a csv file
 
     Args:
@@ -665,12 +616,9 @@ def export_transactions_to_csv(
     last_month = last_month_date.strftime("%B")
     last_month_year = last_month_date.strftime("%Y")
     source_file = "test.csv" if test else "Transactions.csv"
-    if transactions is not None:
-        shutil.copy2(source_file, f"{test_flag}{last_month}{last_month_year}Raw.csv")
-        export_payments(transactions, f"{test_flag}{last_month} {last_month_year}.csv")
-        print(f"Matched payments saved as {last_month} {last_month_year}.csv")
-    else:
-        print("No Transactions Loaded")
+    shutil.copy2(source_file, f"{test_flag}{last_month}{last_month_year}Raw.csv")
+    export_payments(transactions, f"{test_flag}{last_month} {last_month_year}.csv")
+    print(f"Matched payments saved as {last_month} {last_month_year}.csv")
 
 
 def export_transactions_to_csv_action(test: bool = False):
@@ -683,6 +631,7 @@ def export_transactions_to_csv_action(test: bool = False):
         None
     """
     transactions = state["transactions"]
+    assert transactions is not None
     export_transactions_to_csv(transactions, test)
 
 
