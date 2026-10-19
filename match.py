@@ -52,8 +52,13 @@ class Matcher:
         """
         index = 1
         for account in accounts:
+            assert account.balance is not None
             print(f"[{index}] - {account.name}, Site {account.site}")
             index += 1
+            balance = account.balance
+            print(
+                f"    Annual Fees: {balance.annual}, Remaining: {balance.remaining}, Outstanding: {balance.outstanding}, Behind: {balance.check_on_track()}"
+            )
 
     @staticmethod
     def account_picker(accounts: list[Account]) -> Account:
