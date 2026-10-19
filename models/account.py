@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from cli.menu import get_input
 from models.balance import Balance
-from services.user import get_input
 
 
 class Account:
@@ -20,7 +20,7 @@ class Account:
 
     def __init__(
         self,
-        site: str | int,
+        site_number: str | int,
         name: str,
         aliases: list[str] | None = None,
         account_id: int | None = None,
@@ -40,7 +40,7 @@ class Account:
         """
         self.id = account_id
         self.name = name
-        self.site = str(site)
+        self.site = str(site_number)
         if len(self.site) == 1:
             self.site = f"0{self.site}"
         self.aliases = aliases if aliases is not None else []
@@ -50,7 +50,7 @@ class Account:
                 self.aliases.append(alias)
                 self.aliases.append(alias.upper())
             self.aliases.append(self.site)
-            self.aliases.append(str(site))
+            self.aliases.append(str(site_number))
         self.balance = None
         self.active = active
 
@@ -70,7 +70,7 @@ class Account:
             active = False
         if row["ID"] == "None":
             return cls(
-                site=row["Site"],
+                site_number=row["Site"],
                 name=row["Name"],
                 aliases=row["Aliases"].split(","),
                 account_id=None,
@@ -78,7 +78,7 @@ class Account:
             )
         else:
             return cls(
-                site=row["Site"],
+                site_number=row["Site"],
                 name=row["Name"],
                 aliases=row["Aliases"].split(","),
                 account_id=int(row["ID"]),

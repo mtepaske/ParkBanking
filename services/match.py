@@ -1,6 +1,6 @@
+from cli.menu import get_input
 from models.account import Account
 from models.transactions import Transaction
-from services.user import get_input
 
 
 class Matcher:

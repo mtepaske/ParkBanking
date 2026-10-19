@@ -1,6 +1,7 @@
 import csv
 from decimal import Decimal
 
+from cli.matching import review_matches
 from models.account import Account
 from models.balance import Balance
 from models.transactions import Transaction
@@ -75,69 +76,69 @@ def import_matched(filepath: str, accounts: list[Account]) -> list[Transaction]:
         return [Transaction.from_matched(row, accounts) for row in reader]
 
 
-def export_accounts(accounts: list[Account], filepath: str) -> None:
-    """Export updated account information as a csv file
-
-    Args:
-        accounts: (list[Account]) A list of accounts to export
+def import_accounts_from_csv() -> tuple[list[Account], list[Balance]]:
+    """Imports accounts and balances files
 
     Returns:
-        None
+        (tuple[list[Account], list[Balances]]) A tuple containing imported accounts and imported balances
     """
-    fieldnames = ["ID", "Active", "Name", "Site", "Aliases"]
-    with open(f"{filepath}.csv", "w", newline="", encoding="utf-8-sig") as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        for account in accounts:
-            writer.writerow(account.to_dict())
-
-
-def export_payments(payments: list[Transaction], filepath: str) -> None:
-    """Exports cleaned and matched transaction information to a csv file
-
-    Args:
-        payments: (list[Transaction]) A list of transactions to export
-        filename: (str) The name of exported file
-
-    Returns:
-        None
-    """
-    fieldnames = ["Date", "Site", "Name", "Amount"]
-    with open(f"{filepath}.csv", "w", newline="", encoding="utf-8-sig") as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        for transaction in payments:
-            writer.writerow(transaction.to_dict())
-
-
-def export_words_to_ignore(words: list[str], filepath: str) -> None:
-    """Exports a list of words to ignore to a csv file
-
-    Args:
-        words: (list[str]) A list of words to ignore
-
-    Returns:
-        None
-    """
-    with open(f"{filepath}.csv", "w", newline="", encoding="utf-8-sig") as file:
-        writer = csv.writer(file)
-        writer.writerow(["Words"])
-        for word in words:
-            writer.writerow([word])
-
-
-def export_balances(balances: list[Balance], filepath: str) -> None:
-    fieldnames = [
-        "Site",
-        "ID",
-        "Account ID",
-        "Annual Fee",
-        "Remaining from this FY",
-        "Outstanding from previous FYs",
-        "Pay Frequency",
-    ]
-    with open(f"{filepath}.csv", "w", newline="", encoding="utf-8-sig") as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
+    # Importing csvs should update database not overwrite it.
+    accounts = import_accounts("Accounts.csv")
+    balances = import_balances("Balances.csv")
+    print("Imported Accounts and Balances")
+    for account in accounts:
         for balance in balances:
-            writer.writerow(balance.to_dict())
+            if account.site == balance.site:
+                account.add_balance(balance)
+                break
+        if account.balance is None:
+            print(
+                f"Could not find matching balance for {account}\nAssigning default balance"
+            )
+            balance = Balance(account.id, account.site, "7550", "7550", "0", "m")
+            balances.append(balance)
+            account.add_balance(balance)
+    print("Accounts loaded")
+    return (accounts, balances)
+
+
+def import_banking(test: bool = False) -> list[Transaction]:
+    """Import banking raw banking information
+
+    Args:
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        (list[Transaction]) A list of all the relavent transactions
+    """
+    if test:
+        transactions = import_payments("test.csv")
+    else:
+        transactions = import_payments("Transactions.csv")
+    print("Imported Transactions")
+    return transactions
+
+
+def import_mached_transactions(
+    filepath: str, accounts: list[Account], test: bool = False
+) -> list[Transaction] | None:
+    """Imports a csv file containing previously matched transactions
+
+    Args:
+        filepath: (str) The path of the file
+        test: (bool) True when in test mode, False otherwise
+
+    Returns:
+        None
+    """
+    assert accounts is not None
+    if test:
+        transactions = import_matched("test_matched.csv", accounts)
+    else:
+        try:
+            transactions = import_matched(filepath, accounts)
+        except FileNotFoundError:
+            print("Filepath not valid")
+            return
+    review_matches(transactions, accounts)
+    return transactions

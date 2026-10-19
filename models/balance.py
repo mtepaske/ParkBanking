@@ -5,7 +5,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from typing import Literal
 from zoneinfo import ZoneInfo
 
-from services.user import get_input
+from cli.menu import get_input
 
 
 class Balance:
