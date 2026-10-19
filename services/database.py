@@ -1,8 +1,8 @@
 import sqlite3
 from pathlib import Path
 
-from account import Account
-from balance import Balance
+from models.account import Account
+from models.balance import Balance
 
 DB_PATH = Path(__file__).resolve().parent / "parkbanking.db"
 

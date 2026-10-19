@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from balance import Balance
-from user import get_input
+from models.balance import Balance
+from services.user import get_input
 
 
 class Account:

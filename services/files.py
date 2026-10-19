@@ -1,9 +1,9 @@
 import csv
 from decimal import Decimal
 
-from account import Account
-from balance import Balance
-from transactions import Transaction
+from models.account import Account
+from models.balance import Balance
+from models.transactions import Transaction
 
 
 def import_payments(filepath: str) -> list[Transaction]:

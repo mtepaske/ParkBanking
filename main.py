@@ -7,9 +7,10 @@ from zoneinfo import ZoneInfo
 
 from dateutil.relativedelta import relativedelta
 
-from account import Account
-from balance import Balance
-from database import (
+from models.account import Account
+from models.balance import Balance
+from models.transactions import Transaction
+from services.database import (
     DB_PATH,
     AccountRepository,
     BalanceRepository,
@@ -18,7 +19,7 @@ from database import (
     disconnect,
     initialise_database,
 )
-from files import (
+from services.files import (
     export_accounts,
     export_balances,
     export_payments,
@@ -28,9 +29,8 @@ from files import (
     import_payments,
     import_words_to_ignore,
 )
-from match import Matcher
-from transactions import Transaction
-from user import get_input
+from services.match import Matcher
+from services.user import get_input
 
 
 class AppState(TypedDict):

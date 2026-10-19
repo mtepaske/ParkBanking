@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from account import Account
+from models.account import Account
 
 
 class Transaction:
