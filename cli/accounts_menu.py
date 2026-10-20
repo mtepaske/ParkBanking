@@ -1,5 +1,11 @@
+from application import Application
 from models.account import Account
 from models.balance import Balance
+
+
+def accounts_menu(app: Application) -> None:
+    print("ACCOUNTS MENU")
+    show_accounts(app.state.accounts)
 
 
 def show_accounts(accounts: list[Account]) -> None:
@@ -62,20 +68,24 @@ def add_account(accounts: list[Account]) -> None:
         except ValueError:
             print("Please enter a number")
     name = input("Account Holder Name")
-    new_account = Account(site, name)
+    new_account = Account(
+        site_number=site,
+        name=name,
+        balance=Balance(
+            account_id=None,
+            site_number=site,
+            annual="7550",
+            remaining="0",
+            outstanding="0",
+            pay_frequency="m",
+        ),
+    )
     for account in accounts:
-        assert account.balance is not None
         if account.site_number == new_account.site_number and account.active:
-            new_balance = Balance(
-                account.account_id,
-                new_account.site_number,
-                str(account.balance.annual),
-                "0",
-                "0",
-                "m",
-            )
+            assert account.balance is not None
+            assert new_account.balance is not None
+            new_account.balance.annual = account.balance.annual
             account.switch_active()
-            new_account.add_balance(new_balance)
     accounts.append(new_account)
 
 

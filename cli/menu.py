@@ -1,7 +1,7 @@
 import sys
 
 from application import Application
-from cli.accounts_menu import show_accounts
+from cli.accounts_menu import accounts_menu
 from cli.export_menu import export_menu
 from cli.matching import match_to_account, unknown_words
 from services.imports import (
@@ -14,7 +14,7 @@ from services.match import Matcher, apply_payments, match_transactions
 
 
 def show_menu(app: Application) -> None:
-    print("MAIN MENU")
+    print("\nMAIN MENU")
     availables = [
         (name, action) for name, action in actions.items() if action["available"]
     ]
@@ -31,13 +31,14 @@ def show_menu(app: Application) -> None:
 
 
 def exit_program(app: Application) -> None:
-    print("EXITING PROGRAM")
+    print("\nEXITING PROGRAM")
     sys.exit(0)
 
 
 def load_from_db(app: Application) -> None:
-    print("LOADING DATA FROM DATABASE")
+    print("\nLOADING DATA FROM DATABASE")
     app.state.accounts = app.repos.account_repo.get_active_accounts()
+    print("Accounts Loaded From Database")
     app.state.words_to_ignore = app.repos.ignore_repo.get_all_ignore()
     if len(app.state.words_to_ignore) == 0:
         print("No Words to Ignore in Database\nAttempting to Import From File")
@@ -47,16 +48,19 @@ def load_from_db(app: Application) -> None:
             print(
                 "No File Named WordsToIgnore.csv Found\nLoading With No Words to Ignore"
             )
+        print("Words to Ignore Imported")
+    else:
+        print("Words to Ignore Loaded from Database")
     actions["Import Accounts & Balances From CSV"]["available"] = False
     actions["Load From Database"]["available"] = False
-    actions["View Accounts"]["available"] = True
+    actions["Accounts Menu"]["available"] = True
     actions["Import Previously Matched Transactions"]["available"] = True
     if len(app.state.transactions) != 0:
         actions["Match Transactions to Accounts"]["available"] = True
 
 
 def save_all_to_db(app: Application) -> None:
-    print("SAVING TO DATABASE")
+    print("\nSAVING TO DATABASE")
     accounts = app.state.accounts
     ignore = app.state.words_to_ignore
     app.repos.account_repo.save_accounts(accounts)
@@ -66,25 +70,26 @@ def save_all_to_db(app: Application) -> None:
 
 
 def import_accounts_from_csv(app: Application) -> None:
-    print("IMPORTING ACCOUNTS INFORMATION")
+    print("\nIMPORTING ACCOUNTS INFORMATION")
     print("[b] -> Back")
-    print("[d] -> Default Filepath (Accounts.csv)")
+    print("[d] -> Default Filepath (files/Accounts.csv)")
     accounts_filepath = input("Enter Filepath for Accounts: ")
     if accounts_filepath == "b":
         print("BACK")
         return
     elif accounts_filepath == "d":
-        accounts_filepath = "Accounts.csv"
-    balances_filepath = input("Enter Filepath for Balances: ")
+        accounts_filepath = "files/Accounts.csv"
     print("[b] -> Back")
-    print("[d] -> Default Filepath (Balances.csv)")
+    print("[d] -> Default Filepath (files/Balances.csv)")
+    balances_filepath = input("Enter Filepath for Balances: ")
     if balances_filepath == "b":
         print("BACK")
         return
     elif balances_filepath == "d":
-        balances_filepath = "Balances.csv"
+        balances_filepath = "files/Balances.csv"
     try:
         app.state.accounts = import_account_info_from_csv(accounts_filepath)
+        print("Accounts Information Imported")
     except FileNotFoundError:
         print(
             f"One or Both Files Named {accounts_filepath} & {balances_filepath} Not Found"
@@ -92,21 +97,16 @@ def import_accounts_from_csv(app: Application) -> None:
         return
     actions["Import Accounts & Balances From CSV"]["available"] = False
     actions["Load From Database"]["available"] = False
-    actions["View Accounts"]["available"] = True
+    actions["Accounts Menu"]["available"] = True
     actions["Import Previously Matched Transactions"]["available"] = True
     if app.state.transactions is not None:
         actions["Match Transactions to Accounts"]["available"] = True
 
 
-def accounts_menu(app: Application) -> None:
-    print("ACCOUNTS MENU")
-    show_accounts(app.state.accounts)
-
-
 def import_banking(app: Application) -> None:
-    print("IMPORTING BANKING DATA")
+    print("\nIMPORTING BANKING DATA")
     print("[b] -> Back")
-    print("[d] -> Default Filepath (Transactions.csv)")
+    print("[d] -> Default Filepath (files/Transactions.csv)")
     filepath = input("Enter Filepath: ")
     if filepath == "b":
         print("BACK")
@@ -118,6 +118,7 @@ def import_banking(app: Application) -> None:
         app.state.transactions = import_payments(filepath)
     except FileNotFoundError:
         print(f"No File Named {filepath} Found")
+    print("Banking Data Imported")
     actions["Import Banking Data"]["available"] = False
     actions["Import Previously Matched Transactions"]["available"] = False
     if len(app.state.accounts) != 0:
@@ -125,7 +126,7 @@ def import_banking(app: Application) -> None:
 
 
 def import_mached_transactions(app: Application):
-    print("IMPORTING MATCHED TRANSACTIONS")
+    print("\nIMPORTING MATCHED TRANSACTIONS")
     accounts = app.state.accounts
     filepath = input("Enter Filepath: ")
     while True:
@@ -142,7 +143,7 @@ def import_mached_transactions(app: Application):
 
 
 def match(app: Application) -> None:
-    print("MATCHING TRANSACTIONS")
+    print("\nMATCHING TRANSACTIONS")
     accounts = app.state.accounts
     transactions = app.state.transactions
     ignore = app.state.words_to_ignore
@@ -158,7 +159,7 @@ def match(app: Application) -> None:
 
 
 def process_payments(app: Application) -> None:
-    print("PROCCESSING PAYMENTS")
+    print("\nPROCCESSING PAYMENTS")
     transactions = app.state.transactions
     apply_payments(transactions)
     print("Balances Updated")
@@ -167,7 +168,7 @@ def process_payments(app: Application) -> None:
 
 
 def procces_unknown_words(app: Application) -> None:
-    print("PROCCESSING UNKNOWN WORDS")
+    print("\nPROCCESSING UNKNOWN WORDS")
     accounts = app.state.accounts
     unknown = app.state.unknown_words
     ignore = app.state.words_to_ignore

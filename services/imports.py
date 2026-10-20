@@ -6,19 +6,19 @@ from models.balance import Balance
 from models.transactions import Transaction
 
 
-def import_accounts(filepath: str = "Account.csv") -> list[Account]:
+def import_accounts(filepath: str = "files/Account.csv") -> list[Account]:
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         return [Account.from_csv(row) for row in reader]
 
 
-def import_balances(filepath: str = "Balances.csv") -> list[Balance]:
+def import_balances(filepath: str = "files/Balances.csv") -> list[Balance]:
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         return [Balance.from_csv(row) for row in reader]
 
 
-def import_words_to_ignore(filepath: str = "WordsToIgnore.csv") -> list[str]:
+def import_words_to_ignore(filepath: str = "files/WordsToIgnore.csv") -> list[str]:
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         reader = csv.DictReader(file)
         return [row["Words"] for row in reader]
@@ -46,7 +46,7 @@ def import_matched(filepath: str, accounts: list[Account]) -> list[Transaction]:
 
 
 def import_account_info_from_csv(
-    accounts_file: str = "Accounts.csv", balances_file: str = "Balances.csv"
+    accounts_file: str = "files/Accounts.csv", balances_file: str = "files/Balances.csv"
 ) -> list[Account]:
     accounts = import_accounts(accounts_file)
     balances = import_balances(balances_file)

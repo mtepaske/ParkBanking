@@ -47,9 +47,9 @@ def export_accounts(app: Application) -> None:
     )
     last_month = last_month_date.strftime("%B")
     last_month_year = last_month_date.strftime("%Y")
-    export_accounts_to_csv(accounts, f"{last_month} {last_month_year} - Accounts")
+    export_accounts_to_csv(accounts, f"files/{last_month} {last_month_year} - Accounts")
     print(f"Accounts saved as {last_month} {last_month_year} - Accounts.csv")
-    export_balances_to_csv(balances, f"{last_month} {last_month_year} - Balances")
+    export_balances_to_csv(balances, f"files/{last_month} {last_month_year} - Balances")
     print(f"Balances saved as {last_month} {last_month_year} - Balances.csv")
 
 
@@ -62,10 +62,12 @@ def export_payments(app: Application):
     last_month = last_month_date.strftime("%B")
     last_month_year = last_month_date.strftime("%Y")
     try:
-        shutil.copy2(source_file, f"{last_month} {last_month_year} Raw.csv")
+        shutil.copy2(source_file, f"files/{last_month} {last_month_year} Raw.csv")
         print(f"{source_file} Saved as {last_month} {last_month_year} Raw.csv")
     finally:
-        export_payments_to_csv(transactions, f"{last_month} {last_month_year}.csv")
+        export_payments_to_csv(
+            transactions, f"files/{last_month} {last_month_year}.csv"
+        )
         print(f"Matched payments saved as {last_month} {last_month_year}.csv")
 
 
@@ -76,7 +78,9 @@ def export_words_to_ignore(app: Application):
     )
     last_month = last_month_date.strftime("%B")
     last_month_year = last_month_date.strftime("%Y")
-    export_ignore_to_csv(ignore, f"{last_month} {last_month_year} - WordsToIgnore.csv")
+    export_ignore_to_csv(
+        ignore, f"files/{last_month} {last_month_year} - WordsToIgnore.csv"
+    )
     print(
         f"Words to Ignore Saved As {last_month} {last_month_year} - WordsToIgnore.csv"
     )

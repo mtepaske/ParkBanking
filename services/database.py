@@ -73,7 +73,6 @@ class Repository:
 
 
 class AccountRepository(Repository):
-
     def get_all_accounts(self) -> list[Account]:
         account_rows = self.execute("""
             SELECT * 
