@@ -26,6 +26,7 @@ class Balance:
         remaining: str,
         outstanding: str,
         pay_frequency: str,
+        credit: str = "0.00",
         id: int | None = None,
     ) -> None:
         self.id = id
@@ -37,7 +38,7 @@ class Balance:
         self.annual = self.money(annual)
         self.remaining = self.money(remaining)
         self.outstanding = self.money(outstanding)
-        self.credit = Decimal("0.00")
+        self.credit = self.money(credit)
         # Checks for valid pay_frequency
         if pay_frequency not in ["a", "q", "m"]:
             pay_frequency = "m"
@@ -50,16 +51,21 @@ class Balance:
         remaining = row["Remaining from this FY"]
         outstanding = row["Outstanding from previous FYs"]
         pay_frequency = row["Pay Frequency"]
-        if row["ID"] == "None":
+        if row["ID"] == "None" or row["ID"] == "":
             id = None
         else:
             id = int(row["ID"])
-        if row["Account ID"] == "None":
+        if row["Account ID"] == "None" or row["Account ID"] == "":
             account_id = None
         else:
             account_id = int(row["Account ID"])
         if remaining == "":
             remaining = annual
+        if int(remaining) < 0:
+            remaining = "0.00"
+            credit = str(int(remaining) * -1)
+        else:
+            credit = "0.00"
         if outstanding == "":
             outstanding = "0.00"
         return cls(
@@ -69,6 +75,7 @@ class Balance:
             remaining,
             outstanding,
             pay_frequency,
+            credit,
             id,
         )
 
@@ -181,7 +188,6 @@ class Balance:
         return actual_paid >= expected
 
     def to_dict(self) -> dict[str, str]:
-        # Credit should show as negative outstanding amount
         id = str(self.id)
         account_id = str(self.account_id)
         site_number = str(self.site_number)
