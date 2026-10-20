@@ -11,6 +11,7 @@ class AppState:
     accounts: list[Account] = field(default_factory=list)
     transactions: list[Transaction] = field(default_factory=list)
     words_to_ignore: list[str] = field(default_factory=list)
+    unknown_words: list[str] = field(default_factory=list)
 
 
 @dataclass

@@ -1,299 +1,209 @@
 import sys
 
 from application import Application
-from cli.accounts import show_accounts
-from cli.menu import get_input
-from services.exports import export_accounts_to_csv, export_transactions_to_csv
+from cli.accounts_menu import show_accounts
+from cli.export_menu import export_menu
+from cli.matching import match_to_account, unknown_words
 from services.imports import (
-    import_accounts_from_csv,
-    import_banking,
-    import_mached_transactions,
+    import_account_info_from_csv,
+    import_matched,
+    import_payments,
     import_words_to_ignore,
 )
-from services.transactions import (
-    match_transactions,
-    procces_unknown_words,
-    process_payments,
-)
+from services.match import Matcher, apply_payments, match_transactions
 
 
-def get_input(question: str) -> str:
-    """Prompts the user for input
-
-    Args:
-        question: (str) The statement to print
-
-    Returns:
-        (str) The user input
-    """
-    return input(f"{question}: ")
-
-
-def show_menu(test: bool = False) -> None:
-    """Shows a menu with available actions to user
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
+def show_menu(app: Application) -> None:
+    print("MAIN MENU")
+    availables = [
+        (name, action) for name, action in actions.items() if action["available"]
+    ]
+    for i, (name, action) in enumerate(availables, start=1):
+        print(f"{i} -> {name}")
     while True:
-        available_actions = [
-            (name, action) for name, action in actions.items() if action["available"]
-        ]
-        for i, (name, action) in enumerate(available_actions, start=1):
-            print(f"{i} -> {name}")
         try:
-            choice = int(get_input("Choose an action"))
-            name, action = available_actions[choice - 1]
+            choice = int(input("Choose an Action: "))
+            name, action = availables[choice - 1]
             break
         except (ValueError, IndexError):
-            print("Invalid choice. Please choose from list")
-    return action["function"](test)
+            print("Invalid Choice. Please Choose From List")
+    return action["function"](app=app)
 
 
-def exit_program(test: bool = False) -> None:
-    """Exits the program
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
-    print("Exiting Program")
+def exit_program(app: Application) -> None:
+    print("EXITING PROGRAM")
     sys.exit(0)
 
 
-def load_from_db_action(app: Application, test: bool = False) -> None:
-    """Helper action to call load_from_db
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-    Returns:
-        None
-    """
-    app.load_from_db()
+def load_from_db(app: Application) -> None:
+    print("LOADING DATA FROM DATABASE")
+    app.state.accounts = app.repos.account_repo.get_active_accounts()
+    app.state.words_to_ignore = app.repos.ignore_repo.get_all_ignore()
+    if len(app.state.words_to_ignore) == 0:
+        print("No Words to Ignore in Database\nAttempting to Import From File")
+        try:
+            app.state.words_to_ignore = import_words_to_ignore()
+        except FileNotFoundError:
+            print(
+                "No File Named WordsToIgnore.csv Found\nLoading With No Words to Ignore"
+            )
     actions["Import Accounts & Balances From CSV"]["available"] = False
-    actions["Load Accounts From Database"]["available"] = False
+    actions["Load From Database"]["available"] = False
     actions["View Accounts"]["available"] = True
     actions["Import Previously Matched Transactions"]["available"] = True
-    actions["Export Accounts To CSV"]["available"] = True
-    actions["Save To Database"]["available"] = True
+    if len(app.state.transactions) != 0:
+        actions["Match Transactions to Accounts"]["available"] = True
+
+
+def save_all_to_db(app: Application) -> None:
+    print("SAVING TO DATABASE")
+    accounts = app.state.accounts
+    ignore = app.state.words_to_ignore
+    app.repos.account_repo.save_accounts(accounts)
+    print("Accounts & Balances Saved")
+    app.repos.ignore_repo.replace_all_ignore(ignore)
+    print("Words to Ignore Saved")
+
+
+def import_accounts_from_csv(app: Application) -> None:
+    print("IMPORTING ACCOUNTS INFORMATION")
+    print("[b] -> Back")
+    print("[d] -> Default Filepath (Accounts.csv)")
+    accounts_filepath = input("Enter Filepath for Accounts: ")
+    if accounts_filepath == "b":
+        print("BACK")
+        return
+    elif accounts_filepath == "d":
+        accounts_filepath = "Accounts.csv"
+    balances_filepath = input("Enter Filepath for Balances: ")
+    print("[b] -> Back")
+    print("[d] -> Default Filepath (Balances.csv)")
+    if balances_filepath == "b":
+        print("BACK")
+        return
+    elif balances_filepath == "d":
+        balances_filepath = "Balances.csv"
+    try:
+        app.state.accounts = import_account_info_from_csv(accounts_filepath)
+    except FileNotFoundError:
+        print(
+            f"One or Both Files Named {accounts_filepath} & {balances_filepath} Not Found"
+        )
+        return
+    actions["Import Accounts & Balances From CSV"]["available"] = False
+    actions["Load From Database"]["available"] = False
+    actions["View Accounts"]["available"] = True
+    actions["Import Previously Matched Transactions"]["available"] = True
     if app.state.transactions is not None:
         actions["Match Transactions to Accounts"]["available"] = True
 
 
-def save_to_db_action(app: Application, test: bool = False) -> None:
-    """Helper action to call save_to_db
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-    Returns:
-        None
-    """
-    app.save_to_db()
-    actions["Save To Database"]["available"] = False
+def accounts_menu(app: Application) -> None:
+    print("ACCOUNTS MENU")
+    show_accounts(app.state.accounts)
 
 
-def import_accounts_from_csv_action(app: Application, test: bool = False) -> None:
-    """Helper function to call import_accounts_and_balances
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
-    acts_and_bal = import_accounts_from_csv()
-    app.state.accounts = acts_and_bal[0]
-    app.state.balances = acts_and_bal[1]
-    actions["Import Accounts & Balances From CSV"]["available"] = False
-    actions["Load Accounts From Database"]["available"] = False
-    actions["View Accounts"]["available"] = True
-    actions["Import Previously Matched Transactions"]["available"] = True
-    actions["Save To Database"]["available"] = True
-    actions["Export Accounts To CSV"]["available"] = True
-    if app.state.transactions is not None:
-        actions["Match Transactions to Accounts"]["available"] = True
-
-
-def show_accounts_action(app: Application, test: bool = False) -> None:
-    """Helper function to call show_accounts
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
-    show_accounts(app.state.accounts, app.state.balances)
-
-
-def import_banking_action(app: Application, test: bool = False) -> None:
-    """Helper function to call import_banking
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
-    app.state.transactions = import_banking(test)
+def import_banking(app: Application) -> None:
+    print("IMPORTING BANKING DATA")
+    print("[b] -> Back")
+    print("[d] -> Default Filepath (Transactions.csv)")
+    filepath = input("Enter Filepath: ")
+    if filepath == "b":
+        print("BACK")
+        return
+    elif filepath == "d":
+        app.state.transactions = import_payments()
+        return
+    try:
+        app.state.transactions = import_payments(filepath)
+    except FileNotFoundError:
+        print(f"No File Named {filepath} Found")
     actions["Import Banking Data"]["available"] = False
     actions["Import Previously Matched Transactions"]["available"] = False
-    if app.state.accounts is not None and app.state.balances is not None:
+    if len(app.state.accounts) != 0:
         actions["Match Transactions to Accounts"]["available"] = True
 
 
-def import_mached_transactions_action(app: Application, test: bool = False):
-    """Helper action to call import_mached_transactions
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
+def import_mached_transactions(app: Application):
+    print("IMPORTING MATCHED TRANSACTIONS")
     accounts = app.state.accounts
+    filepath = input("Enter Filepath: ")
     while True:
-        filepath = get_input(
-            "Whats the name of the file containing matched transaction information?"
-        )
-        transactions = import_mached_transactions(filepath, accounts, test)
-        if transactions is not None:
+        try:
+            transactions = import_matched(filepath, accounts)
             app.state.transactions = transactions
             break
+        except FileNotFoundError:
+            print(f"No File Named {filepath} Found")
+    print("Matched Transactions Imported")
     actions["Import Banking Data"]["available"] = False
     actions["Import Previously Matched Transactions"]["available"] = False
     actions["Proccess Payments"]["available"] = True
-    actions["Export Transactions to CSV"]["available"] = True
 
 
-def match_transactions_action(app: Application, test: bool = False) -> None:
-    """Helper function to call match_transactions
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
+def match(app: Application) -> None:
+    print("MATCHING TRANSACTIONS")
     accounts = app.state.accounts
-    balances = app.state.balances
     transactions = app.state.transactions
     ignore = app.state.words_to_ignore
-    if ignore is None:
-        ignore_repo = app.repos.ignore_repo
-        assert ignore_repo is not None
-        ignore = ignore_repo.get_all()
-        if len(ignore) == 0:
-            print("Words to Ignore Empty. Importing from CSV")
-            ignore = import_words_to_ignore("WordsToIgnore.csv")
-    assert accounts is not None
-    assert balances is not None
-    assert transactions is not None
-    assert ignore is not None
-    app.state.matcher = match_transactions(accounts, transactions, ignore)
+    matcher = Matcher(accounts, ignore)
+    for transaction in transactions:
+        possibilities = match_transactions(matcher, transaction)
+        match_to_account(transaction, possibilities, accounts)
+    app.state.unknown_words = matcher.get_unknown_words()
+    print("Transactions Matched")
     actions["Match Transactions to Accounts"]["available"] = False
     actions["Proccess Payments"]["available"] = True
     actions["Proccess Unknown Words"]["available"] = True
-    actions["Export Transactions to CSV"]["available"] = True
 
 
-def process_payments_action(app: Application, test: bool = False) -> None:
-    """Helper function to call process_payments
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
+def process_payments(app: Application) -> None:
+    print("PROCCESSING PAYMENTS")
     transactions = app.state.transactions
-    process_payments(transactions)
+    apply_payments(transactions)
+    print("Balances Updated")
     actions["Proccess Payments"]["available"] = False
     actions["Import Previously Matched Transactions"]["available"] = True
 
 
-def procces_unknown_words_action(app: Application, test: bool = False) -> None:
-    """Helper function to call procces_unknown_words
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
-    matcher = app.state.matcher
-    assert matcher is not None
-    app.state.words_to_ignore = procces_unknown_words(matcher)
+def procces_unknown_words(app: Application) -> None:
+    print("PROCCESSING UNKNOWN WORDS")
+    accounts = app.state.accounts
+    unknown = app.state.unknown_words
+    ignore = app.state.words_to_ignore
+    unknown_words(accounts, unknown, ignore)
+    print("Unknown Words Proccessed")
     actions["Proccess Unknown Words"]["available"] = False
 
 
-def export_accounts_to_csv_action(app: Application, test: bool = False):
-    """Helper function to call export_accounts_to_csv
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
-    accounts = app.state.accounts
-    balances = app.state.balances
-    assert accounts is not None
-    assert balances is not None
-    export_accounts_to_csv(accounts, balances, test)
-
-
-def export_transactions_to_csv_action(app: Application, test: bool = False):
-    """Helper function to call export_transactions_to_csv
-
-    Args:
-        test: (bool) True when in test mode, False otherwise
-
-    Returns:
-        None
-    """
-    transactions = app.state.transactions
-    assert transactions is not None
-    export_transactions_to_csv(transactions, test)
-
-
 actions = {
+    "Load From Database": {
+        "available": True,
+        "function": load_from_db,
+    },
+    "Accounts Menu": {"available": False, "function": accounts_menu},
     "Import Accounts & Balances From CSV": {
         "available": True,
-        "function": import_accounts_from_csv_action,
+        "function": import_accounts_from_csv,
     },
-    "Load Accounts From Database": {
-        "available": True,
-        "function": load_from_db_action,
-    },
-    "View Accounts": {"available": False, "function": show_accounts_action},
-    "Import Banking Data": {"available": True, "function": import_banking_action},
+    "Import Banking Data": {"available": True, "function": import_banking},
     "Import Previously Matched Transactions": {
         "available": False,
-        "function": import_mached_transactions_action,
+        "function": import_mached_transactions,
+    },
+    "Export Menu": {
+        "available": True,
+        "function": export_menu,
     },
     "Match Transactions to Accounts": {
         "available": False,
-        "function": match_transactions_action,
+        "function": match,
     },
-    "Proccess Payments": {"available": False, "function": process_payments_action},
+    "Proccess Payments": {"available": False, "function": apply_payments},
     "Proccess Unknown Words": {
         "available": False,
-        "function": procces_unknown_words_action,
+        "function": procces_unknown_words,
     },
-    "Export Transactions to CSV": {
-        "available": False,
-        "function": export_transactions_to_csv_action,
-    },
-    "Save To Database": {"available": False, "function": save_to_db_action},
-    "Export Accounts To CSV": {
-        "available": False,
-        "function": export_accounts_to_csv_action,
-    },
+    "Save To Database": {"available": True, "function": save_all_to_db},
     "Exit Program": {"available": True, "function": exit_program},
 }
