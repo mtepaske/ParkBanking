@@ -21,10 +21,12 @@ class Transaction:
         )
 
     @classmethod
-    def from_matched(cls, row: dict[str, str], accounts: list[Account]) -> Transaction:
+    def from_matched_csv(
+        cls, row: dict[str, str], accounts: list[Account]
+    ) -> Transaction:
         transaction = cls(row["Date"], Decimal(row["Amount"]), "previously matched")
         for account in accounts:
-            if account.site == row["Site"]:
+            if account.site_number == row["Site"]:
                 transaction.add_account(account)
                 break
         return transaction
@@ -35,7 +37,9 @@ class Transaction:
     def to_dict(self) -> dict[str, str]:
         return {
             "Date": self.date,
-            "Site": (str(self.account.site) if self.account is not None else "??"),
+            "Site": (
+                str(self.account.site_number) if self.account is not None else "??"
+            ),
             "Name": (self.account.name if self.account is not None else "Unmatched"),
             "Amount": str(self.amount),
         }

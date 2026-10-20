@@ -16,14 +16,14 @@ class Account:
         account_id: int | None = None,
         active: bool = True,
     ) -> None:
-        self.id = account_id
+        self.account_id = account_id
         self.name = name
         self.balance = balance
         self.active = active
         # Site number is extended to 2 digits
-        self.site = str(site_number)
-        if len(self.site) == 1:
-            self.site = f"0{self.site}"
+        self.site_number = str(site_number)
+        if len(self.site_number) == 1:
+            self.site_number = f"0{self.site_number}"
         self.aliases = aliases if aliases is not None else []
         # Aliases attribute is populated with name and site number if none given
         if len(self.aliases) == 0:
@@ -31,7 +31,7 @@ class Account:
             for alias in names:
                 self.aliases.append(alias)
                 self.aliases.append(alias.upper())
-            self.aliases.append(self.site)
+            self.aliases.append(self.site_number)
             self.aliases.append(str(site_number))
 
     @classmethod
@@ -56,11 +56,11 @@ class Account:
 
     def add_balance(self, balance: Balance) -> None:
         self.balance = balance
-        if self.id is not None:
-            self.balance.account_id = self.id
+        if self.account_id is not None:
+            self.balance.account_id = self.account_id
 
     def change_site(self, new_site: str) -> None:
-        self.site = new_site
+        self.site_number = new_site
         self.aliases.append(new_site)
         if self.balance is not None:
             self.balance.site_number = new_site
@@ -88,12 +88,12 @@ class Account:
         else:
             active = "0"
         return {
-            "ID": str(self.id),
+            "ID": str(self.account_id),
             "Name": self.name,
-            "Site": str(self.site),
+            "Site": str(self.site_number),
             "Aliases": ",".join(self.aliases),
             "Active": active,
         }
 
     def __str__(self) -> str:
-        return f"{self.site}: {self.name}"
+        return f"{self.site_number}: {self.name}"
