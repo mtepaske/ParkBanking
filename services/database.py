@@ -41,6 +41,7 @@ def initialise_database(connection: sqlite3.Connection) -> None:
                 annual TEXT NOT NULL,
                 remaining TEXT NOT NULL,
                 outstanding TEXT NOT NULL,
+                credit TEXT NOT NULL,
                 pay_frequency TEXT NOT NULL,
                 FOREIGN KEY (account_id) REFERENCES accounts(id)
             )
@@ -120,6 +121,7 @@ class AccountRepository(Repository):
                 balances.remaining,
                 balances.outstanding,
                 balances.pay_frequency,
+                balances.credit,
                 accounts.site_number
             FROM balances 
             JOIN accounts
@@ -137,6 +139,7 @@ class AccountRepository(Repository):
             remaining=balance_row["remaining"],
             outstanding=balance_row["outstanding"],
             pay_frequency=balance_row["pay_frequency"],
+            credit=balance_row["credit"],
             id=balance_row["id"],
         )
 
@@ -156,6 +159,7 @@ class AccountRepository(Repository):
                 remaining=row["remaining"],
                 outstanding=row["outstanding"],
                 pay_frequency=row["pay_frequency"],
+                credit=row["credit"],
                 id=row["id"],
             )
             for row in balance_rows
@@ -178,6 +182,7 @@ class AccountRepository(Repository):
                 remaining=row["remaining"],
                 outstanding=row["outstanding"],
                 pay_frequency=row["pay_frequency"],
+                credit=row["credit"],
                 id=row["id"],
             )
             for row in balance_rows
@@ -276,46 +281,56 @@ class AccountRepository(Repository):
     def _save_balance(self, balance: Balance) -> None:
         if balance.account_id is None:
             raise ValueError("Insert Failed. Balance has no account id")
-        if balance.id is None:
-            cursor = self.execute(
-                """
-                INSERT INTO balances (
-                account_id, 
-                annual, 
-                remaining, 
-                outstanding, 
-                pay_frequency) 
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (
-                    balance.account_id,
-                    str(balance.annual),
-                    str(balance.remaining),
-                    str(balance.outstanding),
-                    balance.pay_frequency,
-                ),
-            )
-            balance.id = cursor.lastrowid
-        else:
-            cursor = self.execute(
-                """
-                UPDATE balances 
-                SET annual = ?, 
-                remaining = ?, 
-                outstanding = ?, 
-                pay_frequency = ? 
-                WHERE id = ?
-                """,
-                (
-                    str(balance.annual),
-                    str(balance.remaining),
-                    str(balance.outstanding),
-                    balance.pay_frequency,
-                    balance.id,
-                ),
-            )
-            if cursor.rowcount != 1:
-                raise ValueError(f"Balance {balance.id} does not exist in the database")
+        try:
+            if balance.id is None:
+                cursor = self.execute(
+                    """
+                    INSERT INTO balances (
+                    account_id, 
+                    annual, 
+                    remaining, 
+                    outstanding, 
+                    credit,
+                    pay_frequency
+                    ) 
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        balance.account_id,
+                        str(balance.annual),
+                        str(balance.remaining),
+                        str(balance.outstanding),
+                        str(balance.credit),
+                        balance.pay_frequency,
+                    ),
+                )
+                balance.id = cursor.lastrowid
+            else:
+                cursor = self.execute(
+                    """
+                    UPDATE balances 
+                    SET annual = ?, 
+                    remaining = ?, 
+                    outstanding = ?, 
+                    credit = ?,
+                    pay_frequency = ? 
+                    WHERE id = ?
+                    """,
+                    (
+                        str(balance.annual),
+                        str(balance.remaining),
+                        str(balance.outstanding),
+                        str(balance.credit),
+                        balance.pay_frequency,
+                        balance.id,
+                    ),
+                )
+                if cursor.rowcount != 1:
+                    raise ValueError(
+                        f"Balance {balance.id} does not exist in the database"
+                    )
+        except sqlite3.OperationalError:
+            print(f"{balance.site_number} Could Not Be Entered")
 
 
 class IgnoreRepository(Repository):

@@ -62,8 +62,8 @@ class Balance:
         if remaining == "":
             remaining = annual
         if Decimal(remaining) < 0:
-            remaining = "0.00"
             credit = str(Decimal(remaining) * -1)
+            remaining = "0.00"
         else:
             credit = "0.00"
         if outstanding == "":
@@ -210,4 +210,4 @@ class Balance:
         }
 
     def __str__(self) -> str:
-        return f"Balance for {self.site_number} with Account ID {self.account_id} -> Annual = {self.annual}, Remaining = {self.remaining}, Outstanding = {self.outstanding}, Pay Frequency = {self.pay_frequency}"
+        return f"Balance for {self.site_number} with Account ID {self.account_id} -> Annual = {self.annual}, Remaining = {self.remaining}, Outstanding = {self.outstanding}, Credit = {self.credit}, Pay Frequency = {self.pay_frequency}"

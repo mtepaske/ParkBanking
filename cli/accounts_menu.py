@@ -49,6 +49,7 @@ def edit_account(account: Account) -> None:
             "value": balance.outstanding,
             "function": change_account_outstanding,
         },
+        "Credit": {"value": balance.credit, "function": change_account_credit},
     }
     while True:
         print(f"Editing Account -> {account}")
@@ -130,6 +131,18 @@ def change_account_outstanding(account: Account):
     edit_account(account)
 
 
+def change_account_credit(account: Account):
+    assert account.balance is not None
+    while True:
+        try:
+            new_credit = Decimal(input("Enter New Amount: "))
+            break
+        except ValueError:
+            print("Please Enter A Number")
+    account.balance.outstanding = new_credit
+    edit_account(account)
+
+
 def add_account(accounts: list[Account]) -> None:
     while True:
         try:
@@ -168,6 +181,7 @@ def print_accounts(accounts: list[Account]) -> None:
     table.add_column("Name")
     table.add_column("Remaining")
     table.add_column("Outstanding")
+    table.add_column("Credit")
     index = 1
     for account in accounts:
         assert account.balance is not None
@@ -180,6 +194,7 @@ def print_accounts(accounts: list[Account]) -> None:
             f"{account.name}",
             f"[{style}]${balance.remaining:,.2f}[/{style}]",
             f"[{style}]${balance.outstanding:,.2f}[/{style}]",
+            f"[{style}]${balance.credit:,.2f}[/{style}]",
         )
         index += 1
     console.print(table)

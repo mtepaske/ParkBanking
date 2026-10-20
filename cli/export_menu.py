@@ -62,13 +62,17 @@ def export_payments(app: Application):
     last_month = last_month_date.strftime("%B")
     last_month_year = last_month_date.strftime("%Y")
     try:
+        print("Moving & Renaming Source File")
         shutil.copy2(source_file, f"files/{last_month} {last_month_year} Raw.csv")
         print(f"{source_file} Saved as {last_month} {last_month_year} Raw.csv")
-    finally:
-        export_payments_to_csv(
-            transactions, f"files/{last_month} {last_month_year}.csv"
-        )
-        print(f"Matched payments saved as {last_month} {last_month_year}.csv")
+    except FileNotFoundError:
+        print("Imported Transactions File Not Found\nCanceling Copy And Move")
+    print(f"[d] -> Default File Path (files/{last_month} {last_month_year}.csv)")
+    filepath = input("Enter New File Path: ")
+    if filepath == "d":
+        filepath = f"files/{last_month} {last_month_year}.csv"
+    export_payments_to_csv(transactions, filepath)
+    print(f"Matched Payments Exported As: {filepath}")
 
 
 def export_words_to_ignore(app: Application):

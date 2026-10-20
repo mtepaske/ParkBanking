@@ -75,23 +75,25 @@ def save_all_to_db(app: Application) -> None:
 def import_accounts_from_csv(app: Application) -> None:
     print("\nIMPORTING ACCOUNTS INFORMATION")
     print("[b] -> Back")
-    print("[d] -> Default Filepath (files/Accounts.csv)")
+    print("[d] -> Default Filepath (files/Accounts)")
     accounts_filepath = input("Enter Filepath for Accounts: ")
     if accounts_filepath == "b":
         print("BACK")
         return
     elif accounts_filepath == "d":
-        accounts_filepath = "files/Accounts.csv"
+        accounts_filepath = "files/Accounts"
     print("[b] -> Back")
-    print("[d] -> Default Filepath (files/Balances.csv)")
+    print("[d] -> Default Filepath (files/Balances)")
     balances_filepath = input("Enter Filepath for Balances: ")
     if balances_filepath == "b":
         print("BACK")
         return
     elif balances_filepath == "d":
-        balances_filepath = "files/Balances.csv"
+        balances_filepath = "files/Balances"
     try:
-        app.state.accounts = import_account_info_from_csv(accounts_filepath)
+        app.state.accounts = import_account_info_from_csv(
+            f"{accounts_filepath}.csv", f"{balances_filepath}.csv"
+        )
         print("Accounts Information Imported")
     except FileNotFoundError:
         print(
@@ -109,7 +111,7 @@ def import_accounts_from_csv(app: Application) -> None:
 def import_banking(app: Application) -> None:
     print("\nIMPORTING BANKING DATA")
     print("[b] -> Back")
-    print("[d] -> Default Filepath (files/Transactions.csv)")
+    print("[d] -> Default Filepath (files/Transactions)")
     filepath = input("Enter Filepath: ")
     if filepath == "b":
         print("BACK")
@@ -118,9 +120,9 @@ def import_banking(app: Application) -> None:
         app.state.transactions = import_payments()
         return
     try:
-        app.state.transactions = import_payments(filepath)
+        app.state.transactions = import_payments(f"{filepath}.csv")
     except FileNotFoundError:
-        print(f"No File Named {filepath} Found")
+        print(f"No File Named {filepath}.csv Found")
     print("Banking Data Imported")
     actions["Import Banking Data"]["available"] = False
     actions["Import Previously Matched Transactions"]["available"] = False
@@ -132,13 +134,14 @@ def import_mached_transactions(app: Application):
     print("\nIMPORTING MATCHED TRANSACTIONS")
     accounts = app.state.accounts
     filepath = input("Enter Filepath: ")
-    while True:
-        try:
-            transactions = import_matched(filepath, accounts)
+    try:
+        while True:
+            transactions = import_matched(f"{filepath}.csv", accounts)
             app.state.transactions = transactions
             break
-        except FileNotFoundError:
-            print(f"No File Named {filepath} Found")
+    except FileNotFoundError:
+        print(f"No File Named {filepath} Found")
+        return
     review_matches(transactions, accounts)
     print("Matched Transactions Imported")
     actions["Match Transactions to Accounts"]["available"] = False
@@ -169,6 +172,8 @@ def process_payments(app: Application) -> None:
     console = Console()
     table = Table()
     table.add_column("Index")
+    table.add_column("Site Holder")
+    table.add_column("Site Number")
     table.add_column("Old Remaining")
     table.add_column("Old Outstanding")
     table.add_column("Old Credit")
@@ -185,10 +190,13 @@ def process_payments(app: Application) -> None:
             out_col = "red" if old["Outstanding"] == new["Outstanding"] else "green"
             cre_col = "red" if old["Credit"] == new["Credit"] else "green"
             table.add_row(
+                f"{index}",
+                f"{transaction.account.name}",
+                f"{transaction.account.site_number}",
                 f"${old['Remaining']:,.2f}",
                 f"${old['Outstanding']:,.2f}",
-                f'{old["Credit"]}:,.2f',
-                f"-[{'blue'}]{transaction.amount}[/{'blue'}]",
+                f'${old["Credit"]:,.2f}',
+                f"[{'blue'}]-${transaction.amount:,.2f}[/{'blue'}]",
                 f"[{rem_col}]${new['Remaining']:,.2f}[/{rem_col}]",
                 f"[{out_col}]${new['Outstanding']:,.2f}[/{out_col}]",
                 f"[{cre_col}]${new['Credit']:,.2f}[/{cre_col}]",

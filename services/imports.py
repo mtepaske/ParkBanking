@@ -46,7 +46,7 @@ def import_matched(filepath: str, accounts: list[Account]) -> list[Transaction]:
 
 
 def import_account_info_from_csv(
-    accounts_file: str = "files/Accounts.csv", balances_file: str = "files/Balances.csv"
+    accounts_file: str = "files/Accounts", balances_file: str = "files/Balances"
 ) -> list[Account]:
     accounts = import_accounts(accounts_file)
     balances = import_balances(balances_file)

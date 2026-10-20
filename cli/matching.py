@@ -66,7 +66,6 @@ def change_match(transaction: Transaction, accounts: list[Account]) -> None:
     if choice is None:
         return
     transaction.add_account(choice)
-    print(transaction.account)
 
 
 def no_matches(accounts: list[Account], transaction: Transaction) -> None:
