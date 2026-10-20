@@ -1,4 +1,7 @@
+from decimal import Decimal
+
 from models.account import Account
+from models.balance import Balance
 from models.transactions import Transaction
 
 
@@ -42,9 +45,37 @@ def match_transactions(matcher: Matcher, transaction: Transaction) -> list[Accou
     return possibilities
 
 
-def apply_payments(transactions: list[Transaction]) -> None:
-    for transaction in transactions:
-        if transaction.account is None:
-            continue
-        assert transaction.account.balance is not None
-        transaction.account.balance.add_payment(transaction.amount)
+def review_payment(
+    balance: Balance, amount: Decimal
+) -> tuple[dict[str, Decimal], dict[str, Decimal]]:
+    new_remaining = balance.remaining
+    new_outstanding = balance.outstanding
+    new_credit = balance.credit
+    amount = balance.money(amount)
+    if amount <= 0:
+        raise ValueError("Amount must be greater than 0")
+    if amount < new_outstanding:
+        new_outstanding -= amount
+    elif amount < balance.balance:
+        amount -= new_outstanding
+        new_outstanding = Decimal("0.00")
+        new_remaining -= amount
+    else:
+        amount -= new_outstanding
+        new_outstanding = Decimal("0.00")
+        amount -= new_remaining
+        new_remaining = Decimal("0.00")
+        new_credit = amount
+    old_v_new = (
+        {
+            "Remaining": balance.remaining,
+            "Outstanding": balance.outstanding,
+            "Credit": balance.credit,
+        },
+        {
+            "Remaining": new_remaining,
+            "Outstanding": new_outstanding,
+            "Credit": new_credit,
+        },
+    )
+    return old_v_new

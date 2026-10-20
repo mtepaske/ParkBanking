@@ -289,9 +289,9 @@ class AccountRepository(Repository):
                 """,
                 (
                     balance.account_id,
-                    balance.annual,
-                    balance.remaining,
-                    balance.outstanding,
+                    str(balance.annual),
+                    str(balance.remaining),
+                    str(balance.outstanding),
                     balance.pay_frequency,
                 ),
             )
@@ -307,9 +307,9 @@ class AccountRepository(Repository):
                 WHERE id = ?
                 """,
                 (
-                    balance.annual,
-                    balance.remaining,
-                    balance.outstanding,
+                    str(balance.annual),
+                    str(balance.remaining),
+                    str(balance.outstanding),
                     balance.pay_frequency,
                     balance.id,
                 ),

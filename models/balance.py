@@ -61,9 +61,9 @@ class Balance:
             account_id = int(row["Account ID"])
         if remaining == "":
             remaining = annual
-        if int(remaining) < 0:
+        if Decimal(remaining) < 0:
             remaining = "0.00"
-            credit = str(int(remaining) * -1)
+            credit = str(Decimal(remaining) * -1)
         else:
             credit = "0.00"
         if outstanding == "":

@@ -42,7 +42,7 @@ class Account:
         else:
             active = False
         # Checks for a database ID, if none exists then it hasnt been assigned to the database before
-        if row["ID"] == "None":
+        if row["ID"] == "None" or row["ID"] == "":
             id = None
         else:
             id = int(row["ID"])

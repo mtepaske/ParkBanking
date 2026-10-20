@@ -1,36 +1,64 @@
+from rich.console import Console
+from rich.table import Table
+
 from cli.accounts_menu import account_picker
 from models.account import Account
 from models.transactions import Transaction
 
 
 def review_matches(transactions: list[Transaction], accounts: list[Account]) -> None:
-    index = 1
+    console = Console()
+    matched = "green"
+    no_match = "red"
     while True:
+        index = 1
+        table = Table()
+        table.add_column("Index")
+        table.add_column("Date")
+        table.add_column("Amount")
+        table.add_column("Details")
+        table.add_column("")
+        table.add_column("Account Site Number")
+        table.add_column("Account Name")
         for transaction in transactions:
-            if transaction.account is None:
-                print(f"[{index}] - No Match -> {transaction}")
+            account = transaction.account
+            if account is None:
+                table.add_row(
+                    f"[{no_match}]{index}[/{no_match}]",
+                    f"[{no_match}]{transaction.date}[/{no_match}]",
+                    f"[{no_match}]${transaction.amount:,.2f}[/{no_match}]",
+                    f"[{no_match}]{transaction.details}[/{no_match}]",
+                    f"[{no_match}]->[/{no_match}]",
+                    f"[{no_match}]?[/{no_match}]",
+                    f"[{no_match}]?[/{no_match}]",
+                )
             else:
-                account = transaction.account
-                print(
-                    f"[{index}] - {account.site_number}: {account.name} -> {transaction}"
+                table.add_row(
+                    f"[{matched}]{index}[/{matched}]",
+                    f"[{matched}]{transaction.date}[/{matched}]",
+                    f"[{matched}]${transaction.amount:,.2f}[/{matched}]",
+                    f"[{matched}]{transaction.details}[/{matched}]",
+                    f"[{matched}]->[/{matched}]",
+                    f"[{matched}]{account.site_number}[/{matched}]",
+                    f"[{matched}]{account.name}[/{matched}]",
                 )
             index += 1
-        while True:
-            choice = input("Are all the transactions matched correctly? (y/n)")
-            if choice == "y":
-                print("Transactions matched successfully")
-                return
-            elif choice == "n":
-                while True:
-                    match_to_change = int(input("Which match?"))
-                    try:
-                        transaction_to_change = transactions[match_to_change - 1]
-                        change_match(transaction_to_change, accounts)
-                        break
-                    except (IndexError, KeyError):
-                        print("Must choose from the available indexes")
-            else:
-                print("Please choose y or n")
+        console.print(table)
+        choice = input("Are all the transactions matched correctly? (y/n): ")
+        if choice == "y":
+            print("Transactions matched successfully")
+            return
+        elif choice == "n":
+            while True:
+                match_to_change = int(input("Which match?: "))
+                try:
+                    transaction_to_change = transactions[match_to_change - 1]
+                    change_match(transaction_to_change, accounts)
+                    break
+                except (IndexError, KeyError):
+                    print("Must choose from the available indexes")
+        else:
+            print("Please choose y or n")
 
 
 def change_match(transaction: Transaction, accounts: list[Account]) -> None:
@@ -38,13 +66,14 @@ def change_match(transaction: Transaction, accounts: list[Account]) -> None:
     if choice is None:
         return
     transaction.add_account(choice)
+    print(transaction.account)
 
 
 def no_matches(accounts: list[Account], transaction: Transaction) -> None:
     print(
         f"Date: {transaction.date}, Amount: {transaction.amount}, Details: {transaction.details}"
     )
-    print("Which Account does this payment belong to?")
+    print("Which Account does this payment belong to?: ")
     choice = account_picker(accounts)
     if choice is None:
         return
@@ -93,7 +122,7 @@ def unknown_words(
                 "[i] - Add to ignored words\n"
                 "[a] - Add as an alias\n"
                 "[s] - skip\n"
-                "What is your choice?"
+                "What is your choice?: "
             )
             if choice in ["i", "a", "s"]:
                 break
