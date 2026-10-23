@@ -6,5 +6,5 @@ pyproject.toml
 .DS_Store
 
 #Files
-*.csv
+files/
 *.db
