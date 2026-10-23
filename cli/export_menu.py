@@ -14,7 +14,7 @@ from services.exports import (
 
 
 def export_menu(app: Application) -> None:
-    print("EXPORT MENU")
+    print("\nEXPORT MENU")
     export_actions = {
         "Export Accounts & Balances": export_accounts,
         "Export Payments": export_payments,
@@ -47,10 +47,22 @@ def export_accounts(app: Application) -> None:
     )
     last_month = last_month_date.strftime("%B")
     last_month_year = last_month_date.strftime("%Y")
-    export_accounts_to_csv(accounts, f"files/{last_month} {last_month_year} - Accounts")
-    print(f"Accounts saved as {last_month} {last_month_year} - Accounts.csv")
-    export_balances_to_csv(balances, f"files/{last_month} {last_month_year} - Balances")
-    print(f"Balances saved as {last_month} {last_month_year} - Balances.csv")
+    print(
+        f"[d] -> Default File Path (files/{last_month} {last_month_year} - Accounts.csv)"
+    )
+    filepath = input("Enter New File Path For Accounts: ")
+    if filepath == "d":
+        filepath = f"files/{last_month} {last_month_year} - Accounts"
+    export_accounts_to_csv(accounts, f"{filepath}.csv")
+    print(f"Accounts saved as {filepath}.csv")
+    print(
+        f"[d] -> Default File Path (files/{last_month} {last_month_year} - Balances.csv)"
+    )
+    filepath = input("Enter New File Path For Balances: ")
+    if filepath == "d":
+        filepath = f"files/{last_month} {last_month_year} - Balances"
+    export_balances_to_csv(balances, f"{filepath}.csv")
+    print(f"Balances saved as {filepath}.csv")
 
 
 def export_payments(app: Application):
@@ -67,12 +79,12 @@ def export_payments(app: Application):
         print(f"{source_file} Saved as {last_month} {last_month_year} Raw.csv")
     except FileNotFoundError:
         print("Imported Transactions File Not Found\nCanceling Copy And Move")
-    print(f"[d] -> Default File Path (files/{last_month} {last_month_year}.csv)")
+    print(f"[d] -> Default File Path (files/{last_month} {last_month_year})")
     filepath = input("Enter New File Path: ")
     if filepath == "d":
-        filepath = f"files/{last_month} {last_month_year}.csv"
-    export_payments_to_csv(transactions, filepath)
-    print(f"Matched Payments Exported As: {filepath}")
+        filepath = f"files/{last_month} {last_month_year}"
+    export_payments_to_csv(transactions, f"{filepath}.csv")
+    print(f"Matched Payments Saved As: {filepath}.csv")
 
 
 def export_words_to_ignore(app: Application):
@@ -82,9 +94,11 @@ def export_words_to_ignore(app: Application):
     )
     last_month = last_month_date.strftime("%B")
     last_month_year = last_month_date.strftime("%Y")
-    export_ignore_to_csv(
-        ignore, f"files/{last_month} {last_month_year} - WordsToIgnore.csv"
-    )
     print(
-        f"Words to Ignore Saved As {last_month} {last_month_year} - WordsToIgnore.csv"
+        f"[d] -> Default File Path (files/{last_month} {last_month_year} - WordsToIgnore)"
     )
+    filepath = input("Enter New File Path For WordsToIgnore: ")
+    if filepath == "d":
+        filepath = f"files/{last_month} {last_month_year} - WordsToIgnore"
+    export_ignore_to_csv(ignore, f"{filepath}.csv")
+    print(f"Words to Ignore Saved As {filepath}.csv")

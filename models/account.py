@@ -26,8 +26,9 @@ class Account:
             self.site_number = f"0{self.site_number}"
         self.aliases = aliases if aliases is not None else []
         # Aliases attribute is populated with name and site number if none given
-        if len(self.aliases) == 0:
+        if len(self.aliases) == 1:
             names = self.name.split(" ")
+            self.aliases.pop()
             for alias in names:
                 self.aliases.append(alias)
                 self.aliases.append(alias.upper())
