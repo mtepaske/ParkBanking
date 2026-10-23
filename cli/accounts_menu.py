@@ -9,7 +9,7 @@ from models.balance import Balance
 
 
 def accounts_menu(app: Application) -> None:
-    print("ACCOUNTS MENU")
+    print("\nACCOUNTS MENU")
     accounts = app.state.accounts
     while True:
         print_accounts(accounts)
@@ -23,45 +23,56 @@ def accounts_menu(app: Application) -> None:
             elif choice == "a":
                 print("Adding Account")
                 add_account(accounts)
-                return
             else:
                 account = accounts[int(choice) - 1]
-            print(f"You Have Picked {account}")
-            edit_account(account)
+                print(f"You Have Picked {account}")
+                edit_account(account)
         except (ValueError, IndexError):
             print("Invalid Choice. Please Choose From List")
 
 
 def edit_account(account: Account) -> None:
-    print("ACCOUNT EDITING")
-    balance = account.balance
-    assert balance is not None
-    attributes = {
-        "Name": {"value": account.name, "function": change_account_name},
-        "Site Number": {"value": account.site_number, "function": change_account_site},
-        "Active": {"value": account.active, "function": change_account_active},
-        "Annual Fees": {"value": balance.annual, "function": change_account_annual},
-        "Remaining Fees": {
-            "value": balance.remaining,
-            "function": change_account_remaining,
-        },
-        "Outstanding Fees": {
-            "value": balance.outstanding,
-            "function": change_account_outstanding,
-        },
-        "Credit": {"value": balance.credit, "function": change_account_credit},
-    }
+    print("\nACCOUNT EDITING")
     while True:
         print(f"Editing Account -> {account}")
+        balance = account.balance
+        assert balance is not None
+        attributes = {
+            "Name": {"value": account.name, "function": change_account_name},
+            "Site Number": {
+                "value": account.site_number,
+                "function": change_account_site,
+            },
+            "Active": {"value": account.active, "function": change_account_active},
+            "Annual Fees": {"value": balance.annual, "function": change_account_annual},
+            "Remaining Fees": {
+                "value": balance.remaining,
+                "function": change_account_remaining,
+            },
+            "Outstanding Fees": {
+                "value": balance.outstanding,
+                "function": change_account_outstanding,
+            },
+            "Credit": {"value": balance.credit, "function": change_account_credit},
+        }
         editable = [(name, action) for name, action in attributes.items()]
         for i, (name, action) in enumerate(editable, start=1):
-            print(f"[{i}] - {name}: {action['value']}")
+            print(f"[{i}] -> {name}: {action['value']}")
+        print("[p] -> Add Payment")
         print("[b] -> Back")
         try:
             choice = input("What would you like to change?: ")
             if choice == "b":
                 print("BACK")
                 return
+            elif choice == "p":
+                while True:
+                    try:
+                        amount = Decimal(input("Enter Amount: $"))
+                        balance.add_payment(amount)
+                        break
+                    except ValueError:
+                        print("Amount Must Be Monetary Amount")
             else:
                 name, action = editable[int(choice) - 1]
                 break
@@ -99,7 +110,7 @@ def change_account_annual(account: Account):
     assert account.balance is not None
     while True:
         try:
-            new_annual = Decimal(input("Enter New Amount: "))
+            new_annual = Decimal(input("Enter New Amount: $"))
             break
         except ValueError:
             print("Please Enter A Number")
@@ -111,7 +122,7 @@ def change_account_remaining(account: Account):
     assert account.balance is not None
     while True:
         try:
-            new_remaining = Decimal(input("Enter New Amount: "))
+            new_remaining = Decimal(input("Enter New Amount: $"))
             break
         except ValueError:
             print("Please Enter A Number")
@@ -123,7 +134,7 @@ def change_account_outstanding(account: Account):
     assert account.balance is not None
     while True:
         try:
-            new_outstanding = Decimal(input("Enter New Amount: "))
+            new_outstanding = Decimal(input("Enter New Amount: $"))
             break
         except ValueError:
             print("Please Enter A Number")
@@ -135,7 +146,7 @@ def change_account_credit(account: Account):
     assert account.balance is not None
     while True:
         try:
-            new_credit = Decimal(input("Enter New Amount: "))
+            new_credit = Decimal(input("Enter New Amount: $"))
             break
         except ValueError:
             print("Please Enter A Number")

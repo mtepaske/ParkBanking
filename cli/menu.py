@@ -22,7 +22,7 @@ def show_menu(app: Application) -> None:
         (name, action) for name, action in actions.items() if action["available"]
     ]
     for i, (name, action) in enumerate(availables, start=1):
-        print(f"{i} -> {name}")
+        print(f"[{i}] -> {name}")
     while True:
         try:
             choice = int(input("Choose an Action: "))
