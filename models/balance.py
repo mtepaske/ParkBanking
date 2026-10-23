@@ -51,6 +51,7 @@ class Balance:
         remaining = row["Remaining from this FY"]
         outstanding = row["Outstanding from previous FYs"]
         pay_frequency = row["Pay Frequency"]
+        # Check for empty rows or missing values
         if row["ID"] == "None" or row["ID"] == "":
             id = None
         else:

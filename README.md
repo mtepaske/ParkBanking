@@ -1,108 +1,110 @@
 # ParkBanking
 
-A python app designed to automatically clean and match payments made to a site
-holders account and track the balance. This app is designed for use in a caravan
-park where site holders are paying each month (or week, or quarter) and payment
-deatils are not standardised. Although it is designed for use in a caravan park,
-can probably be modified for use in any business where payments need to be
-tracked.
+I recently took over management of a caravan park in southern Victoria. When I
+took over all the banking was hand sorted and hand written to index cards. While
+this only had to be done once a month, it was time consuming and I figured I
+could easily autonmate it and track it using a program. I've developed this app
+to do just that.
+
+Payments come in to the account with different descriptions, so the program
+works by macthing keywords in the description.
+
+I've designed this for my own personal use, and as my first useful application.
+But I imagine it can easily be adapted for any other small businmess or service
+where regular payments are made into an account that you might have to match to
+an account and track over time.
+
+This is written by my self in python, and is still a work in progress. I intend
+to move most of my computer workflow and tracking to this program, so if you end
+up using it keep an eye out for regular updates.
 
 ## To Do
 
-- [x] Add ability to add accounts from app - Function in main.py that adds a
-      dictionary and use the from_csv in accounts.py - [ ] Add ability to edit
-      accounts
 - [ ] Add ability to select transaction file import
 - [ ] Add date object rather then string for date sorting
 - [ ] Add GUI
-- [x] Add handling of Cash deposits - Filter out entries with desciption CASH
-- [ ] Add ability to export credit on balances as negative value on remianing
-      fees - Change to_dict in balance.py to convert credit into negative on
-      remaining. Refactor from_csv and get_all and get_active to reflect change
 - [ ] Add support for new financial year
     - [ ] Adding new fees
     - [ ] Tranfer remaining fees to outstanding fees
 - [ ] Add site class and site tracking
-- [x] Refactor main.py to prompt user for steps
-    - [ ] Add ability to preview files
-    - [x] Add ability to review matches before balance updates
-- [x] Add Database storage through SQlite3
-    - [x] Add ability to read from database and import from csv
-    - [x] Add ability to export active accounts and balances to csv
-- [x] Add ability to load previously matched transactions for paymnet
-      processing - Add from_csv and import_matched functions to transactions and
-      main.py
-- [x] Add ability to rematch specific transactions - Add addition to n option in
-      review mathces to call accout_picker
-- [x] Change to see amount and date of transactions when reviewing or matching -
-      Add ability into review transactions
 
 ## Usage
 
-### Uploading Files
+Currently this is a CLI tool. You can launch the app by typing python3 main.py
+into your command line.
 
-There must be three csv files on your system
+Once launched, you will see a main menu screen. You can begin by loading from
+the database, or by loading from CSV files
 
-- Accounts.csv
-- Transactions.csv
-- WordsToIgnore.csv
-- Balances.csv
+### Loading From CSV's
 
-#### Accounts
+If you choose to load from CSV files, then you need 2 files. One for the Account
+names, sites and aliases. And one for the balance information (examples are
+included under test_files/). You can also choose to load a CSV containing words
+the matcher should ignore. If there is previously matched payments you would
+like to import for payment processing, you can do that by selecting the import
+previously matched option and typing in the file path
 
-This must contain the site number, the site holder name, and at least one alias,
-it doesn't matter if there is only one the first time you import the file it
-will autonmatically add some basic ones.
+### Loading Bank Information
 
-#### Transactions
+Currently this app only supports bank information downloaded from NAB, but could
+be modified to load other CSVs downloaded from otehr banks. Once you have the
+CSV in yout project root (By default called "Transactions.csv", but could be
+modified in the code) and you have eitehr loaded some account information from
+the database or from CSV files, you can select import payment information.
 
-Currently this project only supports importing transaction files from NAB.
+### Matching Keywords
 
-#### WordsToIgnore
+The matcher works by using the account information given to generate a list of
+aliases, or words that might be associated with an account. It filters through
+each transaction, first removing withdrawls and CASH deposits, and then
+filtering descriptions for any words in the ignore list.
 
-Just a single collumn with words that the program shouldn't try to match to an
-account, this could be words like the name of your business, common words like
-"Site" or "Fees", or connecting words like "I" or "The".
+It then generates a list of possible matches by matching the account aliases to
+the transaction details. If only one match is found it will prompt the user to
+pick one, or if none are found it shows a list of all accounts to choose from.
+With the option to leave the account unmatched.
 
-#### Balances
+### Unknown Words
 
-This must contain the site number (they must match the accounts site numbers),
-the total annual fees for the financial year, the remianing fees for the
-financial year, the outstanding fees from previous fincail years, and the
-proposed pay period. If the remaining balance or outstanding fees are empty it
-will autonmatically make them equal 0.
+Once everything is matched, users have the option to handle any unknown words
+that were included in the descriptions, and add them either as an alias for an
+account, or to the list of words to ignore. Meaning the more you run the
+program, the better at matching it becomes.
 
-### Cleaning Data
+### Payment Processing
 
-It will clean the transaction data autonmatically. By first sorting through
-irrelavent collumns (account number, category, ect) and then removing any
-withdraws from the data, as we are only worried about payments into the account.
-It will then go through each transactions details and remove words that are in
-the WordsToIgnore.csv file, ensuring that only relavent information is present.
+When processing payments is selected, any matched transactions will be applied
+as payments to the matched accounts. First by removing any outstanding fees and
+then the remianing fees for the year.
 
-### Matching Data
+### Accounts Screen
 
-This works by a keyword match. It will attempt to match each word to an alias in
-an account, occationally it might find multiple options. If it doesn't find a
-match it will save the word to ask you what to do with it later. If it finds no
-matches for a transaction, it will prompt the user to manually match the
-transaction
+The accounts menu shows a list of all accounts and allows you to edit them, add
+more, or apply a manual payment. The accounts are coloured depending on if they
+are judged to be 'on-track', which uses the indicated payment frequency
+(monthly, quarterly, or annually) and the due dates (15th of each month, first
+15th of each quarter, or the 1st of January respectivly) to calculate how much
+should have been paid, and compare that to how much has been paid. Accounts with
+outstanding amounts are autonmattically coloured red for 'behind'. You are also
+able to activate or deactivate accounts to keep records on old accounts
 
-### Updating Balance Information
+### Exports Screen
 
-This iterates through the matched transactions and adds the payment information
-to the matched account balances. First removing the ammount from any outstanding
-fees, then current fees, and finally adds to credit
+You are able to export any information in the app to a CSV file, including a
+list of matched payments and they're respective amounts. You can do this by
+entering the exports menu and selecting what you would like to export
 
-### Unknown Word Handling
+### Saving Updates
 
-At the end of the program, it will show you a list of words that it didnt find a
-match for and ask for an input. You can either add it to the list of ignored
-words, or add it as an alias for an account
+You must manaully save at the end of proccessing or matching. You can do this by
+selecting the save to database option.
 
-### Exporting Files
+## Issue and Bug Reporting
 
-When everything is complete, it will export and update the Accounts.csv,
-Balance.csv and the WordsToIgnore.csv, and then it will export a new file that
-is the cleaned and matched payment information for the account. This file will
-be called "{this_month} {this_year}.csv"
+If you have any issues or encounter any bugs, please open an issue on GitHub.
+Alternativly you can find me at u/Mooball123 on reddit.
+
+If anyone has any questions about the finctionality of the app, feedback for
+imporvements, or want help modifying the app for their own personal or business
+use, please feel free to get in touch!

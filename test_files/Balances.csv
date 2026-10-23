@@ -1,0 +1,11 @@
+﻿Site,ID,Account ID,Annual Fee,Remaining from this FY,Outstanding from previous FYs,Pay Frequency
+1,,,6000,6000,0,m
+2,,,6500,6500,0,q
+3,,,6000,6000,1000,m
+4,,,6000,6000,6000,a
+5,,,6500,6300,0,m
+6,,,6000,6000,500,m
+7,,,6500,6500,100,m
+8,,,6500,6500,0,m
+9,,,6000,6000,0,q
+10,,,5800,5800,0,m
