@@ -56,7 +56,7 @@ def initialise_database(connection: sqlite3.Connection) -> None:
                 id INTEGER PRIMARY KEY,
                 account_id INTEGER NOT NULL,
                 alias TEXT NOT NULL,
-                FOREIGN KEY (account_id) REFERENCES accounts(id),
+                FOREIGN KEY (account_id) REFERENCES accounts(id)
             )
         """)
 
