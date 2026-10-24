@@ -8,6 +8,8 @@ DEFAULTS = {
     "business_name": "Caravan Park",
     "imports_folder": "files",
     "exports_folder": "files",
+    "append_accounts_on_import": "Ask",
+    "append_transactions_on_import": "Ask",
     "annual_fees_base_rate": "7550",
     "annual_fees_ac_rate": "150",
     "annual_fees_sewer_rate": "300",
