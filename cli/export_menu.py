@@ -4,17 +4,22 @@ from zoneinfo import ZoneInfo
 
 from dateutil.relativedelta import relativedelta
 
-from application import Application
+from application import APP_DIRECTORY, Application
 from services.exports import (
     export_accounts_to_csv,
     export_balances_to_csv,
     export_ignore_to_csv,
     export_payments_to_csv,
 )
+from services.settings import get_setting
+
+import_folder = APP_DIRECTORY / get_setting("import_folder")
+export_folder = APP_DIRECTORY / get_setting("exports_folder")
 
 
 def export_menu(app: Application) -> None:
     print("\nEXPORT MENU")
+    print(f"\nDefault Export Folder: {export_folder}")
     export_actions = {
         "Export Accounts & Balances": export_accounts,
         "Export Payments": export_payments,
@@ -47,27 +52,23 @@ def export_accounts(app: Application) -> None:
     )
     last_month = last_month_date.strftime("%B")
     last_month_year = last_month_date.strftime("%Y")
-    print(
-        f"[d] -> Default File Path (files/{last_month} {last_month_year} - Accounts.csv)"
-    )
-    filepath = input("Enter New File Path For Accounts: ")
-    if filepath == "d":
-        filepath = f"files/{last_month} {last_month_year} - Accounts"
-    export_accounts_to_csv(accounts, f"{filepath}.csv")
-    print(f"Accounts saved as {filepath}.csv")
-    print(
-        f"[d] -> Default File Path (files/{last_month} {last_month_year} - Balances.csv)"
-    )
-    filepath = input("Enter New File Path For Balances: ")
-    if filepath == "d":
-        filepath = f"files/{last_month} {last_month_year} - Balances"
-    export_balances_to_csv(balances, f"{filepath}.csv")
-    print(f"Balances saved as {filepath}.csv")
+    print(f"[d] -> Default File Name: ({last_month} {last_month_year} - Accounts)")
+    filename = input("Enter New File Name For Accounts: ")
+    if filename == "d":
+        filename = f"{last_month} {last_month_year} - Accounts"
+    export_accounts_to_csv(accounts, filename)
+    print(f"Accounts saved as {filename}.csv")
+    print(f"[d] -> Default File Name: ({last_month} {last_month_year} - Balances)")
+    filename = input("Enter New File Name For Balances: ")
+    if filename == "d":
+        filename = f"{last_month} {last_month_year} - Balances"
+    export_balances_to_csv(balances, filename)
+    print(f"Balances saved as {filename}.csv")
 
 
 def export_payments(app: Application):
     transactions = app.state.transactions
-    source_file = "Transactions.csv"
+    source_file = import_folder / "Transactions.csv"
     last_month_date = dt.datetime.now(ZoneInfo("Australia/Melbourne")) - relativedelta(
         months=1
     )
@@ -75,16 +76,19 @@ def export_payments(app: Application):
     last_month_year = last_month_date.strftime("%Y")
     try:
         print("Moving & Renaming Source File")
-        shutil.copy2(source_file, f"files/{last_month} {last_month_year} Raw.csv")
+        shutil.copy2(
+            source_file,
+            APP_DIRECTORY / export_folder / f"{last_month} {last_month_year} Raw.csv",
+        )
         print(f"{source_file} Saved as {last_month} {last_month_year} Raw.csv")
     except FileNotFoundError:
         print("Imported Transactions File Not Found\nCanceling Copy And Move")
-    print(f"[d] -> Default File Path (files/{last_month} {last_month_year})")
-    filepath = input("Enter New File Path: ")
-    if filepath == "d":
-        filepath = f"files/{last_month} {last_month_year}"
-    export_payments_to_csv(transactions, f"{filepath}.csv")
-    print(f"Matched Payments Saved As: {filepath}.csv")
+    print(f"[d] -> Default File Name: ({last_month} {last_month_year} - Payments)")
+    filename = input("Enter New File Name: ")
+    if filename == "d":
+        filename = f"{last_month} {last_month_year} Payments"
+    export_payments_to_csv(transactions, filename)
+    print(f"Matched Payments Saved As: {filename}.csv")
 
 
 def export_words_to_ignore(app: Application):
@@ -94,11 +98,9 @@ def export_words_to_ignore(app: Application):
     )
     last_month = last_month_date.strftime("%B")
     last_month_year = last_month_date.strftime("%Y")
-    print(
-        f"[d] -> Default File Path (files/{last_month} {last_month_year} - WordsToIgnore)"
-    )
-    filepath = input("Enter New File Path For WordsToIgnore: ")
-    if filepath == "d":
-        filepath = f"files/{last_month} {last_month_year} - WordsToIgnore"
-    export_ignore_to_csv(ignore, f"{filepath}.csv")
-    print(f"Words to Ignore Saved As {filepath}.csv")
+    print(f"[d] -> Default File Name ({last_month} {last_month_year} - WordsToIgnore)")
+    filename = input("Enter New File Name For WordsToIgnore: ")
+    if filename == "d":
+        filename = f"{last_month} {last_month_year} - WordsToIgnore"
+    export_ignore_to_csv(ignore, filename)
+    print(f"Words to Ignore Saved As {filename}.csv")
