@@ -6,6 +6,10 @@ from typing import Literal
 from zoneinfo import ZoneInfo
 
 
+def money(value: Decimal | float | str) -> Decimal:
+    return Decimal(str(value)).quantize(Balance.CENT, rounding=ROUND_HALF_UP)
+
+
 class Balance:
 
     CENT = Decimal("0.01")
@@ -13,10 +17,6 @@ class Balance:
     @staticmethod
     def get_today() -> date:
         return datetime.now(ZoneInfo("Australia/Melbourne")).date()
-
-    @staticmethod
-    def money(value: Decimal | float | str) -> Decimal:
-        return Decimal(str(value)).quantize(Balance.CENT, rounding=ROUND_HALF_UP)
 
     def __init__(
         self,
@@ -35,10 +35,10 @@ class Balance:
         self.site_number = str(site_number)
         if len(self.site_number) == 1:
             self.site_number = f"0{self.site_number}"
-        self.annual = self.money(annual)
-        self.remaining = self.money(remaining)
-        self.outstanding = self.money(outstanding)
-        self.credit = self.money(credit)
+        self.annual = money(annual)
+        self.remaining = money(remaining)
+        self.outstanding = money(outstanding)
+        self.credit = money(credit)
         # Checks for valid pay_frequency
         if pay_frequency not in ["a", "q", "m"]:
             pay_frequency = "m"
@@ -90,7 +90,7 @@ class Balance:
 
     @outstanding.setter
     def outstanding(self, amount: Decimal) -> None:
-        amount = self.money(amount)
+        amount = money(amount)
         if amount < 0:
             raise ValueError("Outstanding can not be negative")
         else:
@@ -102,7 +102,7 @@ class Balance:
 
     @remaining.setter
     def remaining(self, amount: Decimal) -> None:
-        amount = self.money(amount)
+        amount = money(amount)
         if amount < 0:
             raise ValueError("Remaining can not be negative")
         else:
@@ -138,10 +138,10 @@ class Balance:
                     num_of_payments = 4
                 case "m":
                     num_of_payments = 12
-        return self.money(amount / num_of_payments)
+        return money(amount / num_of_payments)
 
     def add_payment(self, amount: Decimal) -> None:
-        amount = self.money(amount)
+        amount = money(amount)
         if amount <= 0:
             raise ValueError("Amount must be greater than 0")
         if amount < self.outstanding:
@@ -166,7 +166,7 @@ class Balance:
             if as_of_date >= date(self.end_of_fy.year, 1, 1):
                 return self.annual
             else:
-                return self.money("0")
+                return money("0")
         else:
             while True:
                 year = self.start_of_fy.year + ((6 + month_offset) // 12)
@@ -182,7 +182,7 @@ class Balance:
         return self.calc_payments(self.annual) * count
 
     def check_on_track(self, as_of_date: date | None = None) -> bool:
-        if self.outstanding != self.money(0):
+        if self.outstanding != money(0):
             return False
         expected = self.expected_paid(as_of_date)
         actual_paid = self.annual - self.remaining
@@ -197,7 +197,7 @@ class Balance:
         outstanding = str(self.outstanding)
         pay_frequency = self.pay_frequency
         # Converts credit into a negative remaining amount
-        if self.credit != self.money(0):
+        if self.credit != money(0):
             remaining -= self.credit
         remaining = str(remaining)
         return {

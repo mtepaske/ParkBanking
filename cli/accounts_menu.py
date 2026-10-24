@@ -55,30 +55,30 @@ def edit_account(account: Account) -> None:
             },
             "Credit": {"value": balance.credit, "function": change_account_credit},
         }
-        editable = [(name, action) for name, action in attributes.items()]
-        for i, (name, action) in enumerate(editable, start=1):
-            print(f"[{i}] -> {name}: {action['value']}")
-        print("[p] -> Add Payment")
-        print("[b] -> Back")
-        try:
-            choice = input("What would you like to change?: ")
-            if choice == "b":
-                print("BACK")
-                return
-            elif choice == "p":
-                while True:
-                    try:
-                        amount = Decimal(input("Enter Amount: $"))
-                        balance.add_payment(amount)
-                        break
-                    except ValueError:
-                        print("Amount Must Be Monetary Amount")
-            else:
-                name, action = editable[int(choice) - 1]
-                break
-        except (ValueError, IndexError):
-            print("Invalid Choice. Please Choose From List")
-    return action["function"](account)
+        while True:
+            try:
+                editable = [(name, action) for name, action in attributes.items()]
+                for i, (name, action) in enumerate(editable, start=1):
+                    print(f"[{i}] -> {name}: {action['value']}")
+                print("[p] -> Add Payment")
+                print("[b] -> Back")
+                choice = input("What would you like to change?: ")
+                if choice == "b":
+                    print("BACK")
+                    return
+                elif choice == "p":
+                    while True:
+                        try:
+                            amount = Decimal(input("Enter Amount: $"))
+                            balance.add_payment(amount)
+                            break
+                        except ValueError:
+                            print("Amount Must Be Monetary Amount")
+                else:
+                    name, action = editable[int(choice) - 1]
+                    action["function"](account)
+            except (ValueError, IndexError):
+                print("Invalid Choice. Please Choose From List")
 
 
 def change_account_name(account: Account):

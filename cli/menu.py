@@ -8,6 +8,7 @@ from cli.accounts_menu import accounts_menu
 from cli.export_menu import export_menu
 from cli.import_menu import import_menu
 from cli.matching import match_to_account, unknown_words
+from cli.settings_menu import settings_menu
 from services.imports import (
     import_words_to_ignore,
 )
@@ -173,5 +174,6 @@ actions = {
         "available": True,
         "function": export_menu,
     },
+    "Settings Menu": {"available": True, "function": settings_menu},
     "Exit Program": {"available": True, "function": exit_program},
 }
