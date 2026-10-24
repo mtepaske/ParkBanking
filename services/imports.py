@@ -1,31 +1,43 @@
 import csv
 from decimal import Decimal
 
+from application import APP_DIRECTORY
 from models.account import Account
 from models.balance import Balance
 from models.transactions import Transaction
+from services.settings import get_setting
+
+import_folder = APP_DIRECTORY / get_setting("import_folder")
 
 
-def import_accounts(filepath: str = "files/Account.csv") -> list[Account]:
-    with open(filepath, newline="", encoding="utf-8-sig") as file:
+def import_accounts(filename: str) -> list[Account]:
+    with open(
+        f"{import_folder / filename}.csv", newline="", encoding="utf-8-sig"
+    ) as file:
         reader = csv.DictReader(file)
         return [Account.from_csv(row) for row in reader]
 
 
-def import_balances(filepath: str = "files/Balances.csv") -> list[Balance]:
-    with open(filepath, newline="", encoding="utf-8-sig") as file:
+def import_balances(filename: str) -> list[Balance]:
+    with open(
+        f"{import_folder / filename}.csv", newline="", encoding="utf-8-sig"
+    ) as file:
         reader = csv.DictReader(file)
         return [Balance.from_csv(row) for row in reader]
 
 
-def import_words_to_ignore(filepath: str = "files/WordsToIgnore.csv") -> list[str]:
-    with open(filepath, newline="", encoding="utf-8-sig") as file:
+def import_words_to_ignore(filename: str) -> list[str]:
+    with open(
+        f"{import_folder / filename}.csv", newline="", encoding="utf-8-sig"
+    ) as file:
         reader = csv.DictReader(file)
         return [row["Words"] for row in reader]
 
 
-def import_payments(filepath: str = "files/Transaction.csv") -> list[Transaction]:
-    with open(filepath, newline="", encoding="utf-8-sig") as file:
+def import_payments(filename: str) -> list[Transaction]:
+    with open(
+        f"{import_folder / filename}.csv", newline="", encoding="utf-8-sig"
+    ) as file:
         transactions = []
         reader = csv.DictReader(file)
         for row in reader:
@@ -39,14 +51,16 @@ def import_payments(filepath: str = "files/Transaction.csv") -> list[Transaction
         return transactions
 
 
-def import_matched(filepath: str, accounts: list[Account]) -> list[Transaction]:
-    with open(filepath, newline="", encoding="utf-8-sig") as file:
+def import_matched(filename: str, accounts: list[Account]) -> list[Transaction]:
+    with open(
+        f"{import_folder / filename}.csv", newline="", encoding="utf-8-sig"
+    ) as file:
         reader = csv.DictReader(file)
         return [Transaction.from_matched_csv(row, accounts) for row in reader]
 
 
 def import_account_info_from_csv(
-    accounts_file: str = "files/Accounts", balances_file: str = "files/Balances"
+    accounts_file: str, balances_file: str
 ) -> list[Account]:
     accounts = import_accounts(accounts_file)
     balances = import_balances(balances_file)
