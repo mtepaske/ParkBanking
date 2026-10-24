@@ -43,7 +43,6 @@ settings menu to make it more customisable.
     - Export Payment history as pdf and statement of account
     - Use ReportLab module
 - [ ] Add settings menu
-    - Use QSettings module
     - Set business name
     - Set default export/import folder
     - Set annual fees and site fees
