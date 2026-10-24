@@ -1,7 +1,8 @@
 import json
-from pathlib import Path
 
-SETTINGS_PATH = Path.home() / ".parkbanking" / "settings.json"
+from application import APP_DIRECTORY
+
+SETTINGS_PATH = APP_DIRECTORY / ".parkbanking" / "settings.json"
 
 DEFAULTS = {
     "business_name": "Caravan Park",
@@ -14,6 +15,7 @@ DEFAULTS = {
     "annual_period": "FY",
     "auto_load_from_db": "False",
     "auto_save_to_db": "False",
+    "db_path": ".parkbanking",
 }
 
 
@@ -31,11 +33,11 @@ def save_settings(settings: dict) -> None:
         json.dump(settings, settings_file, indent=4)
 
 
-def get_settings(key: str) -> str:
+def get_setting(key: str) -> str:
     return load_settings()[key]
 
 
-def update_settings(key: str, value: str) -> None:
+def update_setting(key: str, value: str) -> None:
     settings = load_settings()
     settings[key] = value
     save_settings(settings)

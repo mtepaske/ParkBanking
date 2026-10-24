@@ -1,13 +1,13 @@
 import sqlite3
-from pathlib import Path
 
+from application import APP_DIRECTORY
 from models.account import Account
 from models.balance import Balance
+from services.settings import get_setting
 
-DB_PATH = Path(__file__).resolve().parent / "parkbanking.db"
 
-
-def connect(db_path=DB_PATH) -> sqlite3.Connection:
+def connect() -> sqlite3.Connection:
+    db_path = APP_DIRECTORY / get_setting("db_path")
     connection = sqlite3.connect(db_path)
     connection.execute("PRAGMA foreign_keys = ON")
     connection.row_factory = sqlite3.Row

@@ -1,9 +1,12 @@
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from models.account import Account
 from models.transactions import Transaction
 from services.database import AccountRepository, IgnoreRepository
 from services.imports import import_words_to_ignore
+
+APP_DIRECTORY = Path(__file__).resolve().parent
 
 
 @dataclass

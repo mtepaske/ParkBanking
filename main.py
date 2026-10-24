@@ -11,7 +11,7 @@ from services.database import (
 if __name__ == "__main__":
     connection = connect()
     initialise_database(connection)
-    print("DATABASE CONNECTION ESTABLISHED")
+    print("\nDATABASE CONNECTION ESTABLISHED")
     app = Application(
         AppRepositories(AccountRepository(connection), IgnoreRepository(connection))
     )
@@ -20,4 +20,4 @@ if __name__ == "__main__":
             show_menu(app)
     finally:
         disconnect(connection)
-        print("DISCONNECTED FROM DATABASE")
+        print("\nDISCONNECTED FROM DATABASE")

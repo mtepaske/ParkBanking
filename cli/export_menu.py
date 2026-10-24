@@ -43,6 +43,7 @@ def export_menu(app: Application) -> None:
 
 
 def export_accounts(app: Application) -> None:
+    print("\nEXPORTING ACCOUNT INFORMATION")
     accounts = app.state.accounts
     balances = []
     for account in accounts:
@@ -67,6 +68,7 @@ def export_accounts(app: Application) -> None:
 
 
 def export_payments(app: Application):
+    print("\nEXPORTING PAYMENTS")
     transactions = app.state.transactions
     source_file = import_folder / "Transactions.csv"
     last_month_date = dt.datetime.now(ZoneInfo("Australia/Melbourne")) - relativedelta(
@@ -92,6 +94,7 @@ def export_payments(app: Application):
 
 
 def export_words_to_ignore(app: Application):
+    print("\nEXPORTING WORDS TO IGNORE")
     ignore = app.state.words_to_ignore
     last_month_date = dt.datetime.now(ZoneInfo("Australia/Melbourne")) - relativedelta(
         months=1
