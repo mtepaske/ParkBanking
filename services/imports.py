@@ -1,13 +1,13 @@
 import csv
 from decimal import Decimal
 
-from application import APP_DIRECTORY
 from models.account import Account
 from models.balance import Balance
 from models.transactions import Transaction
-from services.settings import get_setting
+from services.settings import APP_DIRECTORY, get_setting
 
-import_folder = APP_DIRECTORY / get_setting("import_folder")
+import_folder = APP_DIRECTORY / get_setting("imports_folder")
+import_folder.mkdir(parents=True, exist_ok=True)
 
 
 def import_accounts(filename: str) -> list[Account]:

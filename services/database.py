@@ -1,13 +1,15 @@
 import sqlite3
 
-from application import APP_DIRECTORY
 from models.account import Account
 from models.balance import Balance
-from services.settings import get_setting
+from services.settings import APP_DIRECTORY, get_setting
+
+db_folder = APP_DIRECTORY / get_setting("db_path")
+db_folder.mkdir(parents=True, exist_ok=True)
 
 
 def connect() -> sqlite3.Connection:
-    db_path = APP_DIRECTORY / get_setting("db_path")
+    db_path = db_folder / "database.db"
     connection = sqlite3.connect(db_path)
     connection.execute("PRAGMA foreign_keys = ON")
     connection.row_factory = sqlite3.Row

@@ -1,13 +1,13 @@
-from application import APP_DIRECTORY, Application
+from application import Application
 from cli.matching import review_matches
 from services.imports import (
     import_account_info_from_csv,
     import_matched,
     import_payments,
 )
-from services.settings import get_setting
+from services.settings import APP_DIRECTORY, get_setting
 
-import_folder = APP_DIRECTORY / get_setting("import_folder")
+import_folder = APP_DIRECTORY / get_setting("imports_folder")
 
 
 def import_menu(app: Application) -> None:
@@ -99,6 +99,9 @@ def import_accounts_from_csv(app: Application) -> None:
                     return
                 else:
                     print("Invalid Choice. Please Choose From List")
+        else:
+            app.state.accounts = new_accounts
+            print("Accounts Added")
 
 
 def import_banking(app: Application) -> None:
@@ -156,6 +159,9 @@ def import_banking(app: Application) -> None:
                     return
                 else:
                     print("Invalid Choice. Please Choose From List")
+        else:
+            app.state.transactions = new_transactions
+            print("Transactions Added")
 
 
 def import_mached_transactions(app: Application):
@@ -210,3 +216,6 @@ def import_mached_transactions(app: Application):
                     return
                 else:
                     print("Invalid Choice. Please Choose From List")
+        else:
+            app.state.transactions = new_transactions
+            print("Transactions Added")

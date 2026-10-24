@@ -1,6 +1,7 @@
 import json
+from pathlib import Path
 
-from application import APP_DIRECTORY
+APP_DIRECTORY = Path(__file__).resolve().parent.parent
 
 SETTINGS_PATH = APP_DIRECTORY / ".parkbanking" / "settings.json"
 

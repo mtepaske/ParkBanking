@@ -4,16 +4,16 @@ from zoneinfo import ZoneInfo
 
 from dateutil.relativedelta import relativedelta
 
-from application import APP_DIRECTORY, Application
+from application import Application
 from services.exports import (
     export_accounts_to_csv,
     export_balances_to_csv,
     export_ignore_to_csv,
     export_payments_to_csv,
 )
-from services.settings import get_setting
+from services.settings import APP_DIRECTORY, get_setting
 
-import_folder = APP_DIRECTORY / get_setting("import_folder")
+import_folder = APP_DIRECTORY / get_setting("imports_folder")
 export_folder = APP_DIRECTORY / get_setting("exports_folder")
 
 

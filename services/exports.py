@@ -1,12 +1,12 @@
 import csv
 
-from application import APP_DIRECTORY
 from models.account import Account
 from models.balance import Balance
 from models.transactions import Transaction
-from services.settings import get_setting
+from services.settings import APP_DIRECTORY, get_setting
 
-export_folder = APP_DIRECTORY / get_setting("export_folder")
+export_folder = APP_DIRECTORY / get_setting("exports_folder")
+export_folder.mkdir(parents=True, exist_ok=True)
 
 
 def export_accounts_to_csv(accounts: list[Account], filename: str) -> None:

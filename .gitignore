@@ -11,3 +11,6 @@ files/*
 
 #Ignore The Database
 *.db
+
+#Ignore Settings Folder
+.parkbanking/

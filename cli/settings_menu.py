@@ -10,21 +10,20 @@ def settings_menu(app: Application):
         "Data Settings": data_settings,
         "Fee Settings": fee_settings,
     }
-    available = [(name, _) for name, _ in settings_actions.items()]
-    for i, (name, _) in enumerate(available, start=1):
-        print(f"[{i}] -> {name}")
-    print("[b] -> Back")
     while True:
+        available = [(name, _) for name, _ in settings_actions.items()]
+        for i, (name, _) in enumerate(available, start=1):
+            print(f"[{i}] -> {name}")
+        print("[b] -> Back")
         choice = input("Choose an Action: ")
         if choice == "b":
             print("BACK")
             return
         try:
             name, _ = available[int(choice) - 1]
-            break
+            settings_actions[name]()
         except (ValueError, IndexError):
             print("Invalid Choice. Please Choose From List")
-    return settings_actions[name]
 
 
 def buisness_settings() -> None:
@@ -101,20 +100,20 @@ def fee_settings() -> None:
             "function": change_fees,
         },
         "AC Charge": {
-            "value": "annual_fees_base_rate",
+            "value": "annual_fees_ac_rate",
             "function": change_fees,
         },
         "Sewer Charge": {
-            "value": "annual_fees_base_rate",
+            "value": "annual_fees_sewer_rate",
             "function": change_fees,
         },
         "Extra Nominated Visitors Charge": {
-            "value": "annual_fees_base_rate",
+            "value": "annual_fees_extra_guests_rate",
             "function": change_fees,
         },
         "Annual Period": {
-            "value": "annual_fees_base_rate",
-            "function": change_fees,
+            "value": "annual_period",
+            "function": change_period,
         },
     }
     settings = [(name, action) for name, action in fee_settings.items()]
@@ -179,10 +178,10 @@ def change_period(key: str) -> None:
         print("[2] -> Calender Year: 1st January - 31st December")
         choice = input("Enter Index For Option: ")
         if choice == "1":
-            update_setting(key, "Calender")
+            update_setting(key, "FY")
             return
         elif choice == "2":
-            update_setting(key, "FY")
+            update_setting(key, "Calender")
             return
         else:
             print("Invalid Choice. Please Choose From List")
