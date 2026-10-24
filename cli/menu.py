@@ -26,7 +26,9 @@ def start_program(app: Application) -> None:
 
 def determine_available(app: Application) -> list[tuple]:
     if len(app.state.accounts) > 0 and len(app.state.transactions) > 0:
-        actions["Match Transactions to Accounts"]["available"] = True
+        for transaction in app.state.transactions:
+            if transaction.account is None:
+                actions["Match Transactions to Accounts"]["available"] = True
     return [(name, action) for name, action in actions.items() if action["available"]]
 
 
@@ -75,11 +77,13 @@ def save_all_to_db(app: Application) -> None:
     print("\nSAVING TO DATABASE")
     accounts = app.state.accounts
     ignore = app.state.words_to_ignore
+    payments = app.state.payments
     count = app.repos.account_repo.save_accounts(accounts)
     print(
         f"Accounts & Balances Saved\n{count['Inserted']} New Accounts Instered - {count['Updated']} Accounts Updated"
     )
     app.repos.ignore_repo.replace_all_ignore(ignore)
+    app.repos.account_repo.save_payments(payments)
     print("Words to Ignore Saved")
 
 
@@ -135,6 +139,7 @@ def process_payments(app: Application) -> None:
             )
             index += 1
             transaction.account.balance.add_payment(transaction.amount)
+            app.state.payments.append(transaction)
     console.print(table)
     print("Balances Updated")
     actions["Proccess Payments"]["available"] = False

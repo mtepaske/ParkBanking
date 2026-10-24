@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from models.account import Account
-from models.balance import Balance
+from models.balance import Balance, money
 from models.transactions import Transaction
 
 
@@ -51,7 +51,7 @@ def review_payment(
     new_remaining = balance.remaining
     new_outstanding = balance.outstanding
     new_credit = balance.credit
-    amount = balance.money(amount)
+    amount = money(amount)
     if amount <= 0:
         raise ValueError("Amount must be greater than 0")
     if amount < new_outstanding:

@@ -2,6 +2,7 @@ import sqlite3
 
 from models.account import Account
 from models.balance import Balance
+from models.transactions import Transaction
 from services.settings import APP_DIRECTORY, get_setting
 
 db_folder = APP_DIRECTORY / get_setting("db_path")
@@ -58,6 +59,16 @@ def initialise_database(connection: sqlite3.Connection) -> None:
                 id INTEGER PRIMARY KEY,
                 account_id INTEGER NOT NULL,
                 alias TEXT NOT NULL,
+                FOREIGN KEY (account_id) REFERENCES accounts(id)
+            )
+        """)
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS payments (
+                id INTEGER PRIMARY KEY,
+                account_id INTEGER NOT NULL,
+                date TEXT NOT NULL,
+                amount TEXT NOT NULL,
+                details TEXT NOT NULL,
                 FOREIGN KEY (account_id) REFERENCES accounts(id)
             )
         """)
@@ -201,6 +212,25 @@ class AccountRepository(Repository):
         )
         return [row["alias"] for row in alias_rows]
 
+    def get_payments(self, account_id: int) -> list[Transaction]:
+        payment_rows = self.execute(
+            """
+            SELECT *
+            FROM payments
+            WHERE account_id = ?
+            ORDER BY id
+            """,
+            (account_id,),
+        )
+        return [
+            Transaction(
+                date=row["date"],
+                amount=row["amount"],
+                details=row["details"].split(","),
+            )
+            for row in payment_rows
+        ]
+
     def save_accounts(self, accounts: list[Account]) -> dict[str, int]:
         with self.connection:
             insert = 0
@@ -332,6 +362,33 @@ class AccountRepository(Repository):
                     )
         except sqlite3.OperationalError:
             print(f"{balance.site_number} Could Not Be Entered")
+
+    def save_payments(self, payments: list[Transaction]) -> None:
+        with self.connection:
+            for payment in payments:
+                self._save_payment(payment)
+
+    def _save_payment(self, payment: Transaction) -> None:
+        assert payment.account is not None
+        if payment.account.account_id is None:
+            raise ValueError("Insert Failed. Attached Account Has No ID")
+        self.execute(
+            """
+            INSERT INTO payments (
+            account_id,
+            date,
+            amount,
+            details
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                payment.account.account_id,
+                payment.date,
+                str(payment.amount),
+                ",".join(payment.details),
+            ),
+        )
 
 
 class IgnoreRepository(Repository):

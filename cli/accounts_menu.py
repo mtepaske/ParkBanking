@@ -6,6 +6,7 @@ from rich.table import Table
 from application import Application
 from models.account import Account
 from models.balance import Balance
+from models.transactions import Transaction
 
 
 def accounts_menu(app: Application) -> None:
@@ -16,7 +17,7 @@ def accounts_menu(app: Application) -> None:
         print("[a] -> Add New Account")
         print("[b] -> Back")
         try:
-            choice = input("Enter An Account Number To Edit?: ")
+            choice = input("Enter An Account Number To View?: ")
             if choice == "b":
                 print("BACK")
                 return
@@ -26,9 +27,25 @@ def accounts_menu(app: Application) -> None:
             else:
                 account = accounts[int(choice) - 1]
                 print(f"You Have Picked {account}")
+                if account.account_id is not None:
+                    history = app.repos.account_repo.get_payments(account.account_id)
+                    payment_history(account, history)
                 edit_account(account)
         except (ValueError, IndexError):
             print("Invalid Choice. Please Choose From List")
+
+
+def payment_history(account: Account, history: list[Transaction]) -> None:
+    print("\nPAYMENT HISTORY")
+    print(f"History For {account}")
+    console = Console()
+    table = Table()
+    table.add_column("Date")
+    table.add_column("Amount")
+    table.add_column("Details")
+    for payment in history:
+        table.add_row(f"{payment.date}", f"{payment.amount}", f"{payment.details}")
+    console.print(table)
 
 
 def edit_account(account: Account) -> None:
