@@ -24,7 +24,7 @@ def import_words_to_ignore(filepath: str = "files/WordsToIgnore.csv") -> list[st
         return [row["Words"] for row in reader]
 
 
-def import_payments(filepath: str = "Transactions.csv") -> list[Transaction]:
+def import_payments(filepath: str = "files/Transaction.csv") -> list[Transaction]:
     with open(filepath, newline="", encoding="utf-8-sig") as file:
         transactions = []
         reader = csv.DictReader(file)

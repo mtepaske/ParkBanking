@@ -15,18 +15,50 @@ where regular payments are made into an account that you might have to match to
 an account and track over time.
 
 This is written by my self in python, and is still a work in progress. I intend
-to move most of my computer workflow and tracking to this program, so if you end
-up using it keep an eye out for regular updates.
+to move most of my computer workflow and tracking to this program, inlcuding
+tracking payment history and the autonmatic creation of account statements,
+autonmattically calculating and applying new fees in the new year, and adding a
+settings menu to make it more customisable.
 
 ## To Do
 
-- [ ] Add ability to select transaction file import
-- [ ] Add date object rather then string for date sorting
-- [ ] Add GUI
-- [ ] Add support for new financial year
-    - [ ] Adding new fees
-    - [ ] Tranfer remaining fees to outstanding fees
-- [ ] Add site class and site tracking
+- [ ] Add requirements.txt
+- [ ] Should check for test_* files to import if none are found
+    - Check with user before importing
+- [ ] Add ability to load from database and load from CSV
+    - Should be able to load from database then load from csv or vice versa
+    - Should be given option to replace or add to list
+- [ ] Finish database functionality
+    - Add deleting from database
+    - Add getting all accounts from database
+        - Add viewing just inactive accounts from database
+- [ ] Add payment history
+    - Add history table to database
+    - Converts proccessed payments to a new class payments
+        - Date (datetime)
+        - Amount (Decimal)
+        - Type (Card/Cash/Deposit)
+    - Adds Payments to database when proccessed
+    - Load Payments from database and display as spreadsheet
+    - Export Payment history as pdf and statement of account
+    - Use ReportLab module
+- [ ] Add settings menu
+    - Use QSettings module
+    - Set business name
+    - Set default export/import folder
+    - Set annual fees and site fees
+    - Auto load from database vs manual load
+    - Reset/Backup database
+    - Autosave/Manual save
+    - Does importing add to or replace the list
+    - Whats the yearly basis (FY or calender year)
+- [ ] Set up Site class
+    - Stores information for constructing annual fees
+- [ ] Set up new financial year support
+    - Works will Site class to construct new fees and add them to payment
+      history
+
+- [ ] Add GUI using pyside6
 
 ## Usage
 

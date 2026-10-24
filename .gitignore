@@ -5,6 +5,9 @@ pyproject.toml
 #Mac_OS
 .DS_Store
 
-#Files
-files/
+#Ignore Files, But Not Test Files
+files/*
+!test*
+
+#Ignore The Database
 *.db
