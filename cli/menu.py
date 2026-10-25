@@ -111,18 +111,16 @@ def process_payments(app: Application) -> None:
     transactions = app.state.transactions
     unproccessed = []
     console = Console()
-    table = Table()
-    table.add_column("Index")
+    table = Table(show_lines=True)
     table.add_column("Site Holder")
     table.add_column("Site Number")
-    table.add_column("Old Remaining")
-    table.add_column("Old Outstanding")
-    table.add_column("Old Credit")
-    table.add_column("")
+    table.add_column("Remaining")
+    table.add_column("Outstanding")
+    table.add_column("Credit")
+    table.add_column("->", justify="center")
     table.add_column("New Remaining")
     table.add_column("New Outstanding")
     table.add_column("New Credit")
-    index = 1
     for transaction in transactions:
         if transaction.account is not None:
             assert transaction.account.balance is not None
@@ -131,18 +129,16 @@ def process_payments(app: Application) -> None:
             out_col = "red" if old["Outstanding"] == new["Outstanding"] else "green"
             cre_col = "red" if old["Credit"] == new["Credit"] else "green"
             table.add_row(
-                f"{index}",
-                f"{transaction.account.name}",
-                f"{transaction.account.site_number}",
+                f"[blue]{transaction.account.name}[/blue]",
+                f"[blue]{transaction.account.site_number}[/blue]",
                 f"${old['Remaining']:,.2f}",
                 f"${old['Outstanding']:,.2f}",
                 f'${old["Credit"]:,.2f}',
-                f"[{'blue'}]-${transaction.amount:,.2f}[/{'blue'}]",
+                f"[blue]-${transaction.amount:,.2f}[/blue]",
                 f"[{rem_col}]${new['Remaining']:,.2f}[/{rem_col}]",
                 f"[{out_col}]${new['Outstanding']:,.2f}[/{out_col}]",
                 f"[{cre_col}]${new['Credit']:,.2f}[/{cre_col}]",
             )
-            index += 1
             transaction.account.balance.add_payment(transaction.amount)
             app.state.payments.append(transaction)
         else:

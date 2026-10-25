@@ -17,14 +17,14 @@ def review_matches(transactions: list[Transaction], accounts: list[Account]) -> 
         table.add_column("Date")
         table.add_column("Amount")
         table.add_column("Details")
-        table.add_column("")
+        table.add_column("->")
         table.add_column("Account Site Number")
         table.add_column("Account Name")
         for transaction in transactions:
             account = transaction.account
             if account is None:
                 table.add_row(
-                    f"[{no_match}]{index}[/{no_match}]",
+                    f"[blue]{index}[/blue]",
                     f"[{no_match}]{transaction.date}[/{no_match}]",
                     f"[{no_match}]${transaction.amount:,.2f}[/{no_match}]",
                     f"[{no_match}]{transaction.details}[/{no_match}]",
@@ -34,7 +34,7 @@ def review_matches(transactions: list[Transaction], accounts: list[Account]) -> 
                 )
             else:
                 table.add_row(
-                    f"[{matched}]{index}[/{matched}]",
+                    f"[blue]{index}[/blue]",
                     f"[{matched}]{transaction.date}[/{matched}]",
                     f"[{matched}]${transaction.amount:,.2f}[/{matched}]",
                     f"[{matched}]{transaction.details}[/{matched}]",

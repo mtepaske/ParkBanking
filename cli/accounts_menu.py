@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from rich.columns import Columns
 from rich.console import Console
 from rich.table import Table
 
@@ -224,29 +225,50 @@ def add_account(accounts: list[Account]) -> None:
 
 def print_accounts(accounts: list[Account]) -> None:
     console = Console()
-    table = Table(show_lines=True)
-    table.add_column("Index")
-    table.add_column("Site")
-    table.add_column("Name")
-    table.add_column("Remaining")
-    table.add_column("Outstanding")
-    table.add_column("Credit")
-    index = 1
-    for account in accounts:
+    table1 = Table(show_lines=True)
+    table1.add_column("Index")
+    table1.add_column("Site")
+    table1.add_column("Name")
+    table1.add_column("Remaining")
+    table1.add_column("Outstanding")
+    table1.add_column("Credit")
+    table2 = Table(show_lines=True)
+    table2.add_column("Index")
+    table2.add_column("Site")
+    table2.add_column("Name")
+    table2.add_column("Remaining")
+    table2.add_column("Outstanding")
+    table2.add_column("Credit")
+    midpoint = (len(accounts) + 1) // 2
+    for i in range(midpoint):
+        account = accounts[i]
         assert account.balance is not None
         balance = account.balance
         on_track = not balance.check_on_track()
         style = "red" if on_track else "green"
-        table.add_row(
-            f"{index}",
+        table1.add_row(
+            f"[blue]{i + 1}[/blue]",
             f"{account.site_number}",
             f"{account.name}",
             f"[{style}]${balance.remaining:,.2f}[/{style}]",
             f"[{style}]${balance.outstanding:,.2f}[/{style}]",
             f"[{style}]${balance.credit:,.2f}[/{style}]",
         )
-        index += 1
-    console.print(table)
+    for i in range(len(accounts) - midpoint):
+        account = accounts[midpoint + i]
+        assert account.balance is not None
+        balance = account.balance
+        on_track = not balance.check_on_track()
+        style = "red" if on_track else "green"
+        table2.add_row(
+            f"[blue]{i + 1 + midpoint}[/blue]",
+            f"{account.site_number}",
+            f"{account.name}",
+            f"[{style}]${balance.remaining:,.2f}[/{style}]",
+            f"[{style}]${balance.outstanding:,.2f}[/{style}]",
+            f"[{style}]${balance.credit:,.2f}[/{style}]",
+        )
+    console.print(Columns([table1, table2], equal=True, expand=False))
 
 
 def account_picker(accounts: list[Account]) -> Account | None:
