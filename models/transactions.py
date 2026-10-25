@@ -25,6 +25,7 @@ class Transaction:
         date: str,
         amount: Decimal,
         details: str,
+        particulars: str = "",
         proccessed: bool = False,
         id: int | None = None,
     ) -> None:
@@ -32,6 +33,8 @@ class Transaction:
         self.date = convert_date(date)
         self.amount = amount
         self.account = None
+        self.original_details = details
+        self.particulars = particulars
         self.details = details.split(" ")
         self.proccessed = proccessed
 
@@ -65,6 +68,7 @@ class Transaction:
             ),
             "Name": (self.account.name if self.account is not None else "Unmatched"),
             "Amount": str(self.amount),
+            "Details": self.original_details,
         }
 
     def __str__(self):

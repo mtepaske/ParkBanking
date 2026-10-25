@@ -11,28 +11,27 @@ import_folder = APP_DIRECTORY / get_setting("imports_folder")
 
 
 def import_menu(app: Application) -> None:
-    print("\nIMPORT MENU")
-    print(f"\nDefault Import Folder: {import_folder}")
-    import_actions = {
-        "Import Accounts": import_accounts_from_csv,
-        "Import Bank Statement": import_banking,
-        "Import Matched Transactions": import_mached_transactions,
-    }
-    available = [(name, _) for name, _ in import_actions.items()]
-    for i, (name, _) in enumerate(available, start=1):
-        print(f"[{i}] -> {name}")
-    print("[b] -> Back")
     while True:
+        print("\nIMPORT MENU")
+        print(f"\nDefault Import Folder: {import_folder}")
+        import_actions = {
+            "Import Accounts": import_accounts_from_csv,
+            "Import Bank Statement": import_banking,
+            "Import Matched Transactions": import_mached_transactions,
+        }
+        available = [(name, _) for name, _ in import_actions.items()]
+        for i, (name, _) in enumerate(available, start=1):
+            print(f"[{i}] -> {name}")
+        print("[b] -> Back")
         choice = input("Choose an Action: ")
         if choice == "b":
             print("BACK")
             return
         try:
             name, _ = available[int(choice) - 1]
-            break
+            import_actions[name](app=app)
         except (ValueError, IndexError):
             print("Invalid Choice. Please Choose From List")
-    return import_actions[name](app=app)
 
 
 def import_accounts_from_csv(app: Application) -> None:
@@ -66,11 +65,13 @@ def import_accounts_from_csv(app: Application) -> None:
         return
     print("Accounts Information Imported")
     if append == "Always":
-        app.append_accounts(new_accounts)
+        app.append_accounts(new_accounts[0])
+        app.state.payments.extend(new_accounts[1])
         print("Accounts Added")
         return
     elif append == "Never":
-        app.state.accounts = new_accounts
+        app.state.accounts = new_accounts[0]
+        app.state.payments.extend(new_accounts[1])
         print("Accounts Replaced")
         return
     else:
@@ -85,13 +86,16 @@ def import_accounts_from_csv(app: Application) -> None:
                 )
                 if confirmation == "a":
                     try:
-                        app.append_accounts(new_accounts)
+                        app.append_accounts(new_accounts[0])
+                        app.state.payments.extend(new_accounts[1])
                     except ValueError:
                         print("Aborting Replacement")
+                        return
                     print("Accounts Added")
                     return
                 elif confirmation == "r":
-                    app.state.accounts = new_accounts
+                    app.state.accounts = new_accounts[0]
+                    app.state.payments.extend(new_accounts[1])
                     print("Accounts Replaced")
                     return
                 elif confirmation == "c":
@@ -100,7 +104,8 @@ def import_accounts_from_csv(app: Application) -> None:
                 else:
                     print("Invalid Choice. Please Choose From List")
         else:
-            app.state.accounts = new_accounts
+            app.state.accounts = new_accounts[0]
+            app.state.payments.extend(new_accounts[1])
             print("Accounts Added")
 
 

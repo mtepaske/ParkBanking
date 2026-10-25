@@ -30,11 +30,14 @@ def accounts_menu(app: Application) -> None:
                 print(f"You Have Picked {account}")
                 if account.account_id is not None:
                     history = app.repos.account_repo.get_payments(account.account_id)
-                    for payment in app.state.payments:
-                        if payment.account == account:
-                            history.append(payment)
-                    payment_history(account, history)
-                edit_account(account)
+                else:
+                    history = []
+                for payment in app.state.payments:
+                    if payment.account == account:
+                        history.append(payment)
+                payment_history(account, history)
+                added_payments = edit_account(account)
+                app.state.payments.extend(added_payments)
         except (ValueError, IndexError):
             print("Invalid Choice. Please Choose From List")
 
@@ -56,21 +59,41 @@ def payment_history(account: Account, payments: list[Transaction]) -> None:
     for payment in payments:
         if payment.amount > 0:
             rows.append(
-                (f"{payment.date}", "", f"{payment.amount}", "", f"{running_balance}")
+                (
+                    f"{payment.date}",
+                    f"{payment.particulars}",
+                    "",
+                    f"${payment.amount:,.2f}",
+                    f"${running_balance:,.2f}",
+                )
             )
             running_balance += payment.amount
         else:
+            amount = abs(payment.amount)
             rows.append(
-                (f"{payment.date}", "", f"{payment.amount}", "", f"{running_balance}")
+                (
+                    f"{payment.date}",
+                    f"{payment.particulars}",
+                    f"${amount:,.2f}",
+                    "",
+                    f"${running_balance:,.2f}",
+                )
             )
-            running_balance -= payment.amount
+            running_balance -= amount
     rows.reverse()
     for date, particulars, debit, credit, balance in rows:
-        table.add_row(date, particulars, debit, credit, balance)
+        table.add_row(
+            date,
+            particulars,
+            f"[red]{debit}[/red]",
+            f"[green]{credit}[/green]",
+            balance,
+        )
     console.print(table)
 
 
-def edit_account(account: Account) -> None:
+def edit_account(account: Account) -> list[Transaction]:
+    payments = []
     print("\nACCOUNT EDITING")
     while True:
         print(f"Editing Account -> {account}")
@@ -94,36 +117,38 @@ def edit_account(account: Account) -> None:
             },
             "Credit": {"value": balance.credit, "function": change_account_credit},
         }
-        while True:
-            try:
-                editable = [(name, action) for name, action in attributes.items()]
-                for i, (name, action) in enumerate(editable, start=1):
-                    print(f"[{i}] -> {name}: {action['value']}")
-                print("[p] -> Add Payment")
-                print("[b] -> Back")
-                choice = input("What would you like to change?: ")
-                if choice == "b":
-                    print("BACK")
-                    return
-                elif choice == "p":
-                    while True:
-                        try:
-                            amount = Decimal(input("Enter Amount: $"))
-                            balance.add_payment(amount)
-                            break
-                        except ValueError:
-                            print("Amount Must Be Monetary Amount")
-                else:
-                    name, action = editable[int(choice) - 1]
-                    action["function"](account)
-            except (ValueError, IndexError):
-                print("Invalid Choice. Please Choose From List")
+        try:
+            editable = [(name, action) for name, action in attributes.items()]
+            for i, (name, action) in enumerate(editable, start=1):
+                print(f"[{i}] -> {name}: {action['value']}")
+            print("[p] -> Add Payment")
+            print("[b] -> Back")
+            choice = input("What would you like to change?: ")
+            if choice == "b":
+                print("BACK")
+                return payments
+            elif choice == "p":
+                while True:
+                    try:
+                        date = input("Enter Date: (yy-mm-dd)")
+                        amount = Decimal(input("Enter Amount: $"))
+                        balance.add_payment(amount)
+                        payment = Transaction(date, amount, "CASH", "CASH")
+                        payment.add_account(account)
+                        payments.append(payment)
+                        break
+                    except ValueError:
+                        print("Amount Must Be Monetary Amount")
+            else:
+                name, action = editable[int(choice) - 1]
+                action["function"](account)
+        except (ValueError, IndexError):
+            print("Invalid Choice. Please Choose From List")
 
 
 def change_account_name(account: Account):
     new_name = input("Enter New Name: ")
     account.change_name(new_name)
-    edit_account(account)
 
 
 def change_account_site(account: Account):
@@ -137,12 +162,10 @@ def change_account_site(account: Account):
     if len(new_site) == 1:
         new_site = f"0{new_site}"
     account.change_site(new_site)
-    edit_account(account)
 
 
 def change_account_active(account: Account):
     account.switch_active()
-    edit_account(account)
 
 
 def change_account_annual(account: Account):
@@ -154,7 +177,6 @@ def change_account_annual(account: Account):
         except ValueError:
             print("Please Enter A Number")
     account.balance.annual = new_annual
-    edit_account(account)
 
 
 def change_account_remaining(account: Account):
@@ -166,7 +188,6 @@ def change_account_remaining(account: Account):
         except ValueError:
             print("Please Enter A Number")
     account.balance.remaining = new_remaining
-    edit_account(account)
 
 
 def change_account_outstanding(account: Account):
@@ -178,7 +199,6 @@ def change_account_outstanding(account: Account):
         except ValueError:
             print("Please Enter A Number")
     account.balance.outstanding = new_outstanding
-    edit_account(account)
 
 
 def change_account_credit(account: Account):
@@ -190,7 +210,6 @@ def change_account_credit(account: Account):
         except ValueError:
             print("Please Enter A Number")
     account.balance.outstanding = new_credit
-    edit_account(account)
 
 
 def add_account(accounts: list[Account]) -> None:
@@ -209,7 +228,7 @@ def add_account(accounts: list[Account]) -> None:
             account_id=None,
             site_number=site,
             annual="7550",
-            remaining="0",
+            remaining="7550",
             outstanding="0",
             pay_frequency="m",
         ),
