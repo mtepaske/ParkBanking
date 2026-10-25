@@ -218,7 +218,7 @@ class AccountRepository(Repository):
             SELECT *
             FROM payments
             WHERE account_id = ?
-            ORDER BY id
+            ORDER BY date ASC
             """,
             (account_id,),
         )
@@ -227,6 +227,7 @@ class AccountRepository(Repository):
                 date=row["date"],
                 amount=row["amount"],
                 details=row["details"].split(","),
+                id=row["id"],
             )
             for row in payment_rows
         ]
@@ -372,7 +373,7 @@ class AccountRepository(Repository):
         assert payment.account is not None
         if payment.account.account_id is None:
             raise ValueError("Insert Failed. Attached Account Has No ID")
-        self.execute(
+        cursor = self.execute(
             """
             INSERT INTO payments (
             account_id,
@@ -389,6 +390,7 @@ class AccountRepository(Repository):
                 ",".join(payment.details),
             ),
         )
+        payment.id = cursor.lastrowid
 
 
 class IgnoreRepository(Repository):

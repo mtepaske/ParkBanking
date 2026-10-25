@@ -1,16 +1,39 @@
 from __future__ import annotations
 
+from datetime import datetime as dt
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from models.account import Account
 
 
+def convert_date(date: str):
+    try:
+        parsed_date = dt.strptime(date, "%d %b %y").astimezone(
+            ZoneInfo("Australia/Melbourne")
+        )
+    except ValueError:
+        parsed_date = dt.strptime(date, "%Y-%m-%d").astimezone(
+            ZoneInfo("Australia/Melbourne")
+        )
+    return parsed_date.strftime("%Y-%m-%d")
+
+
 class Transaction:
-    def __init__(self, date, amount: Decimal, details: str) -> None:
-        self.date = date
+    def __init__(
+        self,
+        date: str,
+        amount: Decimal,
+        details: str,
+        proccessed: bool = False,
+        id: int | None = None,
+    ) -> None:
+        self.id = id
+        self.date = convert_date(date)
         self.amount = amount
         self.account = None
         self.details = details.split(" ")
+        self.proccessed = proccessed
 
     @classmethod
     def from_csv(cls, row: dict[str, str]) -> Transaction:

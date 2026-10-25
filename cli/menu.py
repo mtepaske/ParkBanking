@@ -29,6 +29,11 @@ def determine_available(app: Application) -> list[tuple]:
         for transaction in app.state.transactions:
             if transaction.account is None:
                 actions["Match Transactions to Accounts"]["available"] = True
+            else:
+                actions["Proccess Payments"]["available"] = True
+    else:
+        actions["Match Transactions to Accounts"]["available"] = False
+        actions["Proccess Payments"]["available"] = False
     return [(name, action) for name, action in actions.items() if action["available"]]
 
 
@@ -98,13 +103,13 @@ def match(app: Application) -> None:
         match_to_account(transaction, possibilities, accounts)
     app.state.unknown_words = matcher.get_unknown_words()
     print("Transactions Matched")
-    actions["Proccess Payments"]["available"] = True
     actions["Proccess Unknown Words"]["available"] = True
 
 
 def process_payments(app: Application) -> None:
     print("\nPROCCESSING PAYMENTS")
     transactions = app.state.transactions
+    unproccessed = []
     console = Console()
     table = Table()
     table.add_column("Index")
@@ -140,9 +145,11 @@ def process_payments(app: Application) -> None:
             index += 1
             transaction.account.balance.add_payment(transaction.amount)
             app.state.payments.append(transaction)
+        else:
+            unproccessed.append(transaction)
+    app.state.transactions = unproccessed
     console.print(table)
     print("Balances Updated")
-    actions["Proccess Payments"]["available"] = False
 
 
 def procces_unknown_words(app: Application) -> None:

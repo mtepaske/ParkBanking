@@ -29,22 +29,43 @@ def accounts_menu(app: Application) -> None:
                 print(f"You Have Picked {account}")
                 if account.account_id is not None:
                     history = app.repos.account_repo.get_payments(account.account_id)
+                    for payment in app.state.payments:
+                        if payment.account == account:
+                            history.append(payment)
                     payment_history(account, history)
                 edit_account(account)
         except (ValueError, IndexError):
             print("Invalid Choice. Please Choose From List")
 
 
-def payment_history(account: Account, history: list[Transaction]) -> None:
+def payment_history(account: Account, payments: list[Transaction]) -> None:
     print("\nPAYMENT HISTORY")
     print(f"History For {account}")
+    assert account.balance is not None
+    running_balance = account.balance.balance
+    rows = []
     console = Console()
-    table = Table()
+    table = Table(show_lines=True)
     table.add_column("Date")
-    table.add_column("Amount")
-    table.add_column("Details")
-    for payment in history:
-        table.add_row(f"{payment.date}", f"{payment.amount}", f"{payment.details}")
+    table.add_column("Particulars")
+    table.add_column("Debit")
+    table.add_column("Credit")
+    table.add_column("Balance")
+    payments.sort(key=lambda t: t.date, reverse=True)
+    for payment in payments:
+        if payment.amount > 0:
+            rows.append(
+                (f"{payment.date}", "", f"{payment.amount}", "", f"{running_balance}")
+            )
+            running_balance += payment.amount
+        else:
+            rows.append(
+                (f"{payment.date}", "", f"{payment.amount}", "", f"{running_balance}")
+            )
+            running_balance -= payment.amount
+    rows.reverse()
+    for date, particulars, debit, credit, balance in rows:
+        table.add_row(date, particulars, debit, credit, balance)
     console.print(table)
 
 
@@ -203,7 +224,7 @@ def add_account(accounts: list[Account]) -> None:
 
 def print_accounts(accounts: list[Account]) -> None:
     console = Console()
-    table = Table()
+    table = Table(show_lines=True)
     table.add_column("Index")
     table.add_column("Site")
     table.add_column("Name")

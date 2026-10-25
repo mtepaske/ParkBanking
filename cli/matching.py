@@ -12,7 +12,7 @@ def review_matches(transactions: list[Transaction], accounts: list[Account]) -> 
     no_match = "red"
     while True:
         index = 1
-        table = Table()
+        table = Table(show_lines=True)
         table.add_column("Index")
         table.add_column("Date")
         table.add_column("Amount")
