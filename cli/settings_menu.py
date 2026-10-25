@@ -111,6 +111,10 @@ def fee_settings() -> None:
             "value": "annual_fees_extra_guests_rate",
             "function": change_fees,
         },
+        "On-Time Payments Discount": {
+            "value": "annual_fees_discount",
+            "function": change_fees,
+        },
         "Annual Period": {
             "value": "annual_period",
             "function": change_period,
