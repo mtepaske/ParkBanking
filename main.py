@@ -1,5 +1,5 @@
 from application import Application, AppRepositories
-from cli.menu import show_menu
+from cli.menu import show_menu, start_program
 from services.database import (
     AccountRepository,
     IgnoreRepository,
@@ -15,6 +15,7 @@ if __name__ == "__main__":
     app = Application(
         AppRepositories(AccountRepository(connection), IgnoreRepository(connection))
     )
+    start_program(app)
     try:
         while True:
             show_menu(app)
