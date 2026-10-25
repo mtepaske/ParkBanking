@@ -1,7 +1,7 @@
 import sqlite3
 
 from models.account import Account
-from models.balance import Balance
+from models.balance import Balance, money
 from models.transactions import Transaction
 from services.settings import APP_DIRECTORY, get_setting
 
@@ -69,6 +69,7 @@ def initialise_database(connection: sqlite3.Connection) -> None:
                 date TEXT NOT NULL,
                 amount TEXT NOT NULL,
                 details TEXT NOT NULL,
+                particulars TEXT NOT NULL,
                 FOREIGN KEY (account_id) REFERENCES accounts(id)
             )
         """)
@@ -225,8 +226,9 @@ class AccountRepository(Repository):
         return [
             Transaction(
                 date=row["date"],
-                amount=row["amount"],
-                details=row["details"].split(","),
+                amount=money(row["amount"]),
+                details=row["details"],
+                particulars=row["particulars"],
                 id=row["id"],
             )
             for row in payment_rows
@@ -246,6 +248,8 @@ class AccountRepository(Repository):
 
     def _save_account(self, account: Account) -> bool:
         if account.account_id is None:
+            if account.balance is None:
+                raise ValueError(f"Account {account.account_id} has no balance")
             cursor = self.execute(
                 """
                 INSERT INTO accounts (
@@ -258,8 +262,6 @@ class AccountRepository(Repository):
                 (account.site_number, account.name, int(account.active)),
             )
             account.account_id = cursor.lastrowid
-            if account.balance is None:
-                raise ValueError(f"Account {account.account_id} has no balance")
             account.balance.account_id = account.account_id
             self._save_balance(account.balance)
             self._save_aliases(account)
@@ -379,15 +381,17 @@ class AccountRepository(Repository):
             account_id,
             date,
             amount,
-            details
+            details,
+            particulars
             )
-            VALUES (?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?)
             """,
             (
                 payment.account.account_id,
                 payment.date,
                 str(payment.amount),
-                ",".join(payment.details),
+                payment.original_details,
+                payment.particulars,
             ),
         )
         payment.id = cursor.lastrowid
