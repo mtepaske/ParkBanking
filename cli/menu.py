@@ -7,7 +7,7 @@ from application import Application
 from cli.accounts_menu import accounts_menu
 from cli.export_menu import export_menu
 from cli.import_menu import import_menu
-from cli.matching import match_to_account, unknown_words
+from cli.matching import match_to_account, review_matches, unknown_words
 from cli.settings_menu import settings_menu
 from services.imports import (
     import_words_to_ignore,
@@ -89,6 +89,7 @@ def save_all_to_db(app: Application) -> None:
     )
     app.repos.ignore_repo.replace_all_ignore(ignore)
     app.repos.account_repo.save_payments(payments)
+    app.state.payments = []
     print("Words to Ignore Saved")
 
 
@@ -99,8 +100,10 @@ def match(app: Application) -> None:
     ignore = app.state.words_to_ignore
     matcher = Matcher(accounts, ignore)
     for transaction in transactions:
-        possibilities = match_transactions(matcher, transaction)
-        match_to_account(transaction, possibilities, accounts)
+        if transaction.account is None:
+            possibilities = match_transactions(matcher, transaction)
+            match_to_account(transaction, possibilities, accounts)
+    review_matches(transactions, accounts)
     app.state.unknown_words = matcher.get_unknown_words()
     print("Transactions Matched")
     actions["Proccess Unknown Words"]["available"] = True
@@ -153,7 +156,7 @@ def procces_unknown_words(app: Application) -> None:
     accounts = app.state.accounts
     unknown = app.state.unknown_words
     ignore = app.state.words_to_ignore
-    unknown_words(accounts, unknown, ignore)
+    app.state.unknown_words = unknown_words(accounts, unknown, ignore)
     print("Unknown Words Proccessed")
     actions["Proccess Unknown Words"]["available"] = False
 

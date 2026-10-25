@@ -27,7 +27,7 @@ def review_matches(transactions: list[Transaction], accounts: list[Account]) -> 
                     f"[blue]{index}[/blue]",
                     f"[{no_match}]{transaction.date}[/{no_match}]",
                     f"[{no_match}]${transaction.amount:,.2f}[/{no_match}]",
-                    f"[{no_match}]{transaction.details}[/{no_match}]",
+                    f"[{no_match}]{transaction.original_details}[/{no_match}]",
                     f"[{no_match}]->[/{no_match}]",
                     f"[{no_match}]?[/{no_match}]",
                     f"[{no_match}]?[/{no_match}]",
@@ -37,7 +37,7 @@ def review_matches(transactions: list[Transaction], accounts: list[Account]) -> 
                     f"[blue]{index}[/blue]",
                     f"[{matched}]{transaction.date}[/{matched}]",
                     f"[{matched}]${transaction.amount:,.2f}[/{matched}]",
-                    f"[{matched}]{transaction.details}[/{matched}]",
+                    f"[{matched}]{transaction.original_details}[/{matched}]",
                     f"[{matched}]->[/{matched}]",
                     f"[{matched}]{account.site_number}[/{matched}]",
                     f"[{matched}]{account.name}[/{matched}]",
@@ -64,18 +64,31 @@ def review_matches(transactions: list[Transaction], accounts: list[Account]) -> 
 def change_match(transaction: Transaction, accounts: list[Account]) -> None:
     choice = account_picker(accounts)
     if choice is None:
+        transaction.account = None
         return
     transaction.add_account(choice)
 
 
 def no_matches(accounts: list[Account], transaction: Transaction) -> None:
     print(
-        f"Date: {transaction.date}, Amount: {transaction.amount}, Details: {transaction.details}"
+        f"Date: {transaction.date}, Amount: {transaction.amount}, Details: {transaction.original_details}"
     )
-    print("Which Account does this payment belong to?: ")
     choice = account_picker(accounts)
     if choice is None:
         return
+    while True:
+        print("[1] -> Direct Debit")
+        print("[2] -> Credit Card")
+        print("[3] -> No Description")
+        particulars = input("Enter Description Choice: ")
+        if particulars == "1":
+            transaction.particulars = "Direct Debit"
+            break
+        elif particulars == "2":
+            transaction.particulars = "Credit Card"
+            break
+        elif particulars == "3":
+            break
     transaction.add_account(choice)
 
 
@@ -85,19 +98,23 @@ def match_to_account(
     accounts: list[Account],
 ) -> None:
     if len(possibilities) == 0:
-        print("No Possible Matches Found")
+        print("\nNo Possible Matches Found")
         no_matches(accounts, transaction)
     elif len(possibilities) == 1:
         transaction.add_account(possibilities[0])
+        transaction.particulars = "Direct Debit"
         print(f"Match found: {possibilities[0]}")
     else:
         amount = len(possibilities)
-        print(f"Details: {transaction.details}")
-        print(f"{amount} Possible Choices Found")
+        print(f"\n{amount} Possible Choices Found")
+        print(
+            f"Date: {transaction.date}, Amount: {transaction.amount}, Details: {transaction.original_details}"
+        )
         choice = account_picker(possibilities)
         if choice is None:
             return
         transaction.add_account(choice)
+        transaction.particulars = "Direct Debit"
 
 
 def alias_handler(accounts: list[Account], alias: str) -> None:
@@ -112,8 +129,9 @@ def ignore_handler(ignored: list[str], word: str) -> None:
 
 
 def unknown_words(
-    accounts: list[Account], unknown: list[str], ignored: list[str]
-) -> None:
+    accounts: list[Account], unknown: set[str], ignored: list[str]
+) -> set[str]:
+    remove = []
     for word in unknown:
         print(f"{word} is an unknown word, what would you like to do with it?")
         while True:
@@ -128,6 +146,11 @@ def unknown_words(
             print("Choice invalid, please try again")
         if choice == "i":
             ignore_handler(ignored, word)
+            remove.append(word)
             print(f"{word} Added to ignored words")
         elif choice == "a":
             alias_handler(accounts, word)
+            remove.append(word)
+    for word in remove:
+        unknown.remove(word)
+    return unknown
