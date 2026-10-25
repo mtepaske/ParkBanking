@@ -18,28 +18,27 @@ export_folder = APP_DIRECTORY / get_setting("exports_folder")
 
 
 def export_menu(app: Application) -> None:
-    print("\nEXPORT MENU")
-    print(f"\nDefault Export Folder: {export_folder}")
-    export_actions = {
-        "Export Accounts & Balances": export_accounts,
-        "Export Payments": export_payments,
-        "Export Words to Ignore": export_words_to_ignore,
-    }
-    available = [(name, _) for name, _ in export_actions.items()]
-    for i, (name, _) in enumerate(available, start=1):
-        print(f"[{i}] -> {name}")
-    print("[b] -> Back")
     while True:
+        print("\nEXPORT MENU")
+        print(f"\nDefault Export Folder: {export_folder}")
+        export_actions = {
+            "Export Accounts & Balances": export_accounts,
+            "Export Payments": export_payments,
+            "Export Words to Ignore": export_words_to_ignore,
+        }
+        available = [(name, _) for name, _ in export_actions.items()]
+        for i, (name, _) in enumerate(available, start=1):
+            print(f"[{i}] -> {name}")
+        print("[b] -> Back")
         choice = input("Choose an Action: ")
         if choice == "b":
             print("BACK")
             return
         try:
             name, _ = available[int(choice) - 1]
-            break
+            export_actions[name](app=app)
         except (ValueError, IndexError):
             print("Invalid Choice. Please Choose From List")
-    return export_actions[name](app=app)
 
 
 def export_accounts(app: Application) -> None:
@@ -70,6 +69,7 @@ def export_accounts(app: Application) -> None:
 def export_payments(app: Application):
     print("\nEXPORTING PAYMENTS")
     transactions = app.state.transactions
+    transactions.extend(app.state.payments)
     source_file = import_folder / "Transactions.csv"
     last_month_date = dt.datetime.now(ZoneInfo("Australia/Melbourne")) - relativedelta(
         months=1

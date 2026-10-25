@@ -52,14 +52,22 @@ class Balance:
         outstanding = row["Outstanding from previous FYs"]
         pay_frequency = row["Pay Frequency"]
         # Check for empty rows or missing values
-        if row["ID"] == "None" or row["ID"] == "":
+        try:
+            if row["ID"] == "None" or row["ID"] == "":
+                id = None
+            else:
+                id = int(row["ID"])
+        except KeyError:
+            print("No ID Row Found")
             id = None
-        else:
-            id = int(row["ID"])
-        if row["Account ID"] == "None" or row["Account ID"] == "":
+        try:
+            if row["Account ID"] == "None" or row["Account ID"] == "":
+                account_id = None
+            else:
+                account_id = int(row["Account ID"])
+        except KeyError:
+            print("No Account ID Row Found")
             account_id = None
-        else:
-            account_id = int(row["Account ID"])
         if remaining == "":
             remaining = annual
         if Decimal(remaining) < 0:

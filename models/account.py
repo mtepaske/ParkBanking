@@ -26,7 +26,7 @@ class Account:
             self.site_number = f"0{self.site_number}"
         self.aliases = aliases if aliases is not None else []
         # Aliases attribute is populated with name and site number if none given
-        if len(self.aliases) == 1:
+        if len(self.aliases) == 1 or len(self.aliases) == 0:
             names = self.name.split(" ")
             self.aliases.pop()
             for alias in names:
@@ -43,7 +43,11 @@ class Account:
         else:
             active = False
         # Checks for a database ID, if none exists then it hasnt been assigned to the database before
-        if row["ID"] == "None" or row["ID"] == "":
+        try:
+            if row["ID"] == "None" or row["ID"] == "":
+                id = None
+        except KeyError:
+            print("No ID Row Found")
             id = None
         else:
             id = int(row["ID"])
@@ -89,7 +93,6 @@ class Account:
         else:
             active = "0"
         return {
-            "ID": str(self.account_id),
             "Name": self.name,
             "Site": str(self.site_number),
             "Aliases": ",".join(self.aliases),
