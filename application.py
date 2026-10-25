@@ -10,9 +10,9 @@ class AppState:
     accounts: list[Account] = field(default_factory=list)
     transactions: list[Transaction] = field(default_factory=list)
     words_to_ignore: list[str] = field(default_factory=list)
-    unknown_words: list[str] = field(default_factory=list)
+    unknown_words: set[str] = field(default_factory=set)
     payments: list[Transaction] = field(default_factory=list)
-    # all_accounts: list[Account] = field(default_factory=list)
+    all_accounts: list[Account] = field(default_factory=list)
 
 
 @dataclass
@@ -25,6 +25,7 @@ class Application:
     def __init__(self, repos: AppRepositories) -> None:
         self.repos = repos
         self.state = AppState()
+        self.state.all_accounts = self.repos.account_repo.get_all_accounts()
 
     def append_accounts(self, accounts_to_add: list[Account]) -> None:
         for new_account in accounts_to_add:
