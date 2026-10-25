@@ -10,7 +10,7 @@ export_folder.mkdir(parents=True, exist_ok=True)
 
 
 def export_accounts_to_csv(accounts: list[Account], filename: str) -> None:
-    fieldnames = ["ID", "Active", "Name", "Site", "Aliases"]
+    fieldnames = ["Active", "Name", "Site", "Aliases"]
     with open(
         f"{export_folder / filename}.csv", "w", newline="", encoding="utf-8-sig"
     ) as file:
@@ -23,8 +23,6 @@ def export_accounts_to_csv(accounts: list[Account], filename: str) -> None:
 def export_balances_to_csv(balances: list[Balance], filename: str) -> None:
     fieldnames = [
         "Site",
-        "ID",
-        "Account ID",
         "Annual Fee",
         "Remaining from this FY",
         "Outstanding from previous FYs",
