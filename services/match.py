@@ -10,7 +10,7 @@ class Matcher:
     def __init__(self, accounts: list[Account], ignore: list[str]) -> None:
         self.accounts = accounts
         self.ignore = ignore
-        self.unknown = []
+        self.unknown = set()
 
     def clean_desc(self, description: list[str]) -> list[str]:
         filtered = []
@@ -33,10 +33,10 @@ class Matcher:
                 for unknown in self.unknown:
                     if word == unknown:
                         break
-                self.unknown.append(word)
+                self.unknown.add(word)
         return possible
 
-    def get_unknown_words(self) -> list[str]:
+    def get_unknown_words(self) -> set[str]:
         return self.unknown
 
 
