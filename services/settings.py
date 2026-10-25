@@ -15,6 +15,7 @@ DEFAULTS = {
     "annual_fees_ac_rate": "150",
     "annual_fees_sewer_rate": "300",
     "annual_fees_extra_guests_rate": "80",
+    "annual_fees_discount": "150",
     "annual_period": "FY",
     "auto_load_from_db": "False",
     "auto_save_to_db": "False",
