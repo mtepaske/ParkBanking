@@ -1,6 +1,7 @@
 #Python
 __pycache__/
 pyproject.toml
+.venv/
 
 #Mac_OS
 .DS_Store
