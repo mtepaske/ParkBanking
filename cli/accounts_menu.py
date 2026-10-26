@@ -8,7 +8,13 @@ from application import Application
 from models.account import Account
 from models.balance import Balance, money
 from models.transactions import Transaction
-from services.date import get_date_from_str_iso
+from services.date import (
+    end_of_fy,
+    get_date_from_str_iso,
+    get_str_from_date,
+    start_of_fy,
+)
+from services.settings import get_setting
 
 
 def accounts_menu(app: Application) -> None:
@@ -45,23 +51,8 @@ def accounts_menu(app: Application) -> None:
             try:
                 account = accounts[int(choice) - 1]
                 print(f"You Have Picked {account}")
-
-                # Gets the payment history from the database if it exists
-                if account.account_id is not None:
-                    history = app.repos.account_repo.get_payments(account.account_id)
-                else:
-                    history = []
-
-                # Gets the payments not loaded into the database
-                for payment in app.state.payments:
-                    if payment.account == account:
-                        history.append(payment)
-
-                # Displays the payment histoyr
-                payment_history(account, history)
-
                 # Displays the edit account acctions
-                added_payments = edit_account(account)
+                added_payments = edit_account(account, app=app)
 
                 # Adds any added payments to the loaded payments
                 app.state.payments.extend(added_payments)
@@ -144,7 +135,7 @@ def payment_history(account: Account, payments: list[Transaction]) -> None:
     console.print(table)
 
 
-def edit_account(account: Account) -> list[Transaction]:
+def edit_account(account: Account, app: Application) -> list[Transaction]:
     """
     Displays current account information and prompts user for input to edit it
 
@@ -155,11 +146,11 @@ def edit_account(account: Account) -> list[Transaction]:
         A list of any added payments
     """
 
+    balance = account.balance
+    assert balance is not None
     payments = []
-    while True:
 
-        balance = account.balance
-        assert balance is not None
+    while True:
 
         # The current attributes and the functions for changing them
         attributes = {
@@ -181,6 +172,24 @@ def edit_account(account: Account) -> list[Transaction]:
             "Credit": {"value": balance.credit, "function": change_account_credit},
         }
 
+        # Gets the payment history from the database if it exists
+        if account.account_id is not None:
+            history = app.repos.account_repo.get_payments(account.account_id)
+        else:
+            history = []
+
+        # Gets the payments not loaded into the database
+        for payment in app.state.payments:
+            if payment.account == account:
+                history.append(payment)
+
+        # Gets any recently added payments
+        for payment in payments:
+            history.append(payment)
+
+        # Displays the payment history
+        payment_history(account, history)
+
         print("\nACCOUNT EDITING")
         print(f"Editing Account -> {account}")
 
@@ -189,6 +198,7 @@ def edit_account(account: Account) -> list[Transaction]:
         for i, (name, action) in enumerate(editable, start=1):
             print(f"[{i}] -> {name}: {action['value']}")
         print("[p] -> Add Payment")
+        print("[c] -> Add Charge")
         print("[b] -> Back")
         choice = input("What would you like to change?: ")
 
@@ -200,8 +210,18 @@ def edit_account(account: Account) -> list[Transaction]:
         # Add payment action
         elif choice == "p":
             payment = add_manual_payment(account)
-            if payment is not None:
+            if payment is None:
+                continue
+            else:
                 payments.append(payment)
+
+        # Add charge action
+        elif choice == "c":
+            charge = add_manual_charge(account)
+            if charge is None:
+                continue
+            else:
+                payments.append(charge)
 
         # Calls action chosen by user
         else:
@@ -230,7 +250,7 @@ def add_manual_payment(account: Account) -> Transaction | None:
 
         # Prompts user for payment date
         print("[b] -> Back")
-        date = input("Enter Date: (yyyy-mm-dd)")
+        date = input("Enter Date (yyyy-mm-dd): ")
 
         # Back action
         if date == "b":
@@ -299,6 +319,102 @@ def add_manual_payment(account: Account) -> Transaction | None:
     payment.account = account
 
     return payment
+
+
+def add_manual_charge(account: Account) -> Transaction | None:
+    """
+    Prompts user to enter information for a manual charge
+
+    Args:
+        account: The account to add the charge= too
+
+    Returns:
+        The charge defined using information from the user
+    """
+
+    balance = account.balance
+    assert balance is not None
+
+    while True:
+
+        # Prompts user for charge date
+        print("[b] -> Back")
+        date = input("Enter Date (yyyy-mm-dd): ")
+
+        # Back action
+        if date == "b":
+            print("BACK")
+            return
+
+        # Data validation
+        try:
+            date = get_date_from_str_iso(date)
+            break
+        except ValueError:
+            print("Incorrect Date Format. Please Use yyyy-mm-dd")
+
+    while True:
+
+        # Prompt user for charge amount
+        print("[b] -> Back")
+        amount = input("Enter Amount: $")
+
+        # Back action
+        if amount == "b":
+            print("BACK")
+            return
+
+        # Data validation
+        try:
+            amount = money(amount)
+            break
+        except ValueError:
+            print("Must Be Monetary Amount")
+
+    while True:
+
+        # Displays options and gets user input for description of payment
+        print("[b] -> Back")
+        print("[a] -> Annual Fees")
+        print("[u] -> Custom Description")
+        choice = input("Please Choose A Description For The Payment: ")
+
+        # Back action
+        if amount == "b":
+            print("BACK")
+            return
+
+        # Sets description as annual fees
+        elif choice == "a":
+
+            # Sets date of annual fees by annual period setting
+            if get_setting("annual_period") == "FY":
+                start_year = start_of_fy(date).year
+                end_year = end_of_fy(date).year
+                period = f"{start_year}/{end_year}"
+            elif get_setting("annual_period") == "CY":
+                period = date.year
+            else:
+                raise ValueError("Setting for annual period invalid")
+
+            # Sets description
+            description = f"Annual Fees {period}"
+            break
+
+        # Gets user input for custom description
+        elif choice == "u":
+            description = input("Enter Custom Description: ")
+            break
+
+        else:
+            print("Invalid Choice. Please Choose From List")
+
+    # Adds the charge to the balance and payment history
+    balance.add_payment(amount)
+    charge = Transaction(get_str_from_date(date), 0 - amount, description, description)
+    charge.account = account
+
+    return charge
 
 
 def change_account_name(account: Account):
@@ -550,7 +666,7 @@ def print_accounts(accounts: list[Account]) -> None:
         account = accounts[i]
         balance = account.balance
         assert balance is not None
-        on_track = not balance.check_on_track()
+        on_track = balance.check_on_track()
 
         # Color for display
         style = "green" if on_track else "red"
