@@ -228,7 +228,7 @@ class AccountRepository(Repository):
                 date=row["date"],
                 amount=money(row["amount"]),
                 details=row["details"],
-                particulars=row["particulars"],
+                type_str=row["particulars"],
                 id=row["id"],
             )
             for row in payment_rows
@@ -391,20 +391,20 @@ class AccountRepository(Repository):
                 payment.date,
                 str(payment.amount),
                 payment.original_details,
-                payment.particulars,
+                payment.type,
             ),
         )
         payment.id = cursor.lastrowid
 
 
 class IgnoreRepository(Repository):
-    def get_all_ignore(self) -> list[str]:
-        return [row["word"] for row in self.execute("""
+    def get_all_ignore(self) -> set[str]:
+        return {row["word"] for row in self.execute("""
             SELECT * 
             FROM ignore
-            """).fetchall()]
+            """).fetchall()}
 
-    def replace_all_ignore(self, words: list[str]) -> None:
+    def replace_all_ignore(self, words: set[str]) -> None:
         with self.connection:
             self.execute("""
                 DELETE FROM ignore

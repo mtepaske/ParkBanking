@@ -61,7 +61,7 @@ def payment_history(account: Account, payments: list[Transaction]) -> None:
             rows.append(
                 (
                     f"{payment.date}",
-                    f"{payment.particulars}",
+                    f"{payment.type}",
                     "",
                     f"${payment.amount:,.2f}",
                     f"${running_balance:,.2f}",
@@ -73,7 +73,7 @@ def payment_history(account: Account, payments: list[Transaction]) -> None:
             rows.append(
                 (
                     f"{payment.date}",
-                    f"{payment.particulars}",
+                    f"{payment.type}",
                     f"${amount:,.2f}",
                     "",
                     f"${running_balance:,.2f}",
@@ -134,7 +134,7 @@ def edit_account(account: Account) -> list[Transaction]:
                         amount = Decimal(input("Enter Amount: $"))
                         balance.add_payment(amount)
                         payment = Transaction(date, amount, "CASH", "CASH")
-                        payment.add_account(account)
+                        payment.account = account
                         payments.append(payment)
                         break
                     except ValueError:

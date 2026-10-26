@@ -4,45 +4,70 @@ from services.settings import get_setting, update_setting
 
 
 def settings_menu(app: Application):
-    print("\nSETTINGS MENU")
+    """
+    Displays the settings menu
+
+    Args:
+        app: The instance of the application
+    """
+
+    # The available actions in the settings menu
     settings_actions = {
         "Business Settings": buisness_settings,
         "Data Settings": data_settings,
         "Fee Settings": fee_settings,
     }
+
     while True:
-        available = [(name, _) for name, _ in settings_actions.items()]
-        for i, (name, _) in enumerate(available, start=1):
+
+        print("\nSETTINGS MENU")
+
+        # Displays available actions and prompts user
+        settings = [(name, _) for name, _ in settings_actions.items()]
+        for i, (name, _) in enumerate(settings, start=1):
             print(f"[{i}] -> {name}")
         print("[b] -> Back")
         choice = input("Choose an Action: ")
+
+        # Back action
         if choice == "b":
             print("BACK")
             return
+
+        # Calls the action selected by the user
         try:
-            name, _ = available[int(choice) - 1]
+            name, _ = settings[int(choice) - 1]
             settings_actions[name]()
         except (ValueError, IndexError):
             print("Invalid Choice. Please Choose From List")
 
 
 def buisness_settings() -> None:
+    """Displays the business specific settings"""
+
+    # The available business settings
     business_settings = {
         "Business Name": {
             "value": "business_name",
             "function": change_name,
         }
     }
+
+    # Displays the available settings and prompts user
     settings = [(name, action) for name, action in business_settings.items()]
     while True:
+        for i, (name, action) in enumerate(settings, start=1):
+            print(f"[{i}] -> {name}: {get_setting(action['value'])}")
+        print("[b] -> Back")
+        choice = input("What would you like to change?: ")
+
+        # Back action
+        if choice == "b":
+            print("BACK")
+            return
+
+        # Calls the action selected by the user
         try:
-            for i, (name, action) in enumerate(settings, start=1):
-                print(f"[{i}] -> {name}: {get_setting(action['value'])}")
-            print("[b] -> Back")
-            choice = input("What would you like to change?: ")
-            if choice == "b":
-                print("BACK")
-                return
             name, action = settings[int(choice) - 1]
             action["function"](action["value"])
         except (ValueError, IndexError):
@@ -50,6 +75,9 @@ def buisness_settings() -> None:
 
 
 def data_settings() -> None:
+    """Displays the data specific settings"""
+
+    # The available data settings
     data_settings = {
         "Imports Folder": {
             "value": "imports_folder",
@@ -77,16 +105,22 @@ def data_settings() -> None:
             "function": change_append,
         },
     }
+
+    # Displays the available settings and prompts user
     settings = [(name, action) for name, action in data_settings.items()]
     while True:
-        try:
-            for i, (name, action) in enumerate(settings, start=1):
-                print(f"[{i}] -> {name}: {get_setting(action['value'])}")
+        for i, (name, action) in enumerate(settings, start=1):
+            print(f"[{i}] -> {name}: {get_setting(action['value'])}")
             print("[b] -> Back")
-            choice = input("What would you like to change?: ")
-            if choice == "b":
-                print("BACK")
-                return
+        choice = input("What would you like to change?: ")
+
+        # Back action
+        if choice == "b":
+            print("BACK")
+            return
+
+        # Calls the action selected by the user
+        try:
             name, action = settings[int(choice) - 1]
             action["function"](action["value"])
         except (ValueError, IndexError):
@@ -94,6 +128,9 @@ def data_settings() -> None:
 
 
 def fee_settings() -> None:
+    """Displays the fee specific settings"""
+
+    # The available fee settings
     fee_settings = {
         "Base Rate": {
             "value": "annual_fees_base_rate",
@@ -120,16 +157,22 @@ def fee_settings() -> None:
             "function": change_period,
         },
     }
+
+    # Displays the available settings and prompts user
     settings = [(name, action) for name, action in fee_settings.items()]
     while True:
-        try:
-            for i, (name, action) in enumerate(settings, start=1):
-                print(f"[{i}] -> {name}: {get_setting(action['value'])}")
+        for i, (name, action) in enumerate(settings, start=1):
+            print(f"[{i}] -> {name}: {get_setting(action['value'])}")
             print("[b] -> Back")
-            choice = input("What would you like to change?: ")
-            if choice == "b":
-                print("BACK")
-                return
+        choice = input("What would you like to change?: ")
+
+        # Back action
+        if choice == "b":
+            print("BACK")
+            return
+
+        # Calls the action selected by the user
+        try:
             name, action = settings[int(choice) - 1]
             action["function"](action["value"])
         except (ValueError, IndexError):
@@ -137,21 +180,46 @@ def fee_settings() -> None:
 
 
 def change_name(key: str) -> None:
+    """
+    Changes a setting for a name
+
+    Args:
+        key: The specific setting to change
+    """
+
     new_name = input("Enter New Name: ")
     update_setting(key, new_name)
 
 
 def change_folder(key: str) -> None:
+    """
+    Change a setting for a folder
+
+    Args:
+        key: The specific setting to change
+    """
+
     new_folder = input("Enter New Folder: ")
     update_setting(key, new_folder)
 
 
 def change_append(key: str) -> None:
+    """
+    Change the setting for an append vs replace setting
+
+    Args:
+        key: The specific setting to change
+    """
+
     while True:
+
+        # Display the options and ask for input
         print("[1] -> Always")
         print("[2] -> Ask")
         print("[3] -> Never")
         choice = input("Enter Index For Option: ")
+
+        # Apply the user selection
         if choice == "1":
             update_setting(key, "Always")
             return
@@ -166,8 +234,17 @@ def change_append(key: str) -> None:
 
 
 def change_fees(key: str) -> None:
+    """
+    Change the amount of a fee setting
+
+    Args:
+        key: The specific setting to change
+    """
+
     while True:
         new_amount = input("Enter New Amount: $")
+
+        # Validate and apply new amount
         try:
             money(new_amount)
             update_setting(key, new_amount)
@@ -177,10 +254,21 @@ def change_fees(key: str) -> None:
 
 
 def change_period(key: str) -> None:
+    """
+    Change a financial period setting
+
+    Args:
+        key: The specific setting to change
+    """
+
     while True:
+
+        # Display options and ask for input
         print("[1] -> Fincial Year: 1st July - 30th June")
         print("[2] -> Calender Year: 1st January - 31st December")
         choice = input("Enter Index For Option: ")
+
+        # Apply the user selection
         if choice == "1":
             update_setting(key, "FY")
             return
@@ -192,10 +280,20 @@ def change_period(key: str) -> None:
 
 
 def change_auto_db(key: str) -> None:
+    """
+    Change a database save/load setting
+
+    Args:
+        key: The specific setting to change
+    """
     while True:
+
+        # Display options and ask for input
         print("[1] -> True")
         print("[2] -> False")
         choice = input("Enter Index For Option: ")
+
+        # Apply the user selection
         if choice == "1":
             update_setting(key, "True")
             return

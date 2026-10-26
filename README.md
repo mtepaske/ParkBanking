@@ -25,7 +25,7 @@ settings menu to make it more customisable.
 - [ ] Add requirements.txt
 - [ ] Should check for test_* files to import if none are found
     - Check with user before importing
-- [ ] Add ability to load from database and load from CSV
+- [x] Add ability to load from database and load from CSV
     - Should be able to load from database then load from csv or vice versa
     - Should be given option to replace or add to list
 - [ ] Finish database functionality
