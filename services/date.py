@@ -2,6 +2,8 @@ from datetime import date
 from datetime import datetime as dt
 from zoneinfo import ZoneInfo
 
+from dateutil.relativedelta import relativedelta
+
 
 def get_today() -> date:
     """
@@ -10,6 +12,7 @@ def get_today() -> date:
     Returns:
         Todays date
     """
+
     return dt.now(ZoneInfo("Australia/Melbourne")).date()
 
 
@@ -23,6 +26,7 @@ def start_of_fy(day: date | None = None) -> date:
     Returns:
         The start of the FY
     """
+
     if day is None:
         day = get_today()
 
@@ -52,7 +56,7 @@ def end_of_fy(day: date | None = None) -> date:
         return date(day.year, 6, 30)
 
 
-def convert_to_iso(date: str):
+def convert_to_iso(date: str) -> str:
     """
     Converts a date string into a ISO format
 
@@ -62,6 +66,7 @@ def convert_to_iso(date: str):
     Returns:
         The date in ISO format
     """
+
     try:
         parsed_date = dt.strptime(date, "%d %b %y").astimezone(
             ZoneInfo("Australia/Melbourne")
@@ -71,3 +76,94 @@ def convert_to_iso(date: str):
             ZoneInfo("Australia/Melbourne")
         )
     return parsed_date.strftime("%Y-%m-%d")
+
+
+def get_last_month(day: date | None = None) -> str:
+    """
+    Gets the month before a given date
+
+    Args:
+        day: The date to get the month before
+
+    Returns:
+        The number representation of the previous month
+    """
+
+    if day is None:
+        day = get_today()
+
+    last_month_date = day - relativedelta(months=1)
+    return last_month_date.strftime("%B")
+
+
+def get_last_month_year(day: date | None = None) -> str:
+    """
+    Gets the year of the month before a given date
+
+    Args:
+        day: The date to get the month before
+
+    Returns:
+        The number representation of year of the previous month
+    """
+
+    if day is None:
+        day = get_today()
+
+    last_month_date = day - relativedelta(months=1)
+    return last_month_date.strftime("%Y")
+
+
+def get_date_from_str(date: str) -> date:
+    """
+    Converts from a string to a date
+
+    Args:
+        date: The date to convert
+
+    Returns:
+        The date as a date object
+    """
+
+    try:
+        parsed_date = dt.strptime(date, "%d %b %y").astimezone(
+            ZoneInfo("Australia/Melbourne")
+        )
+    except ValueError:
+        parsed_date = dt.strptime(date, "%Y-%m-%d").astimezone(
+            ZoneInfo("Australia/Melbourne")
+        )
+
+    return parsed_date
+
+
+def get_str_from_date(date: date) -> str:
+    """
+    Converts a date to a string in ISO format
+
+    Args:
+        date: The date to convert
+
+    Returns:
+        The date in ISO format
+    """
+
+    return date.strftime("%Y=%m-%d")
+
+
+def get_date_from_str_iso(date: str) -> date:
+    """
+    Converts from a string in ISO format to a date
+
+    Args:
+        date: The date to convert
+
+    Returns:
+        The date as a date object
+    """
+
+    parsed_date = dt.strptime(date, "%Y-%m-%d").astimezone(
+        ZoneInfo("Australia/Melbourne")
+    )
+
+    return parsed_date
