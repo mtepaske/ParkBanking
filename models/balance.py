@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Literal
-from zoneinfo import ZoneInfo
+
+from services.date import end_of_fy, get_today, start_of_fy
 
 # The significant digits to round to
 CENT = Decimal("0.01")
@@ -83,16 +84,6 @@ class Balance:
         except ValueError:
             pay_frequency = "m"
         self.pay_frequency = pay_frequency
-
-    @staticmethod
-    def get_today() -> date:
-        """
-        Gets todays date
-
-        Returns:
-            Todays date
-        """
-        return datetime.now(ZoneInfo("Australia/Melbourne")).date()
 
     @classmethod
     def from_csv(cls, row: dict[str, str]) -> Balance:
@@ -206,26 +197,6 @@ class Balance:
         else:
             self._remaining = amount
 
-    @property
-    def end_of_fy(self) -> date:
-        """The end of the current financial year"""
-        today = self.get_today()
-
-        if today.month >= 7:
-            return date(today.year + 1, 6, 30)
-        else:
-            return date(today.year, 6, 30)
-
-    @property
-    def start_of_fy(self) -> date:
-        """The start of the current fincial year"""
-        today = self.get_today()
-
-        if today.month >= 7:
-            return date(today.year, 7, 1)
-        else:
-            return date(today.year - 1, 7, 1)
-
     def change_payfrequency(self, new_frequency: Literal["a", "q", "m"]):
         """
         Changes the pay frequency
@@ -315,11 +286,11 @@ class Balance:
 
         # Assigns todays date if none supplied
         if as_of_date is None:
-            as_of_date = self.get_today()
+            as_of_date = get_today()
 
         # If the pay frequency is annual. Check if before due date
         if self.pay_frequency == "a":
-            if as_of_date >= date(self.end_of_fy.year, 1, 1):
+            if as_of_date >= date(end_of_fy().year, 1, 1):
                 return self.annual
             else:
                 return money("0")
@@ -327,7 +298,7 @@ class Balance:
         # Calculates the amount expected to have been paid
         else:
             while True:
-                year = self.start_of_fy.year + ((6 + month_offset) // 12)
+                year = start_of_fy().year + ((6 + month_offset) // 12)
                 month = (6 + month_offset) % 12 + 1
                 due_date = date(year, month, 15)
                 if due_date >= as_of_date:

@@ -1,22 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime as dt
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
 from models.account import Account
-
-
-def convert_date(date: str):  # Move to new service module to work with dates
-    try:
-        parsed_date = dt.strptime(date, "%d %b %y").astimezone(
-            ZoneInfo("Australia/Melbourne")
-        )
-    except ValueError:
-        parsed_date = dt.strptime(date, "%Y-%m-%d").astimezone(
-            ZoneInfo("Australia/Melbourne")
-        )
-    return parsed_date.strftime("%Y-%m-%d")
+from services.date import convert_to_iso
 
 
 class Transaction:
@@ -55,7 +42,7 @@ class Transaction:
         """
 
         self.id = id
-        self.date = convert_date(date)
+        self.date = convert_to_iso(date)
         self.amount = amount
         self.account = None
         self.original_details = details

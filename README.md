@@ -22,40 +22,27 @@ settings menu to make it more customisable.
 
 ## To Do
 
-- [ ] Add requirements.txt
 - [ ] Should check for test_* files to import if none are found
     - Check with user before importing
-- [x] Add ability to load from database and load from CSV
-    - Should be able to load from database then load from csv or vice versa
-    - Should be given option to replace or add to list
 - [ ] Finish database functionality
     - Add deleting from database
     - Add getting all accounts from database
         - Add viewing just inactive accounts from database
 - [ ] Add payment history
-    - Add history table to database
-    - Converts proccessed payments to a new class payments
-        - Date (datetime)
-        - Amount (Decimal)
-        - Type (Card/Cash/Deposit)
-    - Adds Payments to database when proccessed
     - Load Payments from database and display as spreadsheet
     - Export Payment history as pdf and statement of account
     - Use ReportLab module
-- [ ] Add settings menu
-    - Set business name
-    - Set default export/import folder
-    - Set annual fees and site fees
-    - Auto load from database vs manual load
+    - Add ability to import historical transactions
+- [x] Add settings menu
     - Reset/Backup database
-    - Autosave/Manual save
-    - Does importing add to or replace the list
-    - Whats the yearly basis (FY or calender year)
 - [ ] Set up Site class
     - Stores information for constructing annual fees
+    - Add sites & site saving database
+    - Add site editting menu
 - [ ] Set up new financial year support
     - Works will Site class to construct new fees and add them to payment
       history
+    - Link with financial period setting
 
 - [ ] Add GUI using pyside6
 

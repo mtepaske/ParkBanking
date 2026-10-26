@@ -5,6 +5,7 @@ from decimal import Decimal
 from models.account import Account
 from models.balance import Balance
 from models.transactions import Transaction
+from services.date import end_of_fy, start_of_fy
 from services.settings import APP_DIRECTORY, get_setting
 
 # Sets the folder to import from based on current settings
@@ -178,9 +179,9 @@ def add_annual_fees_to_history(account: Account) -> list[Transaction]:
 
     # Generate information for annual fee charge
     charges = []
-    date = account.balance.start_of_fy.strftime("%Y-%m-%d")
+    date = start_of_fy().strftime("%Y-%m-%d")
     amount = 0 - account.balance.annual
-    details = f"Annual Fees {account.balance.start_of_fy.year}/{account.balance.end_of_fy.year}"
+    details = f"Annual Fees {start_of_fy().year}/{end_of_fy().year}"
 
     # Apply annual fee charge
     annual_fee = Transaction(date, amount, details)
@@ -189,7 +190,7 @@ def add_annual_fees_to_history(account: Account) -> list[Transaction]:
     charges.append(annual_fee)
 
     # Generate information for balance brought forward from untracked history
-    date = (account.balance.start_of_fy - dt.timedelta(days=1)).strftime("%Y-%m-%d")
+    date = (start_of_fy() - dt.timedelta(days=1)).strftime("%Y-%m-%d")
     amount = 0 - account.balance.outstanding
     details = "Brought Forward"
 
