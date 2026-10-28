@@ -1,0 +1,27 @@
+Screen {
+    align: center middle;
+}
+
+#menu {
+    width: auto;
+    height: auto;
+    align-horizontal: center;
+}
+
+#menu .header {
+    width: auto;
+    text-style: bold;
+    text-align: center;
+}
+
+#buttons {
+    width: 100%;
+    height: auto;
+    align: center middle;
+}
+
+#buttons Button {
+    width: 40;
+    height: 10;
+    margin: 1 0;
+}

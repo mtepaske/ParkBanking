@@ -3,6 +3,8 @@ PySide6
 
 #CLI
 rich
+textual
+textual-dev
 
 #Dates
 python-dateutil
