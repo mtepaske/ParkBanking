@@ -6,6 +6,7 @@ from textual.widgets import Button, Footer, Header, Static
 
 from application import Application
 from ui.accounts_menu.accounts_menu import AccountsMenu
+from ui.settings_menu.settings_menu import SettingsMenu
 
 
 class MainMenu(Screen):
@@ -52,4 +53,4 @@ class MainMenu(Screen):
                 pass
 
             case "settings":
-                pass
+                self.app.push_screen(SettingsMenu(self.app_state))

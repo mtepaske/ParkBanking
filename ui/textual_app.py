@@ -4,7 +4,7 @@ from textual.widgets import Footer, Header
 from application import Application, AppRepositories
 from services.database import AccountRepository, IgnoreRepository, connect
 from services.settings import get_setting
-from ui.main_menu import MainMenu
+from ui.main_menu.main_menu import MainMenu
 
 
 class Parkbanking(App):

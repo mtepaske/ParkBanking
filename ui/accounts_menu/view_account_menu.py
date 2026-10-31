@@ -27,7 +27,7 @@ from models.transactions import Transaction
 
 class ViewAccountMenu(Screen):
 
-    CSS_PATH = "edit_account.tcss"
+    CSS_PATH = "view_account_menu.tcss"
 
     BINDINGS = (
         Binding("q", "back_screen", "Back"),
