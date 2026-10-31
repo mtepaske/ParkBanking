@@ -1,4 +1,3 @@
-import logging
 from decimal import Decimal
 
 from rich.text import Text
@@ -24,13 +23,6 @@ from textual.widgets import (
 
 from application import Application
 from models.transactions import Transaction
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    filename="parkbanking_debug.log",
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
 
 
 class ViewAccountMenu(Screen):
