@@ -4,7 +4,8 @@ from textual.containers import VerticalGroup
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Static
 
-from ui.accounts_menu import AccountsMenu
+from application import Application
+from ui.accounts_menu.accounts_menu import AccountsMenu
 
 
 class MainMenu(Screen):
@@ -15,6 +16,10 @@ class MainMenu(Screen):
         Binding("q", "quit_app", "Quit"),
         Binding("ctrl+w", "save_to_db", "Save"),
     )
+
+    def __init__(self, app: Application):
+        super().__init__()
+        self.app_state = app
 
     def compose(self):
         yield Header()
@@ -37,4 +42,4 @@ class MainMenu(Screen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "accounts":
-            self.app.push_screen(AccountsMenu())
+            self.app.push_screen(AccountsMenu(self.app_state))

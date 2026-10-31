@@ -60,6 +60,10 @@ class Application:
         self.repos = repos
         self.state = AppState()
 
+    def load_from_db(self):
+        self.state.accounts = self.repos.account_repo.get_active_accounts()
+        self.state.words_to_ignore = self.repos.ignore_repo.get_all_ignore()
+
     def append_accounts(self, accounts_to_add: list[Account]) -> None:
         """
         Add new accounts to current loaded list

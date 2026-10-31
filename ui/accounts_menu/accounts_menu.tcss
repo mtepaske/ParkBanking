@@ -1,0 +1,21 @@
+#tabs {
+    height: 3;
+    width: 100%;
+    align: left middle;
+}
+
+#tabs Button {
+    height: 3;
+    width: 20;
+    margin: 0 1;
+}
+
+ContentSwitcher {
+    height: 1fr;
+    width: 100%;
+}
+
+DataTable {
+    height: 1fr;
+    width: 100%;
+}
