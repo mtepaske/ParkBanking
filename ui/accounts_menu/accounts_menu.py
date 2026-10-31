@@ -15,7 +15,8 @@ class AccountsMenu(Screen):
 
     BINDINGS = (
         Binding("q", "back_screen", "Back"),
-        Binding("ctrl+w", "save_to_db", "Save"),
+        Binding("ctrl+w", "save_to_database", "Save Accounts To Database"),
+        Binding("ctrl+l", "load_from_database", "Load Accounts From Database"),
     )
 
     def __init__(self, app: Application) -> None:
@@ -55,6 +56,15 @@ class AccountsMenu(Screen):
     def action_back_screen(self) -> None:
         self.dismiss()
 
+    def action_save_to_database(self) -> None:
+        self.app_state.repos.account_repo.save_accounts(self.app_state.state.accounts)
+        self.app_state.repos.ignore_repo.replace_all_ignore(
+            self.app_state.state.words_to_ignore
+        )
+
+    def action_load_from_database(self) -> None:
+        self.app_state.load_from_db()
+
     def on_mount(self) -> None:
 
         accounts_table = self.query_one("#accounts", DataTable)
@@ -85,7 +95,7 @@ class AccountsMenu(Screen):
         )
         self.populate_holders_table()
 
-    def populate_overview(self):
+    def populate_overview(self) -> None:
         pass
         # Overview should have
         # - Total amount of arrears and a list of accounts in arrears
@@ -93,7 +103,7 @@ class AccountsMenu(Screen):
         # - Total number of loaded accounts
         # - Total amount of visitor fees for the previous month
 
-    def populate_accounts_table(self):
+    def populate_accounts_table(self) -> None:
 
         accounts = self.app_state.state.accounts
         accounts_table = self.query_one("#accounts", DataTable)

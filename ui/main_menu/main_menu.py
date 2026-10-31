@@ -15,7 +15,8 @@ class MainMenu(Screen):
 
     BINDINGS = (
         Binding("q", "quit_app", "Quit"),
-        Binding("ctrl+w", "save_to_db", "Save"),
+        Binding("ctrl+w", "save_to_database", "Save Accounts To Database"),
+        Binding("ctrl+l", "load_from_database", "Load Accounts From Database"),
     )
 
     def __init__(self, app: Application):
@@ -54,3 +55,12 @@ class MainMenu(Screen):
 
             case "settings":
                 self.app.push_screen(SettingsMenu(self.app_state))
+
+    def action_save_to_database(self) -> None:
+        self.app_state.repos.account_repo.save_accounts(self.app_state.state.accounts)
+        self.app_state.repos.ignore_repo.replace_all_ignore(
+            self.app_state.state.words_to_ignore
+        )
+
+    def action_load_from_database(self) -> None:
+        self.app_state.load_from_db()

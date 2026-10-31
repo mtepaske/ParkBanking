@@ -18,7 +18,9 @@ class Parkbanking(App):
             )
         )
         self.app_state = app
-        self.app_state.load_from_db()
+
+        if get_setting("auto_load_from_db") == "True":
+            self.app_state.load_from_db()
 
     def compose(self) -> ComposeResult:
         yield Header()
