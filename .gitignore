@@ -2,6 +2,7 @@
 __pycache__/
 pyproject.toml
 .venv/
+*.log
 
 #Mac_OS
 .DS_Store
