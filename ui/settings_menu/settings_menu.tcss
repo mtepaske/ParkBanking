@@ -30,6 +30,18 @@ MaskedInput {
     height: 3;
 }
 
+.tree-row {
+    width: 90%;
+    height: auto;
+    align: left middle;
+    margin: 1;
+}
+
+.tree {
+    width: auto;
+    height: auto;
+}
+
 .select-row {
     width: auto;
     height: 3;
