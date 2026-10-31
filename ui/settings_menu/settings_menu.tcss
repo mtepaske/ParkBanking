@@ -1,0 +1,69 @@
+.section-title {
+    text-style: bold;
+    margin-top: 1;
+    margin-bottom: 1;
+    border-bottom: solid $accent;
+    padding-bottom: 1;
+}
+
+.input-row {
+    width: auto;
+    height: 3;
+    align: left middle;
+    margin: 1;
+}
+
+.input-label {
+    text-style: bold;
+    width: 20;
+    height: 3;
+    content-align: left middle;
+}
+
+Input {
+    width: 40;
+    height: 3;
+}
+
+MaskedInput {
+    width: 40;
+    height: 3;
+}
+
+.select-row {
+    width: auto;
+    height: 3;
+    align: left middle;
+    margin: 1;
+}
+
+.select-label {
+    text-style: bold;
+    width: 20;
+    height: 3;
+    content-align: left middle;
+}
+
+Select {
+    width: 40;
+    height: auto;
+}
+
+.switch-row {
+    width: 60;
+    height: 3;
+    align: left middle;
+    margin: 1;
+}
+
+.switch-label {
+    text-style: bold;
+    width: 40;
+    height: 3;
+    content-align: left middle;
+}
+
+Switch {
+    width: auto;
+    height: 3;
+}
