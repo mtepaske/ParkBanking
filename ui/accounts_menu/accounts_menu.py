@@ -1,5 +1,3 @@
-import logging
-
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -9,13 +7,6 @@ from textual.widgets import Button, ContentSwitcher, DataTable, Footer, Header, 
 
 from application import Application
 from ui.accounts_menu.view_account_menu import ViewAccountMenu
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    filename="parkbanking_debug.log",
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
 
 
 class AccountsMenu(Screen):
@@ -95,12 +86,12 @@ class AccountsMenu(Screen):
         self.populate_holders_table()
 
     def populate_overview(self):
-        accounts = self.app_state.state.accounts
-
-        total_sites = 0
-        total_arrears = 0
-        total_cabing_10 = 0
-        total_visitor_fee = 0
+        pass
+        # Overview should have
+        # - Total amount of arrears and a list of accounts in arrears
+        # - Total nmumber of sites
+        # - Total number of loaded accounts
+        # - Total amount of visitor fees for the previous month
 
     def populate_accounts_table(self):
 

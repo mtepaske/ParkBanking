@@ -1,8 +1,19 @@
+import logging
 from dataclasses import dataclass, field
 
 from models.account import Account
 from models.transactions import Transaction
 from services.database import AccountRepository, IgnoreRepository
+
+
+def enable_logger() -> logging.Logger:
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(
+        filename="/.parkbanking/parkbanking_debug.log",
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+    return logger
 
 
 @dataclass

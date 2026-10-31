@@ -27,19 +27,29 @@ class MainMenu(Screen):
 
         title = pyfiglet.figlet_format("MAIN MENU")
 
-        yield VerticalGroup(
-            Static(title, classes="header"),
-            VerticalGroup(
-                Button("Manage Accounts", id="accounts"),
-                Button("Matching Menu"),
-                Button("Import Files"),
-                Button("Export Files"),
-                Button("Settings"),
-                id="buttons",
-            ),
-            id="menu",
-        )
+        with VerticalGroup(id="menu"):
+            yield Static(title, classes="header")
+            with VerticalGroup(id="buttons"):
+                yield Button("Manage Accounts", id="accounts")
+                yield Button("Matching Menu", id="payments")
+                yield Button("Import Files", id="import")
+                yield Button("Export Files", id="export")
+                yield Button("Settings", id="settings")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "accounts":
-            self.app.push_screen(AccountsMenu(self.app_state))
+        match event.button.id:
+
+            case "accounts":
+                self.app.push_screen(AccountsMenu(self.app_state))
+
+            case "payments":
+                pass
+
+            case "import":
+                pass
+
+            case "export":
+                pass
+
+            case "settings":
+                pass
