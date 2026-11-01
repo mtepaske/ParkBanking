@@ -2,7 +2,6 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import (
     Horizontal,
-    HorizontalGroup,
     Vertical,
     VerticalGroup,
     VerticalScroll,
@@ -12,7 +11,7 @@ from textual.widgets import Button, Collapsible, Footer, Header, Input, Static
 
 from application import Application
 from services.settings import APP_DIRECTORY, get_setting
-from ui.custom_widgets import FolderTree
+from ui.custom_widgets import FolderTree, StatusBox
 
 
 class ExportMenu(Screen):
@@ -84,44 +83,7 @@ class ExportMenu(Screen):
                         "Export Selected File", disabled=True, id="confirm"
                     )
 
-            with VerticalGroup(id="app-status") as box:
-                box.border_title = "Loaded Data"
-                state = self.app_state.state
-
-                with HorizontalGroup(classes="status-row"):
-                    yield Static("Unmatched Payments: ", classes="status")
-                    yield Static(
-                        str(len(state.transactions)),
-                        classes="number",
-                        id="status-transactions",
-                    )
-                with HorizontalGroup(classes="status-row"):
-                    yield Static("Matched Payments: ", classes="status")
-                    yield Static(
-                        str(len(state.payments)), classes="number", id="status-payments"
-                    )
-                with HorizontalGroup(classes="status-row"):
-                    yield Static("Charges: ", classes="status")
-                    yield Static(
-                        str(len(state.charges)), classes="number", id="status-charges"
-                    )
-                with HorizontalGroup(classes="status-row"):
-                    yield Static("Sites: ", classes="status")
-                    yield Static(
-                        str(len(state.sites)), classes="number", id="status-sites"
-                    )
-                with HorizontalGroup(classes="status-row"):
-                    yield Static("Accounts: ", classes="status")
-                    yield Static(
-                        str(len(state.accounts)), classes="number", id="status-accounts"
-                    )
-                with HorizontalGroup(classes="status-row"):
-                    yield Static("Words: ", classes="status")
-                    yield Static(
-                        str(len(state.words_to_ignore)),
-                        classes="number",
-                        id="status-ignore",
-                    )
+            yield StatusBox(self.app_state, id="app-status")
 
         with Vertical(classes="section"):
 

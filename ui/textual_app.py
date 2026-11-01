@@ -9,6 +9,8 @@ from ui.main_menu.main_menu import MainMenu
 
 class Parkbanking(App):
 
+    CSS_PATH = "app.tcss"
+
     def __init__(self):
         super().__init__()
         self.connection = connect()

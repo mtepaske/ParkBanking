@@ -1,0 +1,23 @@
+#app-status {
+    align: center bottom;
+    width: auto;
+    border: round $primary;
+    dock: bottom;
+    padding: 1;
+}
+
+.status-row {
+    height: 2;
+    width: auto;
+}
+
+.status {
+    width: 20;
+    height: 2;
+}
+
+.number {
+    width: 3;
+    height: 2;
+    color: green;
+}
