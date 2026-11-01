@@ -5,6 +5,7 @@ PySide6
 rich
 textual
 textual-dev
+pyfiglet
 
 #Dates
 python-dateutil

@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass, field
 
 from models.account import Account
+from models.site import Site
 from models.transactions import Transaction
 from services.database import AccountRepository, IgnoreRepository
 
@@ -35,6 +36,9 @@ class AppState:
     words_to_ignore: set[str] = field(default_factory=set)
     unknown_words: set[str] = field(default_factory=set)
     payments: list[Transaction] = field(default_factory=list)
+    charges: list[Transaction] = field(default_factory=list)
+    # Refactor code to add charges to correct list
+    sites: list[Site] = field(default_factory=list)
 
 
 @dataclass

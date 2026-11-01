@@ -6,6 +6,7 @@ from textual.widgets import Button, Footer, Header, Static
 
 from application import Application
 from ui.accounts_menu.accounts_menu import AccountsMenu
+from ui.import_menu.import_menu import ImportMenu
 from ui.settings_menu.settings_menu import SettingsMenu
 
 
@@ -45,12 +46,14 @@ class MainMenu(Screen):
                 self.app.push_screen(AccountsMenu(self.app_state))
 
             case "payments":
+                # self.app.push_screen(PaymentMenu(self.app_state))
                 pass
 
             case "import":
-                pass
+                self.app.push_screen(ImportMenu(self.app_state))
 
             case "export":
+                # self.app.push_screen(ExportMenu(self.app_state))
                 pass
 
             case "settings":
