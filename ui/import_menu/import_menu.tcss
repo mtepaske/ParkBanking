@@ -1,16 +1,14 @@
 Screen {
-    align: center middle
+    layout: horizontal;
+    align: center top;
 }
 
 .section {
-    align: center middle;
+    align: center top;
     width: 50%;
-    height: 100%;
-    border: ascii green;
 }
 
 .section-title {
-    width: 100%;
     content-align: left middle;
     text-style: bold;
     margin-top: 1;
@@ -22,17 +20,15 @@ Screen {
 }
 
 #file-select {
-    align: center middle;
+    align: center top;
     width: 100%;
-    border: ascii green;
 }
 
 .tree-row {
     width: 90%;
     height: auto;
-    align: left middle;
+    align: left top;
     margin: 1;
-    border: ascii green;
 }
 
 .tree {
@@ -41,23 +37,34 @@ Screen {
 }
 
 #confirm-row {
-    width: 100%;
-    height: 5;
+    margin-top: 2;
     align: center middle;
-    border: ascii green;
+}
+
+#confirm {
+    content-align: center middle;
 }
 
 #app-status {
-    align: center middle;
-    width: 100%;
-    /*border: round $primary;*/
-    outline: ascii green;
+    align: center bottom;
+    width: auto;
+    border: round $primary;
     dock: bottom;
+    padding: 1;
 }
 
-.status-box {
-    width: 33%;
-    padding: 0 1;
-    align: center middle;
-    margin: 1;
+.status-row {
+    height: 2;
+    width: auto;
+}
+
+.status {
+    width: 20;
+    height: 2;
+}
+
+.number {
+    width: 3;
+    height: 2;
+    color: green;
 }
