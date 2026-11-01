@@ -16,7 +16,7 @@ class ImportMenu(Screen):
 
     CSS_PATH = "import_menu.tcss"
 
-    BINDINGS = Binding("q", "back_screen", "Back")
+    BINDINGS = (Binding("q", "back_screen", "Back"),)
 
     def __init__(self, app: Application):
         super().__init__()

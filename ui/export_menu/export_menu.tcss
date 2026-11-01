@@ -1,0 +1,91 @@
+Screen {
+    layout: horizontal;
+    align: center top;
+}
+
+.section {
+    align: center top;
+    width: 50%;
+}
+
+.section-title {
+    content-align: left middle;
+    text-style: bold;
+    margin-top: 1;
+    margin-bottom: 1;
+    border-bottom: solid $accent;
+    padding-bottom: 1;
+    padding-left: 1;
+    dock: top;
+}
+
+#file-select {
+    align: center top;
+    width: 100%;
+}
+
+.tree-row {
+    width: 90%;
+    height: auto;
+    align: left top;
+    margin: 1;
+}
+
+.tree {
+    width: auto;
+    height: auto;
+}
+
+#confirm-stack {
+    align: center middle;
+    margin-top: 2;
+    width: 100%;
+    height: auto;
+}
+
+#name-row {
+    height: auto;
+    align: center middle;
+}
+
+#file-name {
+    width: 70%;
+    height: auto;
+    content-align: center middle;
+    margin: 1;
+}
+
+#confirm-row {
+    height: auto;
+    align: center middle;
+}
+
+#confirm {
+    content-align: center middle;
+    width: 30%;
+    margin: 1;
+}
+
+#app-status {
+    align: center bottom;
+    width: auto;
+    border: round $primary;
+    dock: bottom;
+    padding: 1;
+}
+
+.status-row {
+    height: 2;
+    width: auto;
+}
+
+.status {
+    width: 20;
+    height: 2;
+}
+
+.number {
+    width: 3;
+    height: 2;
+    color: green;
+}
