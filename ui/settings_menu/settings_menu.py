@@ -1,6 +1,3 @@
-from collections.abc import Iterable
-from pathlib import Path
-
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import (
@@ -23,6 +20,7 @@ from textual.widgets import (
 
 from application import Application
 from services.settings import APP_DIRECTORY, load_settings, save_settings
+from ui.custom_widgets import DatabaseTree, FolderTree
 
 
 class SettingsMenu(Screen):
@@ -251,23 +249,3 @@ class SettingsMenu(Screen):
                     f'Database Folder: {self.settings["db_path"]}'
                 )
                 self.query_one("#database-folder", Collapsible).collapsed = True
-
-
-class FolderTree(DirectoryTree):
-
-    def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
-        return [
-            path
-            for path in paths
-            if path.is_dir()
-            and not path.name.startswith(".")
-            and not path.name.startswith("_")
-        ]
-
-
-class DatabaseTree(DirectoryTree):
-
-    def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
-        return [
-            path for path in paths if path.is_dir() and not path.name.startswith("_")
-        ]

@@ -12,7 +12,7 @@ from textual.widgets import Button, Collapsible, Footer, Header, Input, Static
 
 from application import Application
 from services.settings import APP_DIRECTORY, get_setting
-from ui.settings_menu.settings_menu import FolderTree
+from ui.custom_widgets import FolderTree
 
 
 class ExportMenu(Screen):
