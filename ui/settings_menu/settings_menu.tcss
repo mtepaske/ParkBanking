@@ -1,11 +1,3 @@
-.section-title {
-    text-style: bold;
-    margin-top: 1;
-    margin-bottom: 1;
-    border-bottom: solid $accent;
-    padding-bottom: 1;
-}
-
 .input-row {
     width: auto;
     height: 3;

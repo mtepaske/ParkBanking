@@ -43,7 +43,7 @@ class SettingsMenu(Screen):
 
         with Horizontal():
 
-            with VerticalGroup():
+            with VerticalGroup(classes="section"):
                 yield Static("BUSINESS SETTINGS", classes="section-title")
 
                 with HorizontalGroup(classes="input-row"):
@@ -52,7 +52,7 @@ class SettingsMenu(Screen):
                         value=self.settings["business_name"], id="business-name"
                     )
 
-            with VerticalGroup():
+            with VerticalGroup(classes="section"):
                 yield Static("DATA SETTINGS", classes="section-title")
 
                 with Collapsible(
@@ -125,7 +125,7 @@ class SettingsMenu(Screen):
                         id="append-transactions",
                     )
 
-            with VerticalGroup():
+            with VerticalGroup(classes="section"):
                 yield Static("FEE SETTINGS", classes="section-title")
 
                 with HorizontalGroup(classes="input-row"):

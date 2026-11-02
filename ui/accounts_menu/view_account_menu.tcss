@@ -24,7 +24,7 @@
     width: 60;
     margin-top: 1;
     margin-bottom: 1;
-    border: solid $accent;
+    border: solid $primary;
     content-align: center middle;
 }
 
