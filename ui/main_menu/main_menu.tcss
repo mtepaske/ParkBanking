@@ -1,4 +1,5 @@
-Screen {
+#main-menu {
+    layout: vertical;
     align: center middle;
 }
 

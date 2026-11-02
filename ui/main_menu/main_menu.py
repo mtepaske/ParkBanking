@@ -21,24 +21,25 @@ class MainMenu(Screen):
         Binding("ctrl+l", "load_from_database", "Load Accounts From Database"),
     )
 
-    def __init__(self, app: Application):
-        super().__init__()
+    def __init__(self, app: Application, **kwargs):
+        super().__init__(id="main-menu", **kwargs)
         self.app_state = app
 
     def compose(self):
+        # yield StatusBox(app=self.app_state, id="app-status")
         yield Header()
         yield Footer()
 
         title = pyfiglet.figlet_format("MAIN MENU")
 
-        with VerticalGroup(id="menu"):
-            yield Static(title, classes="header")
-            with VerticalGroup(id="buttons"):
-                yield Button("Manage Accounts", id="accounts")
-                yield Button("Matching Menu", id="payments")
-                yield Button("Import Files", id="import")
-                yield Button("Export Files", id="export")
-                yield Button("Settings", id="settings")
+        yield Static(title, classes="section-title")
+
+        with VerticalGroup(id="buttons"):
+            yield Button("Manage Accounts", id="accounts")
+            yield Button("Matching Menu", id="payments")
+            yield Button("Import Files", id="import")
+            yield Button("Export Files", id="export")
+            yield Button("Settings", id="settings")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         match event.button.id:
