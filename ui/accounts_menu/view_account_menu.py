@@ -193,6 +193,10 @@ class ViewAccountMenu(Screen):
             if payment.account == self.account:
                 history.append(payment)
 
+        for charge in self.app_state.state.charges:
+            if charge.account == self.account:
+                history.append(charge)
+
         # Sort history by date so newest payment first
         history.sort(key=lambda t: t.date, reverse=True)
 

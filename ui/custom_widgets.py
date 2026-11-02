@@ -52,7 +52,7 @@ class StatusBox(VerticalGroup):
                 str(len(state.payments)), classes="number", id="status-payments"
             )
         with HorizontalGroup(classes="status-row"):
-            yield Static("Charges: ", classes="status")
+            yield Static("Un Committed Charges: ", classes="status")
             yield Static(str(len(state.charges)), classes="number", id="status-charges")
         with HorizontalGroup(classes="status-row"):
             yield Static("Sites: ", classes="status")
@@ -69,3 +69,22 @@ class StatusBox(VerticalGroup):
                 classes="number",
                 id="status-ignore",
             )
+
+    def on_mount(self):
+        self.app_state.state.subscribe(self.refresh_status)
+        self.refresh_status()
+
+    def on_unmount(self):
+        self.app_state.state.unsubscribe(self.refresh_status)
+
+    def refresh_status(self):
+        state = self.app_state.state
+
+        self.query_one("#status-transactions", Static).update(
+            str(len(state.transactions))
+        )
+        self.query_one("#status-payments", Static).update(str(len(state.payments)))
+        self.query_one("#status-charges", Static).update(str(len(state.charges)))
+        self.query_one("#status-sites", Static).update(str(len(state.sites)))
+        self.query_one("#status-accounts", Static).update(str(len(state.accounts)))
+        self.query_one("#status-ignore", Static).update(str(len(state.words_to_ignore)))

@@ -1,5 +1,8 @@
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
+
+from textual.message_pump import Callback
 
 from models.account import Account
 from models.site import Site
@@ -39,6 +42,93 @@ class AppState:
     charges: list[Transaction] = field(default_factory=list)
     # Refactor code to add charges to correct list
     sites: list[Site] = field(default_factory=list)
+
+    _listeners: list[Callable] = field(
+        default_factory=list, init=False, repr=False, compare=False
+    )
+
+    def subscribe(self, callback: Callback):
+        self._listeners.append(callback)
+
+    def unsubscribe(self, callback: Callback):
+        if callback in self._listeners:
+            self._listeners.remove(callback)
+
+    def notify_changed(self):
+        for callback in self._listeners.copy():
+            callback()
+
+    def add_account(self, account: Account):
+        self.accounts.append(account)
+        self.notify_changed()
+
+    def remove_account(self, account: Account):
+        self.accounts.remove(account)
+        self.notify_changed()
+
+    def clear_accounts(self):
+        self.accounts: list[Account] = []
+        self.notify_changed()
+
+    def add_transaction(self, transaction: Transaction):
+        self.transactions.append(transaction)
+        self.notify_changed()
+
+    def remove_transaction(self, transaction: Transaction):
+        self.transactions.remove(transaction)
+        self.notify_changed()
+
+    def clear_transactions(self):
+        self.transactions: list[Transaction] = []
+        self.notify_changed()
+
+    def add_ignore(self, word: str):
+        self.words_to_ignore.add(word)
+        self.notify_changed()
+
+    def remove_ignore(self, word: str):
+        self.words_to_ignore.remove(word)
+        self.notify_changed()
+
+    def clear_ignore(self):
+        self.words_to_ignore: set[str] = set()
+        self.notify_changed()
+
+    def add_payment(self, payment: Transaction):
+        self.payments.append(payment)
+        self.notify_changed()
+
+    def remove_payment(self, payment: Transaction):
+        self.payments.remove(payment)
+        self.notify_changed()
+
+    def clear_payments(self):
+        self.payments: list[Transaction] = []
+        self.notify_changed()
+
+    def add_charge(self, charge: Transaction):
+        self.charges.append(charge)
+        self.notify_changed()
+
+    def remove_charge(self, charge: Transaction):
+        self.charges.remove(charge)
+        self.notify_changed()
+
+    def clear_charges(self):
+        self.charges: list[Transaction] = []
+        self.notify_changed()
+
+    def add_site(self, site: Site):
+        self.sites.append(site)
+        self.notify_changed()
+
+    def remove_site(self, site: Site):
+        self.sites.remove(site)
+        self.notify_changed()
+
+    def clear_sites(self):
+        self.sites: list[Site] = []
+        self.notify_changed()
 
 
 @dataclass
