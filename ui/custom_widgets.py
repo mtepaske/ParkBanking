@@ -2,8 +2,9 @@ from collections.abc import Iterable
 from pathlib import Path
 
 from textual.app import ComposeResult
-from textual.containers import HorizontalGroup, VerticalGroup
-from textual.widgets import DirectoryTree, Static
+from textual.containers import HorizontalGroup, Vertical, VerticalGroup
+from textual.screen import ModalScreen
+from textual.widgets import Button, DirectoryTree, Label, Static
 
 from application import Application
 
@@ -88,3 +89,39 @@ class StatusBox(VerticalGroup):
         self.query_one("#status-sites", Static).update(str(len(state.sites)))
         self.query_one("#status-accounts", Static).update(str(len(state.accounts)))
         self.query_one("#status-ignore", Static).update(str(len(state.words_to_ignore)))
+
+
+class ConfirmScreen(ModalScreen[bool]):
+
+    def __init__(self, message: str):
+        super().__init__()
+        self.message = message
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="confirm-dialog"):
+            yield Label(self.message)
+            yield Button.success("Yes", id="yes")
+            yield Button.error("No", id="no")
+
+    def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id == "yes":
+            self.dismiss(True)
+        else:
+            self.dismiss(False)
+
+
+class ConfirmAppendScreen(ModalScreen[str | None]):
+
+    def __init__(self, message: str) -> None:
+        super().__init__()
+        self.message = message
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="append-dialog"):
+            yield Label(self.message)
+            yield Button.success("Add To", id="append")
+            yield Button.warning("Replace", id="replace")
+            yield Button.error("Cancel", id="cancel")
+
+    def on_button_pressed(self, event: Button.Pressed):
+        self.dismiss(event.button.id)

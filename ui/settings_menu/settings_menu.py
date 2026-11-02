@@ -85,6 +85,28 @@ class SettingsMenu(Screen):
                         str(APP_DIRECTORY), classes="tree", id="database-tree"
                     )
 
+                with HorizontalGroup(classes="select-row"):
+                    yield Static(
+                        "Add To Loaded Accounts On Import: ", classes="select-label"
+                    )
+                    yield Select(
+                        [("Never", "Never"), ("Ask", "Ask"), ("Always", "Always")],
+                        value=self.settings["append_accounts_on_import"],
+                        allow_blank=False,
+                        id="append-accounts",
+                    )
+
+                with HorizontalGroup(classes="select-row"):
+                    yield Static(
+                        "Add To Loaded Transactions On Import: ", classes="select-label"
+                    )
+                    yield Select(
+                        [("Never", "Never"), ("Ask", "Ask"), ("Always", "Always")],
+                        value=self.settings["append_transactions_on_import"],
+                        allow_blank=False,
+                        id="append-transactions",
+                    )
+
                 with HorizontalGroup(classes="switch-row"):
                     yield Static(
                         "Auto Load From Database On Start: ", classes="switch-label"
@@ -103,26 +125,6 @@ class SettingsMenu(Screen):
                         value=self.settings["auto_save_to_db"] == "True",
                         animate=True,
                         id="save",
-                    )
-
-                with HorizontalGroup(classes="switch-row"):
-                    yield Static(
-                        "Add To Loaded Accounts On Import: ", classes="switch-label"
-                    )
-                    yield Switch(
-                        value=self.settings["append_accounts_on_import"] == "True",
-                        animate=True,
-                        id="append-accounts",
-                    )
-
-                with HorizontalGroup(classes="switch-row"):
-                    yield Static(
-                        "Add To Loaded Transactions On Import: ", classes="switch-label"
-                    )
-                    yield Switch(
-                        value=self.settings["append_transactions_on_import"] == "True",
-                        animate=True,
-                        id="append-transactions",
                     )
 
             with VerticalGroup(classes="section"):
@@ -191,10 +193,10 @@ class SettingsMenu(Screen):
         self.settings["auto_load_from_db"] = str(self.query_one("#load", Switch).value)
         self.settings["auto_save_to_db"] = str(self.query_one("#save", Switch).value)
         self.settings["append_accounts_on_import"] = str(
-            self.query_one("#append-accounts", Switch).value
+            self.query_one("#append-accounts", Select).value
         )
         self.settings["append_transactions_on_import"] = str(
-            self.query_one("#append-transactions", Switch).value
+            self.query_one("#append-transactions", Select).value
         )
 
         self.settings["annual_fees_base_rate"] = str(

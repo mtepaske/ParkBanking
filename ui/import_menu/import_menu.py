@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from textual import on
+from textual import on, work
 from textual.binding import Binding
 from textual.containers import (
     HorizontalGroup,
@@ -27,7 +27,7 @@ from services.imports import (
     import_words_to_ignore,
 )
 from services.settings import APP_DIRECTORY, get_setting
-from ui.custom_widgets import StatusBox
+from ui.custom_widgets import ConfirmAppendScreen, StatusBox
 
 log = enable_logger()
 
@@ -131,20 +131,11 @@ class ImportMenu(Screen):
         self.dismiss()
 
     @on(Button.Pressed)
-    def on_button_pressed(self, event: Button.Pressed):
-        assert self.loaded_file is not None
+    async def on_button_pressed(self, event: Button.Pressed):
         match self.loaded_file_type:
 
             case "statement":
-                if get_setting("append_transactions_on_import") == "Never":
-                    self.app_state.state.clear_transactions()
-                elif get_setting("append_transactions_on_import") == "Ask":
-                    pass
-                for transaction in self.loaded_file:
-                    assert isinstance(transaction, Transaction)
-                    self.app_state.state.add_transaction(transaction)
-                    self.query_one("#file-preview", DataTable).clear(columns=True)
-                    self.query_one("#confirm", Button).disabled = True
+                self.import_statement()
 
             case "matched":
                 pass
@@ -160,11 +151,7 @@ class ImportMenu(Screen):
                 pass
 
             case "ignore":
-                for word in self.loaded_file:
-                    assert isinstance(word, str)
-                    self.app_state.state.add_ignore(word)
-                    self.query_one("#file-preview", DataTable).clear(columns=True)
-                    self.query_one("#confirm", Button).disabled = True
+                self.import_ignore()
 
     @on(DirectoryTree.FileSelected)
     def on_directiory_tree_file_selected(self, event: DirectoryTree.FileSelected):
@@ -290,7 +277,7 @@ class ImportMenu(Screen):
             return
         except KeyError:
             self.notify(
-                "This File Does Not Contain Statment Information",
+                "This File Does Not Contain Words To Ignore",
                 severity="error",
                 timeout=5,
             )
@@ -305,3 +292,37 @@ class ImportMenu(Screen):
 
         self.loaded_file_type = "ignore"
         self.query_one("#confirm", Button).disabled = False
+
+    @work
+    async def import_statement(self):
+        assert self.loaded_file is not None
+        if len(self.app_state.state.transactions) != 0:
+
+            if get_setting("append_transactions_on_import") == "Never":
+                self.app_state.state.clear_transactions()
+
+            elif get_setting("append_transactions_on_import") == "Ask":
+                choice = await self.app.push_screen_wait(
+                    ConfirmAppendScreen(
+                        message="Add To Or Replace Previously Loaded Transactions?"
+                    )
+                )
+
+                if choice == "replace":
+                    self.app_state.state.clear_transactions()
+                elif choice is None or choice == "cancel":
+                    return
+
+        for transaction in self.loaded_file:
+            assert isinstance(transaction, Transaction)
+            self.app_state.state.add_transaction(transaction)
+            self.query_one("#file-preview", DataTable).clear(columns=True)
+            self.query_one("#confirm", Button).disabled = True
+
+    def import_ignore(self):
+        assert self.loaded_file is not None
+        for word in self.loaded_file:
+            assert isinstance(word, str)
+            self.app_state.state.add_ignore(word)
+            self.query_one("#file-preview", DataTable).clear(columns=True)
+            self.query_one("#confirm", Button).disabled = True
