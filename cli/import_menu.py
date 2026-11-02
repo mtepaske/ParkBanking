@@ -3,7 +3,7 @@ from cli.matching import review_matches
 from services.imports import (
     import_account_info_from_csv,
     import_matched,
-    import_payments,
+    import_statement,
 )
 from services.settings import APP_DIRECTORY, get_setting
 
@@ -199,7 +199,7 @@ def import_banking(app: Application) -> None:
 
     # Import file
     try:
-        new_transactions = import_payments(filename)
+        new_transactions = import_statement(filename)
     except FileNotFoundError:
         print(f"No File Named {filename}.csv Found")
         return

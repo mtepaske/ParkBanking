@@ -8,12 +8,13 @@ from models.account import Account
 from models.site import Site
 from models.transactions import Transaction
 from services.database import AccountRepository, IgnoreRepository
+from services.settings import APP_DIRECTORY
 
 
 def enable_logger() -> logging.Logger:
     logger = logging.getLogger(__name__)
     logging.basicConfig(
-        filename="/.parkbanking/parkbanking_debug.log",
+        filename=APP_DIRECTORY / "parkbanking_debug.log",
         level=logging.DEBUG,
         format="%(asctime)s - %(levelname)s - %(message)s",
     )

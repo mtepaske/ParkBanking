@@ -70,7 +70,7 @@ def import_words_to_ignore(filename: str) -> set[str]:
         return {row["Words"] for row in reader}
 
 
-def import_payments(filename: str) -> list[Transaction]:
+def import_statement(filename: str) -> list[Transaction]:
     """
     Imports a CSV file containing a bank statement
 
