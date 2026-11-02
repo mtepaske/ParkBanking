@@ -19,8 +19,8 @@ class ImportMenu(Screen):
 
     BINDINGS = (Binding("q", "back_screen", "Back"),)
 
-    def __init__(self, app: Application):
-        super().__init__()
+    def __init__(self, app: Application, **kwargs):
+        super().__init__(id="import-menu", **kwargs)
         self.app_state = app
         self.import_folder = APP_DIRECTORY / get_setting("imports_folder")
 

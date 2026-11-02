@@ -19,8 +19,8 @@ class ExportMenu(Screen):
     BINDINGS = (Binding("q", "back_screen", "Back"),)
     CSS_PATH = "export_menu.tcss"
 
-    def __init__(self, app: Application):
-        super().__init__()
+    def __init__(self, app: Application, **kwargs):
+        super().__init__(id="export-menu", **kwargs)
         self.app_state = app
         self.export_folder = APP_DIRECTORY / get_setting("exports_folder")
 
@@ -83,7 +83,7 @@ class ExportMenu(Screen):
                         "Export Selected File", disabled=True, id="confirm"
                     )
 
-            yield StatusBox(self.app_state, id="app-status")
+            yield StatusBox(app=self.app_state, id="app-status")
 
         with Vertical(classes="section"):
 

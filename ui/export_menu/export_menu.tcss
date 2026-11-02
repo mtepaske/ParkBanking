@@ -1,4 +1,4 @@
-Screen {
+#export-menu {
     layout: horizontal;
     align: center top;
 }

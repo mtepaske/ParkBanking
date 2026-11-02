@@ -20,12 +20,12 @@
     content-align: left middle;
 }
 
-Input {
+.input-row Input {
     width: 40;
     height: 3;
 }
 
-MaskedInput {
+.input-row MaskedInput {
     width: 40;
     height: 3;
 }
@@ -56,7 +56,7 @@ MaskedInput {
     content-align: left middle;
 }
 
-Select {
+.select-row Select {
     width: 40;
     height: auto;
 }
@@ -75,7 +75,7 @@ Select {
     content-align: left middle;
 }
 
-Switch {
+.switch-row Switch {
     width: auto;
     height: 3;
 }

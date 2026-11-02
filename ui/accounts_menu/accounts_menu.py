@@ -37,7 +37,7 @@ class AccountsMenu(Screen):
             yield Button("Balances", id="tab_balances")
             yield Button("Site Holders", id="tab_site_holders")
 
-        with ContentSwitcher(initial="overview"):
+        with ContentSwitcher(initial="overview", id="tables"):
             yield Static("Overview", id="overview")
             yield DataTable(id="accounts", cursor_type="row", zebra_stripes=True)
             yield DataTable(id="balances", cursor_type="row", zebra_stripes=True)
