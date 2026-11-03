@@ -28,7 +28,8 @@ class Transaction:
         amount: Decimal,
         details: str,
         type_str: str = "",
-        id: int | None = None,
+        account_id: int | None = None,
+        transaction_id: int | None = None,
     ) -> None:
         """
         Initialises the instance
@@ -41,13 +42,14 @@ class Transaction:
             id: The ID used for database queries. Gets assigned on first insertion to database
         """
 
-        self.id = id
         self.date = convert_to_iso(date)
         self.amount = amount
         self.account = None
         self.original_details = details
         self.details = details.split(" ")
         self.type = type_str
+        self.account_id = account_id
+        self.transaction_id = transaction_id
 
     @classmethod
     def from_csv(cls, row: dict[str, str]) -> Transaction:
@@ -82,15 +84,48 @@ class Transaction:
             The transaction instance containing the information from the row
         """
 
-        transaction = cls(
-            row["Date"], Decimal(row["Amount"]), "previously matched"
-        )  # Change dictionary to export original details
+        date = row["Date"]
+        site_number = row["Site Number"]
+        name = row["Name"]
+        amount = row["Amount"]
+        details = row["Details"]
+        account_id = row["Account ID"]
+        transaction_id = row["Transaction ID"]
 
-        # Matches the transaction to an account matching the site number
+        # Checks for and normalises the account ID. If none is found it assigns None
+        if account_id == "None" or account_id == "":
+            account_id = None
+        else:
+            account_id = int(account_id)
+
+        # Checks for and normalises the transaction ID. If none is found it assigns None
+        if transaction_id == "None" or transaction_id == "":
+            transaction_id = None
+        else:
+            transaction_id = int(transaction_id)
+
+        transaction = cls(
+            date=date,
+            amount=Decimal(amount),
+            details=details,
+            account_id=account_id,
+            transaction_id=transaction_id,
+        )
+
         for account in accounts:
-            if account.site_number == row["Site"]:
+
+            # Attempts to match of account_id if one exists
+            if transaction.account_id is not None:
+                if account.account_id == transaction.account_id:
+                    transaction.account = account
+                    break
+
+            # Falls back on site_number and name
+            elif account.site_number == site_number and account.name == name:
                 transaction.account = account
+                transaction.account_id = account.account_id
                 break
+
         return transaction
 
     def to_dict(self) -> dict[str, str]:
@@ -104,7 +139,7 @@ class Transaction:
         # Construct the Dictionary
         return {
             "Date": self.date,
-            "Site": (
+            "Site Number": (
                 str(self.account.site_number) if self.account is not None else "??"
             ),
             "Name": (self.account.name if self.account is not None else "Unmatched"),
@@ -112,6 +147,9 @@ class Transaction:
             "Details": self.original_details,
             "Account ID": (
                 str(self.account.account_id) if self.account is not None else "??"
+            ),
+            "Transaction ID": (
+                str(self.transaction_id) if self.transaction_id is not None else "None"
             ),
         }
 

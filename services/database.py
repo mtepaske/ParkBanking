@@ -153,7 +153,7 @@ class AccountRepository(Repository):
             outstanding=balance_row["outstanding"],
             pay_frequency=balance_row["pay_frequency"],
             credit=balance_row["credit"],
-            id=balance_row["id"],
+            balance_id=balance_row["id"],
         )
 
     def get_all_balances(self) -> list[Balance]:
@@ -173,7 +173,7 @@ class AccountRepository(Repository):
                 outstanding=row["outstanding"],
                 pay_frequency=row["pay_frequency"],
                 credit=row["credit"],
-                id=row["id"],
+                balance_id=row["id"],
             )
             for row in balance_rows
         ]
@@ -196,7 +196,7 @@ class AccountRepository(Repository):
                 outstanding=row["outstanding"],
                 pay_frequency=row["pay_frequency"],
                 credit=row["credit"],
-                id=row["id"],
+                balance_id=row["id"],
             )
             for row in balance_rows
         ]
@@ -229,7 +229,8 @@ class AccountRepository(Repository):
                 amount=money(row["amount"]),
                 details=row["details"],
                 type_str=row["particulars"],
-                id=row["id"],
+                account_id=account_id,
+                transaction_id=row["id"],
             )
             for row in payment_rows
         ]
@@ -316,7 +317,7 @@ class AccountRepository(Repository):
         if balance.account_id is None:
             raise ValueError("Insert Failed. Balance has no account id")
         try:
-            if balance.id is None:
+            if balance.balance_id is None:
                 cursor = self.execute(
                     """
                     INSERT INTO balances (
@@ -338,7 +339,7 @@ class AccountRepository(Repository):
                         balance.pay_frequency,
                     ),
                 )
-                balance.id = cursor.lastrowid
+                balance.balance_id = cursor.lastrowid
             else:
                 cursor = self.execute(
                     """
@@ -356,12 +357,12 @@ class AccountRepository(Repository):
                         str(balance.outstanding),
                         str(balance.credit),
                         balance.pay_frequency,
-                        balance.id,
+                        balance.balance_id,
                     ),
                 )
                 if cursor.rowcount != 1:
                     raise ValueError(
-                        f"Balance {balance.id} does not exist in the database"
+                        f"Balance {balance.balance_id} does not exist in the database"
                     )
         except sqlite3.OperationalError:
             print(f"{balance.site_number} Could Not Be Entered")
@@ -394,7 +395,7 @@ class AccountRepository(Repository):
                 payment.type,
             ),
         )
-        payment.id = cursor.lastrowid
+        payment.transaction_id = cursor.lastrowid
 
 
 class IgnoreRepository(Repository):

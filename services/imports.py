@@ -2,6 +2,7 @@ import csv
 import datetime as dt
 from decimal import Decimal
 
+from application import MissingBalance
 from models.account import Account
 from models.balance import Balance
 from models.transactions import Transaction
@@ -140,26 +141,22 @@ def import_account_info_from_csv(
     balances = import_balances(balances_file)
     old_charges = []
 
-    # Match accounts to balances based on site number
     for account in accounts:
         for balance in balances:
-            if account.site_number == balance.site_number:
 
-                # Checks for existing database ID's
-                if (
-                    account.account_id is not None
-                    and balance.account_id is not None
-                    and account.account_id != balance.account_id
-                ):
+            if account.account_id is not None:
+                if account.account_id == balance.account_id:
+                    account.add_balance(balance)
+                    break
 
-                    raise ValueError("Balance ID does not match Account ID")
+            else:
+                if account.site_number == balance.site_number:
+                    account.add_balance(balance)
+                    old_charges.extend(add_annual_fees_to_history(account))
+                    break
 
-                account.add_balance(balance)
-                break
-
-        # If the account has never been inserted into a database, generate historical charges
-        if account.account_id is None:
-            old_charges.extend(add_annual_fees_to_history(account))
+        if account.balance is None:
+            raise MissingBalance(f"No Matching Balance Found For {account}")
 
     return (accounts, old_charges)
 

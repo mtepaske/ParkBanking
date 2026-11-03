@@ -223,3 +223,24 @@ class Application:
                     and new_transaction.details == old_transaction.details
                 ):
                     raise ValueError(f"Transaction {new_transaction} Is Already Loaded")
+
+
+class NoAccountID(Exception):
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
+
+
+class AccountWrongInfo(Exception):
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
+
+
+class MissingBalance(Exception):
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)

@@ -47,7 +47,7 @@ class Balance:
         outstanding: str,
         pay_frequency: str,
         credit: str = "0.00",
-        id: int | None = None,
+        balance_id: int | None = None,
     ) -> None:
         """
         Initialises the class
@@ -63,7 +63,7 @@ class Balance:
             id: The ID used for database queries. Gets assigned on first insertion
         """
 
-        self.id = id
+        self.balance_id = balance_id
         self.account_id = account_id
         self.site_number = str(site_number)
 
@@ -97,31 +97,25 @@ class Balance:
             The balance class containing the information from the row
         """
 
-        site = row["Site"]
+        site_number = row["Site Number"]
         annual = row["Annual Fee"]
         remaining = row["Remaining from this FY"]
         outstanding = row["Outstanding from previous FYs"]
         pay_frequency = row["Pay Frequency"]
-
-        # Checks for and normalises the ID. If none is found it assigns None
-        try:
-            if row["ID"] == "None" or row["ID"] == "":
-                id = None
-            else:
-                id = int(row["ID"])
-        except KeyError:
-            print("No ID Row Found")
-            id = None
+        account_id = row["Account ID"]
+        balance_id = row["Balance ID"]
 
         # Checks for and normalises the account ID. If none is found it assigns None
-        try:
-            if row["Account ID"] == "None" or row["Account ID"] == "":
-                account_id = None
-            else:
-                account_id = int(row["Account ID"])
-        except KeyError:
-            print("No Account ID Row Found")
+        if account_id == "None" or account_id == "":
             account_id = None
+        else:
+            account_id = int(account_id)
+
+        # Checks for and normalises the ID. If none is found it assigns None
+        if balance_id == "None" or balance_id == "":
+            balance_id = None
+        else:
+            balance_id = int(balance_id)
 
         # Checks for remaining amount. If the row is empty assigns the annual amount. If its negative assigns as credit instead
         if remaining == "":
@@ -139,13 +133,13 @@ class Balance:
         # Construct the class
         return cls(
             account_id=account_id,
-            site_number=site,
+            site_number=site_number,
             annual=annual,
             remaining=remaining,
             outstanding=outstanding,
             pay_frequency=pay_frequency,
             credit=credit,
-            id=id,
+            balance_id=balance_id,
         )
 
     @property
@@ -337,7 +331,7 @@ class Balance:
             A dictionary containing the account information
         """
 
-        id = str(self.id)
+        id = str(self.balance_id)
         account_id = str(self.account_id)
         site_number = str(self.site_number)
         annual = str(self.annual)

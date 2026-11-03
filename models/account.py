@@ -25,8 +25,9 @@ class Account:
         name: str,
         balance: Balance | None = None,
         aliases: list[str] | None = None,
-        account_id: int | None = None,
         active: bool = True,
+        account_id: int | None = None,
+        balance_id: int | None = None,
     ) -> None:
         """
         Initialises the instance
@@ -40,11 +41,12 @@ class Account:
             active: The active status of the account
         """
 
-        self.account_id = account_id
+        self.site_number = str(site_number)
         self.name = name
         self.balance = balance
         self.active = active
-        self.site_number = str(site_number)
+        self.account_id = account_id
+        self.balance_id = balance_id
 
         # If no aliases are supplied, construct a list from name and site number
         self.aliases = aliases if aliases is not None else []
@@ -73,34 +75,38 @@ class Account:
             The account instance containing the information from the row
         """
 
+        site_number = row["Site Number"]
+        name = row["Name"]
+        aliases = row["Aliases"].split(",")
+        active = row["Active"]
+        account_id = row["Account ID"]
+        balance_id = row["Balance ID"]
+
         # Nomarlises the active status of the account
-        if (
-            row["Active"] == "1"
-            or row["Active"] == "None"
-            or row["Active"] == "True"
-            or row["Active"] == ""
-        ):
+        if active == "1" or active == "None" or active == "True" or active == "":
             active = True
         else:
             active = False
 
         # Checks for and normalises the ID. If none is found it assigns None
-        try:
-            if row["ID"] == "None" or row["ID"] == "":
-                id = None
-            else:
-                id = int(row["ID"])
-        except KeyError:
-            print("No ID Row Found")
-            id = None
+        if account_id == "None" or account_id == "":
+            account_id = None
+        else:
+            account_id = int(account_id)
+
+        if balance_id == "None" or balance_id == "":
+            balance_id = None
+        else:
+            balance_id = int(balance_id)
 
         # Construct the class
         return cls(
-            site_number=row["Site"],
-            name=row["Name"],
-            aliases=row["Aliases"].split(","),
-            account_id=id,
+            site_number=site_number,
+            name=name,
+            aliases=aliases,
             active=active,
+            account_id=account_id,
+            balance_id=balance_id,
         )
 
     def add_balance(self, balance: Balance) -> None:
@@ -112,6 +118,7 @@ class Account:
         """
 
         self.balance = balance
+        self.balance_id = self.balance.balance_id
 
         # Assigns an account ID to the balance if one exists
         if self.account_id is not None:
@@ -182,12 +189,12 @@ class Account:
         assert self.balance is not None
 
         return {
+            "Site Number": str(self.site_number),
             "Name": self.name,
-            "Site": str(self.site_number),
             "Aliases": ",".join(self.aliases),
             "Active": "True" if self.active else "False",
             "Account ID": str(self.account_id),
-            "Balance ID": (str(self.balance.id)),
+            "Balance ID": (str(self.balance.balance_id)),
         }
 
     def __str__(self) -> str:
