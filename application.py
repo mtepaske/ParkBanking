@@ -60,6 +60,17 @@ class AppState:
             callback()
 
     def add_account(self, account: Account):
+
+        for old_account in self.accounts:
+            if (
+                account.site_number == old_account.site_number
+                and account.active
+                and old_account.active
+            ):
+                raise DuplicateAccount(
+                    f"Account {old_account} Is Already Active For Site {old_account.site_number}"
+                )
+
         self.accounts.append(account)
         self.notify_changed()
 
@@ -72,6 +83,17 @@ class AppState:
         self.notify_changed()
 
     def add_transaction(self, transaction: Transaction):
+
+        for old_transaction in self.transactions:
+            if (
+                transaction.date == old_transaction.date
+                and transaction.amount == old_transaction.amount
+                and transaction.details == old_transaction.details
+            ):
+                raise DuplicateTransaction(
+                    f"Transaction {transaction} Is Already Loaded"
+                )
+
         self.transactions.append(transaction)
         self.notify_changed()
 
@@ -96,6 +118,16 @@ class AppState:
         self.notify_changed()
 
     def add_payment(self, payment: Transaction):
+
+        for old_payment in self.payments:
+            if (
+                payment.date == old_payment.date
+                and payment.amount == old_payment.amount
+                and payment.details == old_payment.details
+                and payment.account_id == old_payment.account_id
+            ):
+                raise DuplicateTransaction(f"Transaction {payment} Is Already Loaded")
+
         self.payments.append(payment)
         self.notify_changed()
 
@@ -108,6 +140,16 @@ class AppState:
         self.notify_changed()
 
     def add_charge(self, charge: Transaction):
+
+        for old_charge in self.charges:
+            if (
+                charge.date == old_charge.date
+                and charge.amount == old_charge.amount
+                and charge.details == old_charge.details
+                and charge.account_id == old_charge.account_id
+            ):
+                raise DuplicateTransaction(f"Transaction {charge} Is Already Loaded")
+
         self.charges.append(charge)
         self.notify_changed()
 
@@ -240,6 +282,20 @@ class AccountWrongInfo(Exception):
 
 
 class MissingBalance(Exception):
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
+
+
+class DuplicateAccount(Exception):
+
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
+
+
+class DuplicateTransaction(Exception):
 
     def __init__(self, message: str):
         self.message = message
