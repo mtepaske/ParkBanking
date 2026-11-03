@@ -161,6 +161,11 @@ class ViewAccountMenu(Screen):
         balance = self.account.balance
         assert balance is not None
 
+        self.app_state.repos.account_repo.save_accounts([self.account])
+        self.app_state.repos.account_repo.save_payments(self.history)
+        self.app_state.state.clear_payments()
+        self.app_state.state.clear_charges()
+
         # Contact Details
         self.account.name = str(self.query_one("#name", Input).value)
         # self.account.phone_number = self.query_one('#phone', MaskedInput).value
@@ -246,6 +251,7 @@ class ViewAccountMenu(Screen):
                 balance,
                 key=str(index),
             )
+        history.reverse()
         self.history = history
 
     @on(Button.Pressed)

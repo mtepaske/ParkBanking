@@ -145,7 +145,7 @@ class Balance:
     @property
     def balance(self) -> Decimal:
         """The total fees owed"""
-        return self.outstanding + self.remaining
+        return (self.outstanding + self.remaining) - self.credit
 
     @property
     def outstanding(self) -> Decimal:
@@ -263,18 +263,26 @@ class Balance:
             self.outstanding = Decimal("0.00")
             amount -= self.remaining
             self.remaining = Decimal("0.00")
-            self.credit = amount
+            self.credit += amount
 
     def add_charge(self, amount: Decimal) -> None:
+
         amount = money(amount)
 
         if amount >= 0:
             raise ValueError("Amount Must Be Less Than 0")
 
-        self.remaining -= amount
-
+        amount = abs(amount)
+        self.remaining += amount
+        if self.credit > Decimal(0):
+            if self.credit < self.remaining:
+                self.remaining -= self.credit
+                self.credit = Decimal(0)
+            else:
+                self.credit -= self.remaining
+                self.remaining = Decimal(0)
         if self.remaining > self.annual:
-            self.outstanding = self.remaining - self.annual
+            self.outstanding += self.remaining - self.annual
             self.remaining -= self.outstanding
 
     def expected_paid(self, as_of_date: date | None = None) -> Decimal:
@@ -337,8 +345,10 @@ class Balance:
 
     def recalculate_from_history(self, history: list) -> None:
 
-        self.remaining = money(0)
-        self.outstanding = money(0)
+        self.remaining = money("0")
+        self.outstanding = money("0")
+        self.credit = money("0")
+
         for transaction in history:
             if transaction.amount > 0:
                 self.add_payment(transaction.amount)
