@@ -351,13 +351,13 @@ class Balance:
         remaining = str(remaining)
 
         return {
-            "ID": id,
-            "Account ID": account_id,
             "Site": site_number,
             "Annual Fee": annual,
             "Remaining from this FY": remaining,
             "Outstanding from previous FYs": outstanding,
             "Pay Frequency": pay_frequency,
+            "Account ID": account_id,
+            "Balance ID": id,
         }
 
     def __str__(self) -> str:

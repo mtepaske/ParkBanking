@@ -101,6 +101,7 @@ class Transaction:
             A dictionary containing the transaction information
         """
 
+        # Construct the Dictionary
         return {
             "Date": self.date,
             "Site": (
@@ -109,6 +110,9 @@ class Transaction:
             "Name": (self.account.name if self.account is not None else "Unmatched"),
             "Amount": str(self.amount),
             "Details": self.original_details,
+            "Account ID": (
+                str(self.account.account_id) if self.account is not None else "??"
+            ),
         }
 
     def __str__(self) -> str:

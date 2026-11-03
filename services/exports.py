@@ -20,7 +20,7 @@ def export_accounts_to_csv(accounts: list[Account], filename: str) -> None:
         filename: The name of the file to export to
     """
 
-    fieldnames = ["Active", "Name", "Site", "Aliases"]
+    fieldnames = ["Active", "Name", "Site", "Aliases", "Account ID", "Balance ID"]
 
     with open(
         f"{export_folder / filename}.csv", "w", newline="", encoding="utf-8-sig"
@@ -49,6 +49,8 @@ def export_balances_to_csv(balances: list[Balance], filename: str) -> None:
         "Remaining from this FY",
         "Outstanding from previous FYs",
         "Pay Frequency",
+        "Account ID",
+        "Balance ID",
     ]
 
     with open(
@@ -71,7 +73,7 @@ def export_payments_to_csv(payments: list[Transaction], filename: str) -> None:
         filename: The name of the file to export to
     """
 
-    fieldnames = ["Date", "Site", "Name", "Amount"]
+    fieldnames = ["Date", "Site", "Name", "Amount", "Details", "Account ID"]
 
     with open(
         f"{export_folder / filename}.csv", "w", newline="", encoding="utf-8-sig"

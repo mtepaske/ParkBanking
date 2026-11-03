@@ -179,17 +179,15 @@ class Account:
             A dictionary containing the account information
         """
 
-        # Normalises the active status
-        if self.active == True:
-            active = "1"
-        else:
-            active = "0"
+        assert self.balance is not None
 
         return {
             "Name": self.name,
             "Site": str(self.site_number),
             "Aliases": ",".join(self.aliases),
-            "Active": active,
+            "Active": "True" if self.active else "False",
+            "Account ID": str(self.account_id),
+            "Balance ID": (str(self.balance.id)),
         }
 
     def __str__(self) -> str:
