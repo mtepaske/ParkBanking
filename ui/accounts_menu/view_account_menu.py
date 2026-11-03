@@ -22,6 +22,7 @@ from textual.widgets import (
 )
 
 from application import Application
+from models.account import Account
 from models.transactions import Transaction
 
 
@@ -34,13 +35,10 @@ class ViewAccountMenu(Screen):
         Binding("ctrl+w", "save_account", "Save"),
     )
 
-    def __init__(self, app: Application, account_id: int):
+    def __init__(self, app: Application, account: Account):
         super().__init__()
         self.app_state = app
-        for account in self.app_state.state.accounts:
-            if int(account_id) == account.account_id:
-                self.account = account
-                break
+        self.account = account
 
     def compose(self):
 

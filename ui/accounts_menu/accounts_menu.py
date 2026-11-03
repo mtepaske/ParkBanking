@@ -77,6 +77,7 @@ class AccountsMenu(Screen):
         balances_table.add_columns(
             "ID",
             "Site Holder",
+            "Annual Fees",
             "Remaining From This FY",
             "Outstaning From Previous FYs",
             "Credit",
@@ -111,25 +112,18 @@ class AccountsMenu(Screen):
         accounts_table.clear(columns=False)
 
         for account in accounts:
-            if account.balance is not None:
-                style = "green" if account.balance.check_on_track() else "red"
-                accounts_table.add_row(
-                    Text(f"{account.account_id}", style="cyan"),
-                    Text(f"{account.name}", style="cyan"),
-                    account.site_number,
-                    account.aliases,
-                    Text(f"${account.balance.balance:,.2f}", style=style),
-                    key=str(account.account_id),
-                )
-            else:
-                accounts_table.add_row(
-                    Text(f"{account.account_id}", style="cyan"),
-                    Text(f"{account.name}", style="cyan"),
-                    account.site_number,
-                    account.aliases,
-                    "None",
-                    key=str(account.account_id),
-                )
+            assert account.balance is not None
+            style = "green" if account.balance.check_on_track() else "red"
+            accounts_table.add_row(
+                Text(f"{account.account_id}", style="cyan"),
+                Text(f"{account.name}", style="cyan"),
+                Text(f"{account.site_number}"),
+                Text(f"{account.aliases}"),
+                Text(f"${account.balance.balance:,.2f}", style=style),
+                key=(
+                    str(account.account_id) if account.account_id is not None else None
+                ),
+            )
 
     def populate_balances_table(self) -> None:
 
@@ -140,17 +134,20 @@ class AccountsMenu(Screen):
 
         for account in accounts:
             balance = account.balance
-            if balance is not None:
-                style = "green" if balance.check_on_track() else "red"
-                balances_table.add_row(
-                    Text(f"{account.account_id}", style="cyan"),
-                    Text(f"{account.name}", style="cyan"),
-                    Text(f"${balance.remaining:,.2f}", style=style),
-                    Text(f"${balance.outstanding:,.2f}", style=style),
-                    Text(f"${balance.credit:,.2f}", style=style),
-                    Text(f"${balance.balance:,.2f}", style=style),
-                    key=str(account.account_id),
-                )
+            assert balance is not None
+            style = "green" if balance.check_on_track() else "red"
+            balances_table.add_row(
+                Text(f"{account.account_id}", style="cyan"),
+                Text(f"{account.name}", style="cyan"),
+                Text(f"{balance.annual}"),
+                Text(f"${balance.remaining:,.2f}", style=style),
+                Text(f"${balance.outstanding:,.2f}", style=style),
+                Text(f"${balance.credit:,.2f}", style=style),
+                Text(f"${balance.balance:,.2f}", style=style),
+                key=(
+                    str(account.account_id) if account.account_id is not None else None
+                ),
+            )
 
     def populate_holders_table(self) -> None:
 
@@ -167,15 +164,28 @@ class AccountsMenu(Screen):
             return
 
         account_id = event.row_key.value
-        assert (
-            account_id is not None
-        )  # Will have to select some otherway for new accounts
 
-        self.app.push_screen(
-            ViewAccountMenu(app=self.app_state, account_id=int(account_id)),
-            callback=self.on_screen_close,
-        )
-        return
+        if account_id is None:
+            selected: list[Text] = event.data_table.get_row(event.row_key)
+            for account in self.app_state.state.accounts:
+                if selected[1].plain == account.name:
+                    self.app.push_screen(
+                        ViewAccountMenu(app=self.app_state, account=account),
+                        callback=self.on_screen_close,
+                    )
+                    self.app.push_screen(
+                        ViewAccountMenu(app=self.app_state, account=account),
+                        callback=self.on_screen_close,
+                    )
+                    return
+        else:
+            for account in self.app_state.state.accounts:
+                if account_id == account.account_id:
+                    self.app.push_screen(
+                        ViewAccountMenu(app=self.app_state, account=account),
+                        callback=self.on_screen_close,
+                    )
+                    return
 
     def on_screen_close(self, result=None) -> None:
         self.populate_accounts_table()
