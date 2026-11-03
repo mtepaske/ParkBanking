@@ -3,11 +3,12 @@ from pathlib import Path
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import HorizontalGroup, Vertical, VerticalGroup
+from textual.containers import HorizontalGroup, Vertical, VerticalGroup, VerticalScroll
 from textual.screen import ModalScreen
-from textual.widgets import Button, DirectoryTree, Label, Static
+from textual.widgets import Button, DataTable, DirectoryTree, Label, Static
 
 from application import Application
+from models.transactions import Transaction
 
 
 class FolderTree(DirectoryTree):
@@ -99,7 +100,7 @@ class ConfirmScreen(ModalScreen[bool]):
         self.message = message
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="confirm-dialog"):
+        with Vertical(classes="dialog"):
             yield Label(self.message)
             yield Button.success("Yes", id="yes")
             yield Button.error("No", id="no")
@@ -118,7 +119,7 @@ class ConfirmAppendScreen(ModalScreen[str | None]):
         self.message = message
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="append-dialog"):
+        with Vertical(classes="dialog"):
             yield Label(self.message)
             yield Button.success("Add To", id="append")
             yield Button.warning("Replace", id="replace")
@@ -131,11 +132,12 @@ class ConfirmAppendScreen(ModalScreen[str | None]):
 class ImportBalancesScreen(ModalScreen[Path | None]):
 
     def __init__(self, import_folder: Path):
+        super().__init__()
         self.import_folder = import_folder
         self.filepath = None
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="import-balances-dialog"):
+        with Vertical(classes="dialog"):
             yield Label(
                 "Please Selected File Containing Balance Information For Imported Accounts"
             )
@@ -156,3 +158,34 @@ class ImportBalancesScreen(ModalScreen[Path | None]):
             self.dismiss(self.filepath)
         else:
             self.dismiss()
+
+
+class ConfirmGeneratedCharges(ModalScreen[bool | None]):
+
+    def __init__(self, charges: list[Transaction]) -> None:
+        super().__init__()
+        self.charges = charges
+
+    def compose(self) -> ComposeResult:
+        with VerticalScroll(classes="dialog"):
+            yield Label("Please Confirm Autonmatically Generated Charges Are Correct")
+            yield DataTable(zebra_stripes=True, id="charge-preview")
+            yield Button.success("Confirm", id="confirm")
+            yield Button.error("Cancel", id="cancel")
+
+    def on_mount(self) -> None:
+        charge_preview = self.query_one("#charge-preview", DataTable)
+
+        charge_preview.add_columns("Account", "Date", "Description", "Amount")
+
+        for charge in self.charges:
+            charge_preview.add_row(
+                charge.account, charge.date, charge.original_details, charge.amount
+            )
+
+    @on(Button.Pressed)
+    def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id == "confirm":
+            self.dismiss(True)
+        else:
+            self.dismiss(False)

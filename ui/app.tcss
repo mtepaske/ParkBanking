@@ -42,25 +42,15 @@ ConfirmScreen {
     align: center middle;
 }
 
-#append-dialog {
-    width: 50;
-    height: auto;
-    padding: 2;
-    border: round $accent;
-    background: $surface;
-    align: center middle;
-}
-
-#confirm-dialog Button {
-    width: 100%;
-    margin-top: 1;
-}
-
 ConfirmAppendScreen {
     align: center middle;
 }
 
-#append-dialog {
+ImportBalancesScreen {
+    align: center middle;
+}
+
+.dialog {
     width: auto;
     height: auto;
     padding: 2;
@@ -69,7 +59,18 @@ ConfirmAppendScreen {
     align: center middle;
 }
 
-#append-dialog Button {
+.dialog Label {
+    text-style: bold;
+    margin: 1;
+}
+
+
+.dialog Button {
     width: 100%;
     margin-top: 1;
+}
+
+.dialog Datatable {
+    width: auto;
+    height: auto;
 }
