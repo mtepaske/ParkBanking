@@ -147,12 +147,18 @@ class AppState:
 
     def add_charge(self, charge: Transaction):
 
+        assert charge.account is not None
         for old_charge in self.charges:
             if (
                 charge.date == old_charge.date
                 and charge.amount == old_charge.amount
                 and charge.details == old_charge.details
                 and charge.account_id == old_charge.account_id
+                and charge.account_id is not None
+                or charge.date == old_charge.date
+                and charge.amount == old_charge.amount
+                and charge.details == old_charge.details
+                and charge.account == old_charge.account
             ):
                 raise DuplicateTransaction(f"Transaction {charge} Is Already Loaded")
 
