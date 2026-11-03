@@ -1,4 +1,5 @@
 from rich.text import Text
+from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
@@ -158,6 +159,7 @@ class AccountsMenu(Screen):
 
         # Populate with data when site class is implimented
 
+    @on(DataTable.RowSelected)
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
 
         if event.data_table.id == "overview":
@@ -180,7 +182,7 @@ class AccountsMenu(Screen):
                     return
         else:
             for account in self.app_state.state.accounts:
-                if account_id == account.account_id:
+                if account_id == str(account.account_id):
                     self.app.push_screen(
                         ViewAccountMenu(app=self.app_state, account=account),
                         callback=self.on_screen_close,

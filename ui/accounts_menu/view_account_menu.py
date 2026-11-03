@@ -25,7 +25,7 @@ from textual.widgets import (
 from application import Application
 from models.account import Account
 from models.transactions import Transaction
-from ui.custom_widgets import ConfirmScreen
+from ui.custom_widgets import ConfirmScreen, EnterAmount
 
 
 class ViewAccountMenu(Screen):
@@ -77,7 +77,7 @@ class ViewAccountMenu(Screen):
                     yield Button.success("Add Payment", id="payment")
                     yield Button.error("Add Charge", id="charge")
                     yield Button.warning("Make Inactive", id="status")
-                    yield Button.warning(
+                    yield Button.error(
                         "Recalculate Balance From Payment History", id="recalculate"
                     )
 
@@ -252,6 +252,18 @@ class ViewAccountMenu(Screen):
     def on_button_pressed(self, event: Button.Pressed):
         assert self.account.balance is not None
         match event.button.id:
+            case "payment":
+                self.add_payment()
+
+            case "charge":
+                self.add_charge()
+
+            case "status":
+                self.account.switch_active()
+                self.notify(
+                    f"Account Switched To Active: {self.account.active}", timeout=5
+                )
+
             case "recalculate":
                 self.recalculate_balance()
 
@@ -271,3 +283,19 @@ class ViewAccountMenu(Screen):
         self.notify("Balance Recalculated", timeout=5)
         self.query_one("#history", DataTable).clear()
         self.populate_history_table()
+
+    @work
+    async def add_payment(self) -> None:
+        assert self.account.balance is not None
+        amount = await self.app.push_screen_wait(EnterAmount("Enter Amount"))
+        if amount is None:
+            return
+        self.account.balance.add_payment(Decimal(amount))
+
+    @work
+    async def add_charge(self) -> None:
+        assert self.account.balance is not None
+        amount = await self.app.push_screen_wait(EnterAmount("Enter Amount"))
+        if amount is None:
+            return
+        self.account.balance.add_charge(Decimal(amount))

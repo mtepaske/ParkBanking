@@ -50,6 +50,10 @@ ImportBalancesScreen {
     align: center middle;
 }
 
+EnterAmount {
+    align: center middle;
+}
+
 .dialog {
     width: auto;
     height: auto;
@@ -64,7 +68,6 @@ ImportBalancesScreen {
     margin: 1;
 }
 
-
 .dialog Button {
     width: 100%;
     margin-top: 1;
@@ -72,5 +75,10 @@ ImportBalancesScreen {
 
 .dialog Datatable {
     width: auto;
+    height: auto;
+}
+
+.dialog Input {
+    width: 50;
     height: auto;
 }

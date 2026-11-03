@@ -2,7 +2,12 @@ from textual.app import App, ComposeResult
 from textual.widgets import Footer, Header
 
 from application import Application, AppRepositories
-from services.database import AccountRepository, IgnoreRepository, connect
+from services.database import (
+    AccountRepository,
+    IgnoreRepository,
+    connect,
+    initialise_database,
+)
 from services.settings import get_setting
 from ui.main_menu.main_menu import MainMenu
 
@@ -19,6 +24,7 @@ class Parkbanking(App):
                 AccountRepository(self.connection), IgnoreRepository(self.connection)
             )
         )
+        initialise_database(self.connection)
         self.app_state = app
 
         if get_setting("auto_load_from_db") == "True":

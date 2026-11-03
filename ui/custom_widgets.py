@@ -5,7 +5,7 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import HorizontalGroup, Vertical, VerticalGroup, VerticalScroll
 from textual.screen import ModalScreen
-from textual.widgets import Button, DataTable, DirectoryTree, Label, Static
+from textual.widgets import Button, DataTable, DirectoryTree, Input, Label, Static
 
 from application import Application
 from models.account import Account
@@ -230,9 +230,30 @@ class AccountPicker(ModalScreen[Account | None]):
                     self.dismiss(account)
         else:
             for account in self.accounts:
-                if account_id == account.account_id:
+                if account_id == str(account.account_id):
                     self.dismiss(account)
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
         self.dismiss()
+
+
+class EnterAmount(ModalScreen[str | None]):
+
+    def __init__(self, message: str) -> None:
+        super().__init__()
+        self.message = message
+
+    def compose(self) -> ComposeResult:
+        with Vertical(classes="dialog"):
+            yield Label(self.message, id="amount")
+            yield Input(placeholder="$0")
+            yield Button.success("Confirm", id="confirm")
+            yield Button.error("Cancel", id="cancel")
+
+    @on(Button.Pressed)
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "confirm":
+            self.dismiss(self.query_one("#amount", Input).value)
+        else:
+            self.dismiss()

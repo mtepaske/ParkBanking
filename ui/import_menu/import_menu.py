@@ -757,10 +757,39 @@ class ImportMenu(Screen):
                 self._account_for_history.account_id
             )
 
+            if len(database_charges) != 0:
+                delete_previous = await self.app.push_screen_wait(
+                    ConfirmCharges(
+                        message="The Following Charges And Payments Were Found In The Database, Would You Like To Delete Them?",
+                        charges=database_charges,
+                    )
+                )
+                if delete_previous is None:
+                    self.notify(
+                        "Account History Import Cancelled",
+                        severity="warning",
+                        timeout=5,
+                    )
+                    return
+                elif delete_previous is True:
+                    self.app_state.repos.account_repo.delete_payments_by_account(
+                        self._account_for_history
+                    )
+                    self.notify(
+                        f"Account History For Acccount {self._account_for_history.account_id} Deleted From Database",
+                        timeout=5,
+                    )
+
+        charges_to_delete = []
+        for charge in self.app_state.state.charges:
+            if charge.account == self._account_for_history:
+                charges_to_delete.append(charge)
+
+        if len(charges_to_delete) != 0:
             delete_previous = await self.app.push_screen_wait(
                 ConfirmCharges(
-                    message="The Following Charges And Payments Were Found In The Database, Would You Like To Delete Them?",
-                    charges=database_charges,
+                    message="The Following Charges And Payments Were Found In The History, Would You Like To Delete Them?",
+                    charges=charges_to_delete,
                 )
             )
             if delete_previous is None:
@@ -769,37 +798,12 @@ class ImportMenu(Screen):
                 )
                 return
             elif delete_previous is True:
-                self.app_state.repos.account_repo.delete_payments_by_account(
-                    self._account_for_history
-                )
+                for charge in charges_to_delete:
+                    self.app_state.state.remove_charge(charge)
                 self.notify(
-                    f"Account History For Acccount {self._account_for_history.account_id} Deleted From Database",
+                    f"Account History For Acccount {self._account_for_history.account_id} Deleted",
                     timeout=5,
                 )
-
-        charges_to_delete = []
-        for charge in self.app_state.state.charges:
-            if charge.account == self._account_for_history:
-                charges_to_delete.append(charge)
-
-        delete_previous = await self.app.push_screen_wait(
-            ConfirmCharges(
-                message="The Following Charges And Payments Were Found In The History, Would You Like To Delete Them?",
-                charges=charges_to_delete,
-            )
-        )
-        if delete_previous is None:
-            self.notify(
-                "Account History Import Cancelled", severity="warning", timeout=5
-            )
-            return
-        elif delete_previous is True:
-            for charge in charges_to_delete:
-                self.app_state.state.remove_charge(charge)
-            self.notify(
-                f"Account History For Acccount {self._account_for_history.account_id} Deleted",
-                timeout=5,
-            )
 
         for charge in charges_to_add:
             self.app_state.state.add_charge(charge)
