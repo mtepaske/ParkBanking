@@ -8,6 +8,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, DirectoryTree, Label, Static
 
 from application import Application
+from models.account import Account
 from models.transactions import Transaction
 
 
@@ -160,15 +161,16 @@ class ImportBalancesScreen(ModalScreen[Path | None]):
             self.dismiss()
 
 
-class ConfirmGeneratedCharges(ModalScreen[bool | None]):
+class ConfirmCharges(ModalScreen[bool | None]):
 
-    def __init__(self, charges: list[Transaction]) -> None:
+    def __init__(self, message: str, charges: list[Transaction]) -> None:
         super().__init__()
+        self.message = message
         self.charges = charges
 
     def compose(self) -> ComposeResult:
         with VerticalScroll(classes="dialog"):
-            yield Label("Please Confirm Autonmatically Generated Charges Are Correct")
+            yield Label(self.message)
             yield DataTable(zebra_stripes=True, id="charge-preview")
             yield Button.success("Confirm", id="confirm")
             yield Button.error("Cancel", id="cancel")
@@ -189,3 +191,48 @@ class ConfirmGeneratedCharges(ModalScreen[bool | None]):
             self.dismiss(True)
         else:
             self.dismiss(False)
+
+
+class AccountPicker(ModalScreen[Account | None]):
+
+    def __init__(self, message: str, accounts: list[Account]):
+        super().__init__()
+        self.accounts = accounts
+        self.message = message
+
+    def compose(self) -> ComposeResult:
+        with VerticalScroll(classes="dialog"):
+            yield Label(self.message)
+            yield DataTable(zebra_stripes=True, cursor_type="row", id="accounts")
+            yield Button.error("Cancel", id="cancel")
+
+    def on_mount(self):
+        account_table = self.query_one("#accounts", DataTable)
+        account_table.add_columns("Account ID", "Name", "Site Number", "Active")
+
+        for account in self.accounts:
+            account_table.add_row(
+                account.account_id,
+                account.name,
+                account.site_number,
+                account.active,
+                key=str(account.account_id) if account.account_id is not None else None,
+            )
+
+    @on(DataTable.RowSelected)
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        self.notify("Row Selected")
+        account_id = event.row_key.value
+        if account_id is None:
+            selected: list = event.data_table.get_row(event.row_key)
+            for account in self.accounts:
+                if selected[1] == account.name:
+                    self.dismiss(account)
+        else:
+            for account in self.accounts:
+                if account_id == account.account_id:
+                    self.dismiss(account)
+
+    @on(Button.Pressed)
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        self.dismiss()

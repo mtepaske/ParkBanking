@@ -286,7 +286,7 @@ class NoAccountID(Exception):
         super().__init__(self.message)
 
 
-class AccountWrongInfo(Exception):
+class NoMatchingAccount(Exception):
 
     def __init__(self, message: str):
         self.message = message

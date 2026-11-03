@@ -46,7 +46,7 @@ class ViewAccountMenu(Screen):
         assert balance is not None
 
         site_numbers = []
-        for number in range(1, 81):
+        for number in range(1, 101):
             if len(str(number)) == 1:
                 number = f"0{number}"
             site_numbers.append(number)

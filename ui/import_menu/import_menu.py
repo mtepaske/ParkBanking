@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from rich.text import Text
 from textual import on, work
 from textual.binding import Binding
 from textual.containers import (
@@ -31,14 +32,16 @@ from models.transactions import Transaction
 from services.imports import (
     import_account_info_from_csv,
     import_accounts,
+    import_history,
     import_matched,
     import_statement,
     import_words_to_ignore,
 )
 from services.settings import APP_DIRECTORY, get_setting
 from ui.custom_widgets import (
+    AccountPicker,
     ConfirmAppendScreen,
-    ConfirmGeneratedCharges,
+    ConfirmCharges,
     ImportBalancesScreen,
     StatusBox,
 )
@@ -58,7 +61,8 @@ class ImportMenu(Screen):
         self.import_folder = APP_DIRECTORY / get_setting("imports_folder")
         self.loaded_file = None
         self.loaded_file_type = None
-        self._old_charges = None
+        self._generated_charges = None
+        self._account_for_history = None
 
     def compose(self):
         yield Header()
@@ -160,7 +164,7 @@ class ImportMenu(Screen):
                     self.import_accounts()
 
                 case "history":
-                    pass
+                    self.import_history()
 
                 case "site":
                     pass
@@ -174,15 +178,12 @@ class ImportMenu(Screen):
         match event.control.id:
 
             case "statement-tree":
-                log.info(f"Statement File Path: {event.path}")
                 self.preview_statement(event.path)
 
             case "matched-tree":
-                log.info(f"Matched Statement File Path: {event.path}")
                 self.preview_matched(event.path)
 
             case "accounts-tree":
-                log.info(f"Account File Path: {event.path}")
                 self.preview_accounts(event.path)
 
             case "history-tree":
@@ -283,7 +284,7 @@ class ImportMenu(Screen):
             self.notify("Account Import Cancelled", severity="warning", timeout=5)
             return
         try:
-            self.loaded_file, self._old_charges = import_account_info_from_csv(
+            self.loaded_file, self._generated_charges = import_account_info_from_csv(
                 str(filepath).removesuffix(".csv"),
                 str(balance_filepath).removesuffix(".csv"),
             )
@@ -337,11 +338,80 @@ class ImportMenu(Screen):
         self.loaded_file_type = "account"
         self.query_one("#confirm", Button).disabled = False
 
-    def preview_history(self, filepath: Path):
+    @work
+    async def preview_history(self, filepath: Path):
+
+        self._account_for_history = await self.app.push_screen_wait(
+            AccountPicker("For Which Account?", self.app_state.state.accounts)
+        )
+        if self._account_for_history is None:
+            self.notify(
+                "Account History Import Cancelled", severity="warning", timeout=5
+            )
+            return
+
+        try:
+            self.loaded_file = import_history(
+                str(filepath).removesuffix(".csv"), account=self._account_for_history
+            )
+        except FileNotFoundError:
+            self.notify("File No Longer Exists", severity="error", timeout=5)
+            return
+        except KeyError:
+            self.notify(
+                "This File Does Not Contain Statment Information",
+                severity="error",
+                timeout=5,
+            )
+            return
+
         history_table = self.query_one("#file-preview", DataTable)
         history_table.clear(columns=True)
-        history_table.add_columns()
-        # Complete when importing histoyr is implimented
+        history_table.add_columns("Date", "Description", "Debit", "Credit", "Balance")
+
+        self.loaded_file.sort(key=lambda t: t.date, reverse=True)
+
+        assert self._account_for_history.balance is not None
+        running_balance = self._account_for_history.balance.balance
+        rows = []
+        for payment in self.loaded_file:
+            if payment.amount > 0:
+                rows.append(
+                    (
+                        payment.date,
+                        payment.type,
+                        "",
+                        f"${payment.amount:,.2f}",
+                        f"${running_balance:,.2f}",
+                    )
+                )
+                running_balance += payment.amount
+            else:
+                amount = abs(payment.amount)
+                rows.append(
+                    (
+                        payment.date,
+                        payment.type,
+                        f"${payment.amount:,.2f}",
+                        "",
+                        f"${running_balance:,.2f}",
+                    )
+                )
+                running_balance -= amount
+
+        rows.reverse()
+
+        for date, description, debit, credit, balance in rows:
+            history_table.add_row(
+                Text(date, style="cyan"),
+                description,
+                Text(debit, style="red"),
+                Text(credit, style="green"),
+                balance,
+            )
+
+        self.loaded_file_type = "history"
+        self.query_one("#confirm", Button).disabled = False
 
     def preview_site(self, filepath: Path):
         site_table = self.query_one("#file-preview", DataTable)
@@ -438,8 +508,8 @@ class ImportMenu(Screen):
                             timeout=5,
                         )
 
-        self.query_one("#file-preview", DataTable).clear(columns=True)
         self.query_one("#confirm", Button).disabled = True
+        self.query_one("#file-preview", DataTable).clear(columns=True)
 
     @work
     async def import_matched(self):
@@ -560,14 +630,14 @@ class ImportMenu(Screen):
                             timeout=5,
                         )
 
-        self.query_one("#file-preview", DataTable).clear(columns=True)
         self.query_one("#confirm", Button).disabled = True
+        self.query_one("#file-preview", DataTable).clear(columns=True)
 
     @work
     async def import_accounts(self):
 
         assert self.loaded_file is not None
-        assert self._old_charges is not None
+        assert self._generated_charges is not None
 
         # Check if accounts already exist
         if len(self.app_state.state.accounts) != 0:
@@ -591,7 +661,10 @@ class ImportMenu(Screen):
                     return
 
         charge_confirm = await self.app.push_screen_wait(
-            ConfirmGeneratedCharges(self._old_charges)
+            ConfirmCharges(
+                message="Please Confirm Autonmatically Generated Charges Are Correct",
+                charges=self._generated_charges,
+            )
         )
 
         if not charge_confirm:
@@ -629,7 +702,7 @@ class ImportMenu(Screen):
                         self.notify(f"{account} Swicthed To Inactive")
 
         original_charges = self.app_state.state.charges.copy()
-        for charge in self._old_charges:
+        for charge in self._generated_charges:
             assert isinstance(charge, Transaction)
 
             while True:
@@ -663,10 +736,84 @@ class ImportMenu(Screen):
                             timeout=5,
                         )
 
-    def import_ignore(self):
+        self.query_one("#confirm", Button).disabled = True
+        self.query_one("#file-preview", DataTable).clear(columns=True)
+
+    @work
+    async def import_history(self):
+
         assert self.loaded_file is not None
+        assert self._account_for_history is not None
+        charges_to_add = []
+
+        for payment in self.loaded_file:
+
+            assert isinstance(payment, Transaction)
+            charges_to_add.append(payment)
+
+        if self._account_for_history.account_id is not None:
+
+            database_charges = self.app_state.repos.account_repo.get_payments(
+                self._account_for_history.account_id
+            )
+
+            delete_previous = await self.app.push_screen_wait(
+                ConfirmCharges(
+                    message="The Following Charges And Payments Were Found In The Database, Would You Like To Delete Them?",
+                    charges=database_charges,
+                )
+            )
+            if delete_previous is None:
+                self.notify(
+                    "Account History Import Cancelled", severity="warning", timeout=5
+                )
+                return
+            elif delete_previous is True:
+                self.app_state.repos.account_repo.delete_payments_by_account(
+                    self._account_for_history
+                )
+                self.notify(
+                    f"Account History For Acccount {self._account_for_history.account_id} Deleted From Database",
+                    timeout=5,
+                )
+
+        charges_to_delete = []
+        for charge in self.app_state.state.charges:
+            if charge.account == self._account_for_history:
+                charges_to_delete.append(charge)
+
+        delete_previous = await self.app.push_screen_wait(
+            ConfirmCharges(
+                message="The Following Charges And Payments Were Found In The History, Would You Like To Delete Them?",
+                charges=charges_to_delete,
+            )
+        )
+        if delete_previous is None:
+            self.notify(
+                "Account History Import Cancelled", severity="warning", timeout=5
+            )
+            return
+        elif delete_previous is True:
+            for charge in charges_to_delete:
+                self.app_state.state.remove_charge(charge)
+            self.notify(
+                f"Account History For Acccount {self._account_for_history.account_id} Deleted",
+                timeout=5,
+            )
+
+        for charge in charges_to_add:
+            self.app_state.state.add_charge(charge)
+
+        self.query_one("#confirm", Button).disabled = True
+        self.query_one("#file-preview", DataTable).clear(columns=True)
+
+    def import_ignore(self):
+
+        assert self.loaded_file is not None
+
         for word in self.loaded_file:
             assert isinstance(word, str)
             self.app_state.state.add_ignore(word)
-            self.query_one("#file-preview", DataTable).clear(columns=True)
-            self.query_one("#confirm", Button).disabled = True
+
+        self.query_one("#confirm", Button).disabled = True
+        self.query_one("#file-preview", DataTable).clear(columns=True)

@@ -397,6 +397,22 @@ class AccountRepository(Repository):
         )
         payment.transaction_id = cursor.lastrowid
 
+    def delete_payment(self, payment: Transaction) -> None:
+        with self.connection:
+            if payment.transaction_id is None:
+                raise ValueError("Delete Failed. Transaction Has No ID")
+            self.execute(
+                """DELETE FROM payments WHERE id = ?""", (payment.transaction_id,)
+            )
+
+    def delete_payments_by_account(self, account: Account) -> None:
+        with self.connection:
+            if account.account_id is None:
+                raise ValueError("Delete Failed. Account Has No ID")
+            self.execute(
+                """DELETE FROM payments WHERE account_id = ?""", (account.account_id,)
+            )
+
 
 class IgnoreRepository(Repository):
     def get_all_ignore(self) -> set[str]:

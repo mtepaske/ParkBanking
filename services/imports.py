@@ -205,3 +205,12 @@ def add_annual_fees_to_history(account: Account) -> list[Transaction]:
     charges.append(brought_forward)
 
     return charges
+
+
+def import_history(filename: str, account: Account) -> list[Transaction]:
+
+    with open(
+        f"{import_folder / filename}.csv", newline="", encoding="utf-8-sig"
+    ) as file:
+        reader = csv.DictReader(file)
+        return [Transaction.from_history_csv(row, account) for row in reader]

@@ -26,7 +26,7 @@ class Transaction:
         self,
         date: str,
         amount: Decimal,
-        details: str,
+        details: str = "",
         type_str: str = "",
         account_id: int | None = None,
         transaction_id: int | None = None,
@@ -125,6 +125,25 @@ class Transaction:
                 transaction.account = account
                 transaction.account_id = account.account_id
                 break
+
+        return transaction
+
+    @classmethod
+    def from_history_csv(cls, row: dict[str, str], account: Account) -> Transaction:
+
+        date = row["Date"]
+        description = row["Description"]
+        debit = row["Debit"]
+        credit = row["Credit"]
+
+        transaction = Transaction(
+            date=date,
+            amount=Decimal(credit) if credit != "" else Decimal(0 - Decimal(debit)),
+            type_str=description,
+        )
+
+        transaction.account = account
+        transaction.account_id = account.account_id
 
         return transaction
 
