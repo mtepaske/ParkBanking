@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from rich.text import Text
+from textual import on, work
 from textual.binding import Binding
 from textual.containers import (
     Horizontal,
@@ -24,6 +25,7 @@ from textual.widgets import (
 from application import Application
 from models.account import Account
 from models.transactions import Transaction
+from ui.custom_widgets import ConfirmScreen
 
 
 class ViewAccountMenu(Screen):
@@ -39,6 +41,7 @@ class ViewAccountMenu(Screen):
         super().__init__()
         self.app_state = app
         self.account = account
+        self.history = []
 
     def compose(self):
 
@@ -74,6 +77,9 @@ class ViewAccountMenu(Screen):
                     yield Button.success("Add Payment", id="payment")
                     yield Button.error("Add Charge", id="charge")
                     yield Button.warning("Make Inactive", id="status")
+                    yield Button.warning(
+                        "Recalculate Balance From Payment History", id="recalculate"
+                    )
 
             with VerticalScroll():
                 yield Static("EDIT ACCOUNT", classes="section-title")
@@ -240,3 +246,28 @@ class ViewAccountMenu(Screen):
                 balance,
                 key=str(index),
             )
+        self.history = history
+
+    @on(Button.Pressed)
+    def on_button_pressed(self, event: Button.Pressed):
+        assert self.account.balance is not None
+        match event.button.id:
+            case "recalculate":
+                self.recalculate_balance()
+
+    @work
+    async def recalculate_balance(self):
+        assert self.account.balance is not None
+
+        confirm = await self.app.push_screen_wait(
+            ConfirmScreen("This Action Is Irreverable. Are You Sure?")
+        )
+
+        if confirm is None or False:
+            self.notify("Recalculation Cancelled", timeout=5)
+            return
+
+        self.account.balance.recalculate_from_history(self.history)
+        self.notify("Balance Recalculated", timeout=5)
+        self.query_one("#history", DataTable).clear()
+        self.populate_history_table()

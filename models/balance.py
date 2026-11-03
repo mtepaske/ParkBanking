@@ -265,6 +265,18 @@ class Balance:
             self.remaining = Decimal("0.00")
             self.credit = amount
 
+    def add_charge(self, amount: Decimal) -> None:
+        amount = money(amount)
+
+        if amount >= 0:
+            raise ValueError("Amount Must Be Less Than 0")
+
+        self.remaining -= amount
+
+        if self.remaining > self.annual:
+            self.outstanding = self.remaining - self.annual
+            self.remaining -= self.outstanding
+
     def expected_paid(self, as_of_date: date | None = None) -> Decimal:
         """
         Calculates the expected amount to be paid off the remaining fees. Given the indicated pay frequency
@@ -322,6 +334,16 @@ class Balance:
         expected = self.expected_paid(as_of_date)
         actual_paid = self.annual - self.remaining
         return actual_paid >= expected
+
+    def recalculate_from_history(self, history: list) -> None:
+
+        self.remaining = money(0)
+        self.outstanding = money(0)
+        for transaction in history:
+            if transaction.amount > 0:
+                self.add_payment(transaction.amount)
+            else:
+                self.add_charge(transaction.amount)
 
     def to_dict(self) -> dict[str, str]:
         """
