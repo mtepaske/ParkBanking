@@ -1,4 +1,4 @@
-﻿Site,ID,Account ID,Annual Fee,Remaining from this FY,Outstanding from previous FYs,Pay Frequency
+﻿Site Number,Balance ID,Account ID,Annual Fee,Remaining from this FY,Outstanding from previous FYs,Pay Frequency
 1,,,6000,6000,0,m
 2,,,6500,6500,0,q
 3,,,6000,6000,1000,m
