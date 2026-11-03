@@ -61,6 +61,7 @@ class SettingsMenu(Screen):
                     classes="tree-row",
                     id="import-folder",
                 ):
+
                     yield FolderTree(
                         str(APP_DIRECTORY), classes="tree", id="import-tree"
                     )
@@ -126,6 +127,8 @@ class SettingsMenu(Screen):
                         animate=True,
                         id="save",
                     )
+
+                # Add buttons for backing up database, clearing loaded data, and clearing database
 
             with VerticalGroup(classes="section"):
                 yield Static("FEE SETTINGS", classes="section-title")

@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 from pathlib import Path
 
+from textual import on
 from textual.app import ComposeResult
 from textual.containers import HorizontalGroup, Vertical, VerticalGroup
 from textual.screen import ModalScreen
@@ -125,3 +126,33 @@ class ConfirmAppendScreen(ModalScreen[str | None]):
 
     def on_button_pressed(self, event: Button.Pressed):
         self.dismiss(event.button.id)
+
+
+class ImportBalancesScreen(ModalScreen[Path | None]):
+
+    def __init__(self, import_folder: Path):
+        self.import_folder = import_folder
+        self.filepath = None
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="import-balances-dialog"):
+            yield Label(
+                "Please Selected File Containing Balance Information For Imported Accounts"
+            )
+            yield DirectoryTree(
+                str(self.import_folder), classes="tree", id="balance-tree"
+            )
+            yield Button.success("Confirm", disabled=True, id="confirm")
+            yield Button.error("Cancel", id="cancel")
+
+    @on(DirectoryTree.FileSelected)
+    def on_directiory_tree_file_selected(self, event: DirectoryTree.FileSelected):
+        self.filepath = event.path
+        self.query_one("#confirm", Button).disabled = False
+
+    @on(Button.Pressed)
+    def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id == "confirm":
+            self.dismiss(self.filepath)
+        else:
+            self.dismiss()

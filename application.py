@@ -78,6 +78,12 @@ class AppState:
         self.accounts.remove(account)
         self.notify_changed()
 
+    def deactivate_by_site_number(self, site_number: str):
+        for account in self.accounts:
+            if account.site_number == site_number and account.active:
+                account.switch_active()
+                break
+
     def clear_accounts(self):
         self.accounts: list[Account] = []
         self.notify_changed()
@@ -88,7 +94,7 @@ class AppState:
             if (
                 transaction.date == old_transaction.date
                 and transaction.amount == old_transaction.amount
-                and transaction.details == old_transaction.details
+                and transaction.original_details == old_transaction.original_details
             ):
                 raise DuplicateTransaction(
                     f"Transaction {transaction} Is Already Loaded"

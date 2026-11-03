@@ -134,7 +134,7 @@ def import_account_info_from_csv(
         The account information, as well as a generated history of payments
 
     Raises:
-        ValueError: If an imported balance account ID does not match the imported accounts ID
+        MissingBalance: If no matching balance can be found for an account
     """
 
     accounts = import_accounts(accounts_file)
