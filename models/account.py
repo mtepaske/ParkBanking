@@ -63,6 +63,10 @@ class Account:
         if len(self.site_number) == 1:
             self.site_number = f"0{self.site_number}"
 
+        # Assigns a balance id if one exists
+        if self.balance_id is None and self.balance is not None:
+            self.balance_id = self.balance.balance_id
+
     @classmethod
     def from_csv(cls, row: dict[str, str]) -> Account:
         """
