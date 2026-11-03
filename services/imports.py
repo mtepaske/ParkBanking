@@ -183,17 +183,24 @@ def add_annual_fees_to_history(account: Account) -> list[Transaction]:
     # Apply annual fee charge
     annual_fee = Transaction(date, amount, details)
     annual_fee.account = account
+    annual_fee.account_id = account.account_id
     annual_fee.type = annual_fee.original_details
     charges.append(annual_fee)
 
     # Generate information for balance brought forward from untracked history
     date = (start_of_fy() - dt.timedelta(days=1)).strftime("%Y-%m-%d")
-    amount = 0 - account.balance.outstanding
     details = "Brought Forward"
+    if account.balance.outstanding != Decimal("0.00"):
+        amount = 0 - account.balance.outstanding
+    elif account.balance.credit != Decimal("0.00"):
+        amount = account.balance.credit
+    else:
+        amount = account.balance.annual - account.balance.remaining
 
     # Apply brought forward charge
     brought_forward = Transaction(date, amount, details)
     brought_forward.account = account
+    brought_forward.account_id = account.account_id
     brought_forward.type = brought_forward.original_details
     charges.append(brought_forward)
 

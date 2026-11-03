@@ -36,7 +36,12 @@ from services.imports import (
     import_words_to_ignore,
 )
 from services.settings import APP_DIRECTORY, get_setting
-from ui.custom_widgets import ConfirmAppendScreen, ImportBalancesScreen, StatusBox
+from ui.custom_widgets import (
+    ConfirmAppendScreen,
+    ConfirmGeneratedCharges,
+    ImportBalancesScreen,
+    StatusBox,
+)
 
 log = enable_logger()
 
@@ -169,12 +174,15 @@ class ImportMenu(Screen):
         match event.control.id:
 
             case "statement-tree":
+                log.info(f"Statement File Path: {event.path}")
                 self.preview_statement(event.path)
 
             case "matched-tree":
+                log.info(f"Matched Statement File Path: {event.path}")
                 self.preview_matched(event.path)
 
             case "accounts-tree":
+                log.info(f"Account File Path: {event.path}")
                 self.preview_accounts(event.path)
 
             case "history-tree":
@@ -268,7 +276,12 @@ class ImportMenu(Screen):
             return
 
         # Ask for and import balance information. Match to accounts
-        balance_filepath = ImportBalancesScreen(self.import_folder)
+        balance_filepath = await self.app.push_screen_wait(
+            ImportBalancesScreen(self.import_folder)
+        )
+        if balance_filepath is None:
+            self.notify("Account Import Cancelled", severity="warning", timeout=5)
+            return
         try:
             self.loaded_file, self._old_charges = import_account_info_from_csv(
                 str(filepath).removesuffix(".csv"),
@@ -496,6 +509,7 @@ class ImportMenu(Screen):
 
                     elif confirm is None or confirm == "cancel":
                         self.app_state.state.transactions = original_transactions
+                        self.app_state.state.notify_changed()
                         self.notify(
                             "Matched Statement Import Cancelled",
                             severity="warning",
@@ -533,6 +547,7 @@ class ImportMenu(Screen):
                     elif confirm is None or confirm == "cancel":
                         self.app_state.state.payments = original_payments
                         self.app_state.state.transactions = original_transactions
+                        self.app_state.state.notify_changed()
                         self.notify("Matched Statement Import Cancelled")
                         return
 
@@ -575,6 +590,14 @@ class ImportMenu(Screen):
                 elif choice is None or choice == "cancel":
                     return
 
+        charge_confirm = await self.app.push_screen_wait(
+            ConfirmGeneratedCharges(self._old_charges)
+        )
+
+        if not charge_confirm:
+            self.notify("Account Import Cancelled", severity="warning", timeout=5)
+            return
+
         # Add accounts and generated charges
         original_accounts = self.app_state.state.accounts.copy()
         for account in self.loaded_file:
@@ -598,6 +621,7 @@ class ImportMenu(Screen):
                         )
                     elif confirm is None or confirm == "cancel":
                         self.app_state.state.accounts = original_accounts
+                        self.app_state.state.notify_changed()
                         self.notify("Accounts Import Cancelled", timeout=5)
                         return
                     else:
@@ -616,7 +640,7 @@ class ImportMenu(Screen):
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
                         ConfirmAppendScreen(
-                            f"The Generated {charge} Matches A Charge Thats Already Loaded"
+                            f"The Generated Charge {charge} Matches A Charge Thats Already Loaded"
                         )
                     )
 
@@ -625,6 +649,8 @@ class ImportMenu(Screen):
 
                     elif confirm is None or confirm == "cancel":
                         self.app_state.state.charges = original_charges
+                        self.app_state.state.accounts = original_accounts
+                        self.app_state.state.notify_changed()
                         self.notify("Accounts Import Cancelled", timeout=5)
                         return
 
