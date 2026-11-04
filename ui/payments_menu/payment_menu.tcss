@@ -1,0 +1,16 @@
+#payment-screen {
+    layout: horizontal;
+    align: center middle;
+}
+
+.button-row {
+    width: 100%;
+    height: auto;
+    align: center middle;
+    margin: 1;
+}
+
+.button-row Button {
+    width: 40%;
+    height: auto;
+}

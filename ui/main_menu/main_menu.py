@@ -8,6 +8,7 @@ from application import Application
 from ui.accounts_menu.accounts_menu import AccountsMenu
 from ui.export_menu.export_menu import ExportMenu
 from ui.import_menu.import_menu import ImportMenu
+from ui.payments_menu.payments_menu import PaymentMenu
 from ui.settings_menu.settings_menu import SettingsMenu
 
 
@@ -48,8 +49,7 @@ class MainMenu(Screen):
                 self.app.push_screen(AccountsMenu(self.app_state))
 
             case "payments":
-                # self.app.push_screen(PaymentMenu(self.app_state))
-                pass
+                self.app.push_screen(PaymentMenu(self.app_state))
 
             case "import":
                 self.app.push_screen(ImportMenu(self.app_state))
