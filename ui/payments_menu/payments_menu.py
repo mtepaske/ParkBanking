@@ -1,6 +1,7 @@
 from rich.text import Text
 from textual import on, work
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Footer, Header, Static
@@ -13,6 +14,8 @@ from ui.custom_widgets import AccountPicker, StatusBox
 class PaymentMenu(Screen):
 
     CSS_PATH = "payment_menu.tcss"
+
+    BINDINGS = (Binding("q", "back_screen", "Back"),)
 
     def __init__(self, app_state: Application, **kwargs):
         super().__init__(id="payment-screen", **kwargs)
@@ -102,12 +105,21 @@ class PaymentMenu(Screen):
                 transaction.original_details,
             )
 
+    def action_back_screen(self):
+        self.dismiss()
+
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
         match event.button.id:
 
             case "match":
                 self.match_transactions()
+
+            case "payments":
+                self.proccess_paymets()
+
+            case "unknown":
+                self.proccess_unknown()
 
     @work
     async def match_transactions(self):
