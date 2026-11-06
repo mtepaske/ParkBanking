@@ -166,3 +166,9 @@ class PaymentMenu(Screen):
                     self.app_state.state.add_payment(transaction)
             self.populate_matched()
             self.populate_unmatched()
+
+    def proccess_paymets(self):
+        pass
+
+    def proccess_unknown(self):
+        pass
