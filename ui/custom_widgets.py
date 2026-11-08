@@ -68,7 +68,9 @@ class Menu(Screen):
 
     @work
     async def action_quit(self) -> None:
+        """Quit the program"""
 
+        # Saves depending on settings
         if get_setting("auto_save_to_db") == "True":
             self.action_save()
             self.app.exit()
@@ -82,7 +84,7 @@ class Menu(Screen):
                 return
 
     def action_back(self) -> None:
-        """Go back a screen or quit the app"""
+        """Go back a screen"""
 
         self.dismiss()
 
