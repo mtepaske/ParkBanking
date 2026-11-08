@@ -1,49 +1,27 @@
 from rich.text import Text
 from textual import on
 from textual.app import ComposeResult
-from textual.binding import Binding
 from textual.containers import Horizontal
-from textual.screen import Screen
-from textual.widgets import Button, ContentSwitcher, DataTable, Footer, Header, Static
+from textual.widgets import Button, ContentSwitcher, DataTable, Static
 
-from application import Application
 from ui.accounts_menu.view_account_menu import ViewAccountMenu
+from ui.custom_widgets import Menu
 
 
-class AccountsMenu(Screen):
+class AccountsMenu(Menu):
     """
-    A screen to view all account information
+    An accounts menu to view all account information
 
     Attributes:
-        CSS_PATH: The path of the .tcss file for this screen
-        BINDINGS: The key bindings for this screen
-        app_state: The application instance for tracking state
+        CSS_PATH: (str) The name of the file containing styling information for the app
     """
 
     CSS_PATH = "accounts_menu.tcss"
-    BINDINGS = (
-        Binding("q", "back_screen", "Back"),
-        Binding("ctrl+w", "save_to_database", "Save Accounts To Database"),
-        Binding("ctrl+l", "load_from_database", "Load Accounts From Database"),
-    )
-
-    def __init__(self, app: Application, **kwargs) -> None:
-        """
-        Initialise the instance
-
-        Args:
-            app: The application instance for tracking state
-        """
-
-        super().__init__(id="accounts-menu", **kwargs)
-        self.app_state = app
 
     def compose(self) -> ComposeResult:
         """Construct the widgets on the screen"""
 
-        # Show program name and keybindings
-        yield Header()
-        yield Footer()
+        yield from super().compose()
 
         # The content switcher tabs
         with Horizontal(classes="tabs"):
@@ -59,26 +37,8 @@ class AccountsMenu(Screen):
             yield DataTable(id="balances", cursor_type="row", zebra_stripes=True)
             yield DataTable(id="site_holders", cursor_type="row", zebra_stripes=True)
 
-    def action_back_screen(self) -> None:
-        """Go back to the main menu"""
-
-        self.dismiss()
-
-    def action_save_to_database(self) -> None:
-        """Save updates to the database"""
-
-        self.app_state.repos.account_repo.save_accounts(self.app_state.state.accounts)
-        self.app_state.repos.ignore_repo.save_all_ignore(
-            self.app_state.state.words_to_ignore
-        )
-
-    def action_load_from_database(self) -> None:
-        """Load account information from the database"""
-
-        self.app_state.load_from_db()
-
     def on_mount(self) -> None:
-        """Initialise the datatables"""
+        """Initialise the tables"""
 
         # Initialise the accounts table
         accounts_table = self.query_one("#accounts", DataTable)
@@ -186,7 +146,7 @@ class AccountsMenu(Screen):
         Runs when a button is pressed
 
         Args:
-            event: The button press that triggered the method
+            event: The button presss
         """
 
         if event.button.id in {
@@ -204,7 +164,7 @@ class AccountsMenu(Screen):
         Runs when a row is selected
 
         Args:
-            event: The event that triggered the method
+            event: The row selection
         """
 
         account_id = event.row_key.value

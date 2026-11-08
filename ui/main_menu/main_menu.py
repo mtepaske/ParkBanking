@@ -1,40 +1,35 @@
 import pyfiglet
-from textual.binding import Binding
+from textual import on
 from textual.containers import VerticalGroup
-from textual.screen import Screen
-from textual.widgets import Button, Footer, Header, Static
+from textual.widgets import Button, Static
 
-from application import Application
 from ui.accounts_menu.accounts_menu import AccountsMenu
+from ui.custom_widgets import Menu
 from ui.export_menu.export_menu import ExportMenu
 from ui.import_menu.import_menu import ImportMenu
 from ui.payments_menu.payments_menu import PaymentMenu
 from ui.settings_menu.settings_menu import SettingsMenu
 
 
-class MainMenu(Screen):
+class MainMenu(Menu):
+    """
+    The main menu of the application
+
+    Attributes:
+        CSS_PATH: (str) The name of the file containing styling information for the app
+    """
 
     CSS_PATH = "main_menu.tcss"
 
-    BINDINGS = (
-        Binding("q", "quit_app", "Quit"),
-        Binding("ctrl+w", "save_to_database", "Save Accounts To Database"),
-        Binding("ctrl+l", "load_from_database", "Load Accounts From Database"),
-    )
-
-    def __init__(self, app: Application, **kwargs):
-        super().__init__(id="main-menu", **kwargs)
-        self.app_state = app
-
     def compose(self):
-        # yield StatusBox(app=self.app_state, id="app-status")
-        yield Header()
-        yield Footer()
+        """Construct the widgets on the screen"""
 
+        yield from super().compose()
         title = pyfiglet.figlet_format("MAIN MENU")
 
         yield Static(title, classes="section-title")
 
+        # The buttons
         with VerticalGroup(id="buttons"):
             yield Button("Manage Accounts", id="accounts")
             yield Button("Matching Menu", id="payments")
@@ -42,33 +37,38 @@ class MainMenu(Screen):
             yield Button("Export Files", id="export")
             yield Button("Settings", id="settings")
 
+    @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """
+        Runs when a button is pressed
+
+        Args:
+            event: The button presss
+        """
+
         match event.button.id:
 
             case "accounts":
-                self.app.push_screen(AccountsMenu(self.app_state))
+                self.app.push_screen(
+                    AccountsMenu(app_state=self.app_state, id="accounts-menu")
+                )
 
             case "payments":
-                self.app.push_screen(PaymentMenu(self.app_state))
+                self.app.push_screen(
+                    PaymentMenu(app_state=self.app_state, id="payments-menu")
+                )
 
             case "import":
-                self.app.push_screen(ImportMenu(self.app_state))
+                self.app.push_screen(
+                    ImportMenu(app_state=self.app_state, id="import-menu")
+                )
 
             case "export":
-                self.app.push_screen(ExportMenu(self.app_state))
+                self.app.push_screen(
+                    ExportMenu(app_state=self.app_state, id="export-menu")
+                )
 
             case "settings":
-                self.app.push_screen(SettingsMenu(self.app_state))
-
-    def action_save_to_database(self) -> None:
-        self.app_state.repos.account_repo.save_accounts(self.app_state.state.accounts)
-        self.app_state.repos.account_repo.save_history(self.app_state.state.payments)
-        self.app_state.repos.account_repo.save_history(self.app_state.state.charges)
-        self.app_state.repos.ignore_repo.save_all_ignore(
-            self.app_state.state.words_to_ignore
-        )
-        self.app_state.state.clear_payments()
-        self.app_state.state.clear_charges()
-
-    def action_load_from_database(self) -> None:
-        self.app_state.load_from_db()
+                self.app.push_screen(
+                    SettingsMenu(app_state=self.app_state, id="settings-menu")
+                )

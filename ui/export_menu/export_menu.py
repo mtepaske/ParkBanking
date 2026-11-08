@@ -1,33 +1,38 @@
 from textual.app import ComposeResult
-from textual.binding import Binding
 from textual.containers import (
     Horizontal,
     Vertical,
     VerticalGroup,
     VerticalScroll,
 )
-from textual.screen import Screen
-from textual.widgets import Button, Collapsible, Footer, Header, Input, Static
+from textual.widgets import Button, Collapsible, Input, Static
 
-from application import Application
 from services.settings import APP_DIRECTORY, get_setting
-from ui.custom_widgets import FolderTree, StatusBox
+from ui.custom_widgets import FolderTree, Menu, StatusBox
 
 
-class ExportMenu(Screen):
+class ExportMenu(Menu):
+    """
+    A menu to export current state as files
 
-    BINDINGS = (Binding("q", "back_screen", "Back"),)
+    Attributes:
+        CSS_PATH: (str) The name of the file containing styling information for the app
+        export_folder: (Path) The path of the folder to export too
+    """
+
     CSS_PATH = "export_menu.tcss"
 
-    def __init__(self, app: Application, **kwargs):
-        super().__init__(id="export-menu", **kwargs)
-        self.app_state = app
+    def __init__(self, **kwargs):
+        """Initialise the menu"""
+        super().__init__(**kwargs)
         self.export_folder = APP_DIRECTORY / get_setting("exports_folder")
 
     def compose(self) -> ComposeResult:
-        yield Header()
-        yield Footer()
+        """Construct the widgets on the screen"""
 
+        yield from super().compose()
+
+        # File selection section
         with VerticalScroll(classes="section"):
             yield Static("Export Files", classes="section-title")
 
@@ -83,11 +88,9 @@ class ExportMenu(Screen):
                         "Export Selected File", disabled=True, id="confirm"
                     )
 
-            yield StatusBox(app=self.app_state, id="app-status")
+            yield StatusBox(app_state=self.app_state, id="app-status")
 
+        # File preview
         with Vertical(classes="section"):
 
             yield Static("File Preview", classes="section-title")
-
-    def action_back_screen(self):
-        self.dismiss()

@@ -2,30 +2,25 @@ from pathlib import Path
 
 from rich.text import Text
 from textual import on, work
-from textual.binding import Binding
+from textual.app import ComposeResult
 from textual.containers import (
     HorizontalGroup,
     Vertical,
     VerticalGroup,
     VerticalScroll,
 )
-from textual.screen import Screen
 from textual.widgets import (
     Button,
     Collapsible,
     DataTable,
     DirectoryTree,
-    Footer,
-    Header,
     Static,
 )
 
 from application import (
-    Application,
     DuplicateAccount,
     DuplicateTransaction,
     MissingBalance,
-    enable_logger,
 )
 from models.account import Account
 from models.transactions import Transaction
@@ -43,31 +38,40 @@ from ui.custom_widgets import (
     AppendScreen,
     ConfirmChargesScreen,
     ImportBalancesScreen,
+    Menu,
     StatusBox,
 )
 
-log = enable_logger()
 
+class ImportMenu(Menu):
+    """
+    A menu to import CSV files
 
-class ImportMenu(Screen):
+    Attributes:
+        CSS_PATH: (str) The name of the file containing styling information for the app
+        import_folder: (Path) The path of the folder to import from
+        loaded_file: (Iterable) The information of the current loaded file
+        loaded_file_type: (str) The type of loaded file
+    """
 
     CSS_PATH = "import_menu.tcss"
 
-    BINDINGS = (Binding("q", "back_screen", "Back"),)
+    def __init__(self, **kwargs) -> None:
+        """Initialise the menu"""
 
-    def __init__(self, app: Application, **kwargs):
-        super().__init__(id="import-menu", **kwargs)
-        self.app_state = app
+        super().__init__(**kwargs)
         self.import_folder = APP_DIRECTORY / get_setting("imports_folder")
         self.loaded_file = None
         self.loaded_file_type = None
         self._generated_charges = None
         self._account_for_history = None
 
-    def compose(self):
-        yield Header()
-        yield Footer()
+    def compose(self) -> ComposeResult:
+        """Construct the widgets on the screen"""
 
+        yield from super().compose()
+
+        # File selection section
         with VerticalScroll(classes="section"):
 
             yield Static("Import Files", classes="section-title")
@@ -139,18 +143,23 @@ class ImportMenu(Screen):
                     "Import Selected File", disabled=True, id="confirm"
                 )
 
-            yield StatusBox(self.app_state, id="app-status")
+            yield StatusBox(self.app_state)
 
+        # File preview section
         with Vertical(classes="section"):
 
             yield Static("File Preview", classes="section-title")
             yield DataTable(zebra_stripes=True, id="file-preview")
 
-    def action_back_screen(self):
-        self.dismiss()
-
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed):
+        """
+        Runs when a button is pressed
+
+        Args:
+            event: The button presss
+        """
+
         if event.button.id == "confirm":
             match self.loaded_file_type:
 
@@ -174,6 +183,12 @@ class ImportMenu(Screen):
 
     @on(DirectoryTree.FileSelected)
     def on_directiory_tree_file_selected(self, event: DirectoryTree.FileSelected):
+        """
+        Runs when a file is selected
+
+        Args:
+            event: The event of the file selection
+        """
 
         match event.control.id:
 
@@ -196,7 +211,14 @@ class ImportMenu(Screen):
                 self.preview_ignore(event.path)
 
     def preview_statement(self, filepath: Path):
+        """
+        Preview an bank statement before importing
 
+        Args:
+            filepath: The path of the file
+        """
+
+        # Try to load the selected file
         try:
             self.loaded_file = import_statement(str(filepath).removesuffix(".csv"))
         except FileNotFoundError:
@@ -210,6 +232,7 @@ class ImportMenu(Screen):
             )
             return
 
+        # Preview selected file
         statement_table = self.query_one("#file-preview", DataTable)
         statement_table.clear(columns=True)
         statement_table.add_columns("Date", "Amount", "Transaction Details")
@@ -221,7 +244,14 @@ class ImportMenu(Screen):
         self.query_one("#confirm", Button).disabled = False
 
     def preview_matched(self, filepath: Path):
+        """
+        Preview matched transactions before importing
 
+        Args:
+            filepath: The path of the file
+        """
+
+        # Checks there is loaded accounts
         if len(self.app_state.state.accounts) == 0:
             self.notify(
                 "No Accounts To Match Against. Transactions Will Be Unmatched",
@@ -229,6 +259,7 @@ class ImportMenu(Screen):
                 timeout=5,
             )
 
+        # Try to load the selected file
         try:
             self.loaded_file = import_matched(
                 str(filepath).removesuffix(".csv"), self.app_state.state.accounts
@@ -244,6 +275,7 @@ class ImportMenu(Screen):
             )
             return
 
+        # Preview the selected file
         matched_table = self.query_one("#file-preview", DataTable)
         matched_table.clear(columns=True)
         matched_table.add_columns("Date", "Site Number", "Name", "Amount")
@@ -261,8 +293,14 @@ class ImportMenu(Screen):
 
     @work
     async def preview_accounts(self, filepath: Path):
+        """
+        Preview accounts before imporing
 
-        # Import account information
+        Args:
+            filepath: The path of the file
+        """
+
+        # Try to load the selected file
         try:
             self.loaded_file = import_accounts(str(filepath).removesuffix(".csv"))
         except FileNotFoundError:
@@ -283,6 +321,8 @@ class ImportMenu(Screen):
         if balance_filepath is None:
             self.notify("Account Import Cancelled", severity="warning", timeout=5)
             return
+
+        # Try to load the selected file
         try:
             self.loaded_file, self._generated_charges = import_account_info_from_csv(
                 str(filepath).removesuffix(".csv"),
@@ -302,7 +342,7 @@ class ImportMenu(Screen):
             self.notify("Account Information Does Not Match Balance Information")
             return
 
-        # Initialise table view
+        # Preview the file
         account_table = self.query_one("#file-preview", DataTable)
         account_table.clear(columns=True)
         account_table.add_columns(
@@ -318,7 +358,6 @@ class ImportMenu(Screen):
             "Balance ID",
         )
 
-        # Populate table
         for row in self.loaded_file:
             assert row.balance is not None
             account_table.add_row(
@@ -334,13 +373,19 @@ class ImportMenu(Screen):
                 row.balance.balance_id,
             )
 
-        # Enable confirm button
         self.loaded_file_type = "account"
         self.query_one("#confirm", Button).disabled = False
 
     @work
     async def preview_history(self, filepath: Path):
+        """
+        Preview account history before importing
 
+        Args:
+            filepath: The path of the file
+        """
+
+        # Select the account to import the history of
         self._account_for_history = await self.app.push_screen_wait(
             AccountPicker("For Which Account?", self.app_state.state.accounts)
         )
@@ -351,6 +396,8 @@ class ImportMenu(Screen):
             return
 
         assert isinstance(self._account_for_history, Account)
+
+        # Try to load the selected file
         try:
             self.loaded_file = import_history(
                 str(filepath).removesuffix(".csv"), account=self._account_for_history
@@ -366,6 +413,7 @@ class ImportMenu(Screen):
             )
             return
 
+        # Preview the selected file
         history_table = self.query_one("#file-preview", DataTable)
         history_table.clear(columns=True)
         history_table.add_columns("Date", "Description", "Debit", "Credit", "Balance")
@@ -415,13 +463,27 @@ class ImportMenu(Screen):
         self.query_one("#confirm", Button).disabled = False
 
     def preview_site(self, filepath: Path):
+        """
+        Preview site information before importing
+
+        Args:
+            filepath: The path of the file
+        """
+
         site_table = self.query_one("#file-preview", DataTable)
         site_table.clear(columns=True)
         site_table.add_columns()
         # Conplete when sites are implimented
 
     def preview_ignore(self, filepath: Path):
+        """
+        Preview words to ignore before importing
 
+        Args:
+            filepath: The path of the file
+        """
+
+        # Try to load the selected file
         try:
             self.loaded_file = import_words_to_ignore(
                 str(filepath).removesuffix(".csv")
@@ -437,6 +499,7 @@ class ImportMenu(Screen):
             )
             return
 
+        # Preview the selected file
         ignore_table = self.query_one("#file-preview", DataTable)
         ignore_table.clear(columns=True)
         ignore_table.add_columns("Word")
@@ -449,11 +512,14 @@ class ImportMenu(Screen):
 
     @work
     async def import_statement(self):
+        """Import selected file as unmatched transactions"""
 
         assert self.loaded_file is not None
 
+        # Sets the original application state
         original_state = self.app_state.state.transactions.copy()
 
+        # If there is currently loaded unmatched transactions, append or replace
         if len(self.app_state.state.transactions) != 0:
 
             if get_setting("append_transactions_on_import") == "Never":
@@ -483,6 +549,8 @@ class ImportMenu(Screen):
                 try:
                     self.app_state.state.add_transaction(transaction)
                     break
+
+                # If there is a duplicate transaction
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
                         AppendScreen(
@@ -512,6 +580,7 @@ class ImportMenu(Screen):
 
     @work
     async def import_matched(self):
+        """Import selected file as matched transactions"""
 
         assert self.loaded_file is not None
 
@@ -522,7 +591,9 @@ class ImportMenu(Screen):
         for transaction in self.loaded_file:
             assert isinstance(transaction, Transaction)
 
+            # If the transaction has no matched account
             if transaction.account is None:
+                # If there is currently loaded unmatched transactions, append or replace
                 if len(self.app_state.state.transactions) != 0:
 
                     if (
@@ -558,6 +629,7 @@ class ImportMenu(Screen):
             else:
                 matched_to_add.append(transaction)
 
+        # Sets the original application state
         original_transactions = self.app_state.state.transactions.copy()
         for unmatched in unmatched_to_add:
 
@@ -566,6 +638,7 @@ class ImportMenu(Screen):
                     self.app_state.state.add_transaction(unmatched)
                     break
 
+                # If there is a duplicate transaction
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
                         AppendScreen(
@@ -593,6 +666,7 @@ class ImportMenu(Screen):
                             timeout=5,
                         )
 
+        # Sets the original application state
         original_payments = self.app_state.state.unapplied.copy()
 
         for matched in matched_to_add:
@@ -602,6 +676,7 @@ class ImportMenu(Screen):
                     self.app_state.state.add_unapplied(matched)
                     break
 
+                # If there is a duplicate transaction
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
                         AppendScreen(
@@ -631,19 +706,18 @@ class ImportMenu(Screen):
 
     @work
     async def import_accounts(self):
+        """Import selected file as accounts"""
 
         assert self.loaded_file is not None
         assert self._generated_charges is not None
 
-        # Check if accounts already exist
+        # If there is currently loaded unmatched accounts, append or replace
         if len(self.app_state.state.accounts) != 0:
 
-            # Clear loaded accounts
             if get_setting("append_accounts_on_import") == "Never":
                 self.app_state.state.clear_accounts()
                 self.notify("Accounts Cleared", timeout=5)
 
-            # Ask for input
             elif get_setting("append_accounts_on_import") == "Ask":
                 choice = await self.app.push_screen_wait(
                     AppendScreen(
@@ -656,6 +730,7 @@ class ImportMenu(Screen):
                 elif choice is None or choice == "cancel":
                     return
 
+        # Confirm autonmatically generated charges
         charge_confirm = await self.app.push_screen_wait(
             ConfirmChargesScreen(
                 message="Please Confirm Autonmatically Generated Charges Are Correct",
@@ -667,7 +742,7 @@ class ImportMenu(Screen):
             self.notify("Account Import Cancelled", severity="warning", timeout=5)
             return
 
-        # Add accounts and generated charges
+        # Sets the original application state
         original_accounts = self.app_state.state.accounts.copy()
         for account in self.loaded_file:
             assert isinstance(account, Account)
@@ -676,6 +751,8 @@ class ImportMenu(Screen):
                 try:
                     self.app_state.state.add_account(account)
                     break
+
+                # If there is a duplicate account
                 except DuplicateAccount:
                     confirm = AppendScreen(
                         f"There is Already An Active Account For {account.site_number}"
@@ -697,6 +774,7 @@ class ImportMenu(Screen):
                         account.switch_active()
                         self.notify(f"{account} Swicthed To Inactive")
 
+        # Sets the original application state
         original_charges = self.app_state.state.charges.copy()
         for charge in self._generated_charges:
             assert isinstance(charge, Transaction)
@@ -706,6 +784,7 @@ class ImportMenu(Screen):
                     self.app_state.state.add_charge(charge)
                     break
 
+                # If there is a duplicate transaction
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
                         AppendScreen(
@@ -735,6 +814,7 @@ class ImportMenu(Screen):
 
     @work
     async def import_history(self):
+        """Import selected file as account history"""
 
         assert self.loaded_file is not None
         assert isinstance(self._account_for_history, Account)
@@ -745,6 +825,7 @@ class ImportMenu(Screen):
             assert isinstance(payment, Transaction)
             transactions_to_add.append(payment)
 
+        # Checks for history in the database
         if self._account_for_history.account_id is not None:
 
             database_charges = self.app_state.repos.account_repo.get_history(
@@ -774,6 +855,7 @@ class ImportMenu(Screen):
                         timeout=5,
                     )
 
+        # Checks for unsaved history
         charges_to_delete = []
         for charge in self.app_state.state.charges:
             if charge.account == self._account_for_history:
@@ -809,6 +891,7 @@ class ImportMenu(Screen):
         self.query_one("#file-preview", DataTable).clear(columns=True)
 
     def import_ignore(self):
+        """Import selected file as words to ignore"""
 
         assert self.loaded_file is not None
 

@@ -1,16 +1,14 @@
 from rich.text import Text
 from textual import on, work
 from textual.app import ComposeResult
-from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.screen import Screen
-from textual.widgets import Button, DataTable, Footer, Header, Static
+from textual.widgets import Button, DataTable, Static
 
-from application import Application
 from models.account import Account
 from services.match import Matcher, match_transactions
 from ui.custom_widgets import (
     AccountPicker,
+    Menu,
     ProccessUnknownScreen,
     ReviewBalanceScreen,
     ReviewUnknownScreen,
@@ -18,28 +16,32 @@ from ui.custom_widgets import (
 )
 
 
-class PaymentMenu(Screen):
+class PaymentMenu(Menu):
+    """
+    A menu for displaying and managing payments
+
+    Attributes:
+        CSS_PATH: (str) The name of the file containing styling information for the app
+    """
 
     CSS_PATH = "payment_menu.tcss"
 
-    BINDINGS = (Binding("q", "back_screen", "Back"),)
-
-    def __init__(self, app_state: Application, **kwargs):
-        super().__init__(id="payment-screen", **kwargs)
-        self.app_state = app_state
-
     def compose(self) -> ComposeResult:
-        yield Header()
-        yield Footer()
+        """Construct the widgets on the screen"""
 
+        yield from super().compose()
+
+        # Unmatched payments section
         with VerticalScroll(classes="section"):
             yield Static("Unmacthed Tranactions", classes="section-title")
             yield DataTable(zebra_stripes=True, cursor_type="row", id="unmatched")
 
+        # Unapplied payments and charges section
         with VerticalScroll(classes="section"):
-            yield Static("Matched Tranactions", classes="section-title")
+            yield Static("Unapplied Payments/Charges", classes="section-title")
             yield DataTable(zebra_stripes=True, cursor_type="row", id="matched")
 
+        # Actions section
         with Vertical(classes="section"):
             yield Static("Actions", classes="section-title")
             with Horizontal(classes="button-row"):
@@ -52,9 +54,10 @@ class PaymentMenu(Screen):
                 yield Button.warning(
                     "Proccess Unknown Words", id="unknown", disabled=True
                 )
-            yield StatusBox(app=self.app_state, id="app-status")
+            yield StatusBox(app_state=self.app_state)
 
     def on_mount(self) -> None:
+        """Initialise tables"""
 
         self.query_one("#matched", DataTable).add_columns(
             "Date",
@@ -72,6 +75,7 @@ class PaymentMenu(Screen):
         self.find_available()
 
     def find_available(self):
+        """Find available actions and enable/disable buttons"""
 
         transactions = self.app_state.state.transactions
         accounts = self.app_state.state.accounts
@@ -88,6 +92,7 @@ class PaymentMenu(Screen):
             self.query_one("#unknown", Button).disabled = False
 
     def populate_matched(self) -> None:
+        """Populate unapplied payments/charges table"""
 
         unapplied = self.app_state.state.unapplied
         payment_table = self.query_one("#matched", DataTable)
@@ -107,6 +112,7 @@ class PaymentMenu(Screen):
             )
 
     def populate_unmatched(self) -> None:
+        """Populate unmatched transactions table"""
 
         transactions = self.app_state.state.transactions
         transaction_table = self.query_one("#unmatched", DataTable)
@@ -122,12 +128,14 @@ class PaymentMenu(Screen):
                 transaction.details,
             )
 
-    def action_back_screen(self):
-
-        self.dismiss()
-
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """
+        Runs when a button is pressed
+
+        Args:
+            event: The button presss
+        """
 
         match event.button.id:
 
@@ -142,14 +150,18 @@ class PaymentMenu(Screen):
 
     @work
     async def match_transactions(self):
+        """Match unmatched transactions to accounts"""
 
+        # Initialise matcher
         matcher = Matcher(
             self.app_state.state.accounts, self.app_state.state.words_to_ignore
         )
 
+        # Run matching on transactions
         for transaction in self.app_state.state.transactions.copy():
             possibilities = match_transactions(matcher, transaction)
 
+            # No match found
             if len(possibilities) == 0:
                 match = await self.app.push_screen_wait(
                     AccountPicker(
@@ -172,12 +184,14 @@ class PaymentMenu(Screen):
                     self.app_state.state.remove_transaction(transaction)
                     self.app_state.state.add_unapplied(transaction)
 
+            # Only one match found
             elif len(possibilities) == 1:
                 transaction.account = possibilities[0]
                 transaction.type = "Direct Debit"
                 self.app_state.state.remove_transaction(transaction)
                 self.app_state.state.add_unapplied(transaction)
 
+            # Multiple matches found
             else:
                 match = await self.app.push_screen_wait(
                     AccountPicker(
@@ -200,11 +214,13 @@ class PaymentMenu(Screen):
                     self.app_state.state.remove_transaction(transaction)
                     self.app_state.state.add_unapplied(transaction)
 
+            # Update tables
             self.populate_matched()
             self.populate_unmatched()
 
         unknown_words = matcher.unknown
 
+        # Update unknown words
         for unknown in unknown_words:
             self.app_state.state.add_unknown(unknown)
 
@@ -212,6 +228,7 @@ class PaymentMenu(Screen):
 
     @work
     async def proccess_payments(self):
+        """Proccess unapplied payments and charges"""
 
         unapplied = self.app_state.state.unapplied.copy()
         accounts = self.app_state.state.accounts
@@ -239,6 +256,7 @@ class PaymentMenu(Screen):
 
     @work
     async def proccess_unknown(self):
+        """Proccess unknown words"""
 
         ignore_to_add: set[str] = set()
         alias_to_add: dict[str, Account] = {}
@@ -272,6 +290,7 @@ class PaymentMenu(Screen):
                 case None:
                     continue
 
+        # Confirm changes
         confirm = await self.app.push_screen_wait(
             ReviewUnknownScreen(
                 "Confirm The Following Changes", ignore_to_add, alias_to_add

@@ -1,16 +1,12 @@
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import (
-    Horizontal,
     HorizontalGroup,
     VerticalGroup,
 )
-from textual.screen import Screen
 from textual.widgets import (
     Collapsible,
     DirectoryTree,
-    Footer,
-    Header,
     Input,
     MaskedInput,
     Select,
@@ -18,176 +14,174 @@ from textual.widgets import (
     Switch,
 )
 
-from application import Application
 from services.settings import APP_DIRECTORY, load_settings, save_settings
-from ui.custom_widgets import DatabaseTree, FolderTree
+from ui.custom_widgets import DatabaseTree, FolderTree, Menu
 
 
-class SettingsMenu(Screen):
+class SettingsMenu(Menu):
+    """
+    A settings menu
+
+    Attributes:
+        BINDINGS: (tuple[Binding]) The keybindings for the menu
+        CSS_PATH: (str) The name of the file containing styling information for the app
+        settings: (dict) The dictionary containing current settings
+    """
+
+    BINDINGS = (
+        Binding("q", "back", "Back"),
+        Binding("ctrl+s", "save_settings", "Save Settings"),
+    )
 
     CSS_PATH = "settings_menu.tcss"
 
-    BINDINGS = (
-        Binding("q", "back_screen", "Back"),
-        Binding("ctrl+w", "save", "Save Settings"),
-    )
+    def __init__(self, **kwargs) -> None:
+        """Initialise the menu"""
 
-    def __init__(self, app: Application) -> None:
-        super().__init__()
-        self.app_state = app
+        super().__init__(**kwargs)
         self.settings = load_settings()
 
     def compose(self) -> ComposeResult:
-        yield Header()
-        yield Footer()
+        """Construct the widgets on the screen"""
 
-        with Horizontal():
+        yield from super().compose()
 
-            with VerticalGroup(classes="section"):
-                yield Static("BUSINESS SETTINGS", classes="section-title")
+        # Business settings section
+        with VerticalGroup(classes="section"):
+            yield Static("BUSINESS SETTINGS", classes="section-title")
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static("Business Name: ", classes="input-label")
-                    yield Input(
-                        value=self.settings["business_name"], id="business-name"
-                    )
+            with HorizontalGroup(classes="input-row"):
+                yield Static("Business Name: ", classes="input-label")
+                yield Input(value=self.settings["business_name"], id="business-name")
 
-            with VerticalGroup(classes="section"):
-                yield Static("DATA SETTINGS", classes="section-title")
+        # Data settings section
+        with VerticalGroup(classes="section"):
+            yield Static("DATA SETTINGS", classes="section-title")
 
-                with Collapsible(
-                    title=f'Imports Folder: {self.settings["imports_folder"]}',
-                    collapsed=True,
-                    classes="tree-row",
-                    id="import-folder",
-                ):
+            with Collapsible(
+                title=f'Imports Folder: {self.settings["imports_folder"]}',
+                collapsed=True,
+                classes="tree-row",
+                id="import-folder",
+            ):
 
-                    yield FolderTree(
-                        str(APP_DIRECTORY), classes="tree", id="import-tree"
-                    )
+                yield FolderTree(str(APP_DIRECTORY), classes="tree", id="import-tree")
 
-                with Collapsible(
-                    title=f"Export Folder: {self.settings['exports_folder']}",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="export-folder",
-                ):
-                    yield FolderTree(
-                        str(APP_DIRECTORY), classes="tree", id="export-tree"
-                    )
+            with Collapsible(
+                title=f"Export Folder: {self.settings['exports_folder']}",
+                collapsed=True,
+                classes="tree-row",
+                id="export-folder",
+            ):
+                yield FolderTree(str(APP_DIRECTORY), classes="tree", id="export-tree")
 
-                with Collapsible(
-                    title=f"Database Location: {self.settings['db_path']}",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="database-folder",
-                ):
-                    yield DatabaseTree(
-                        str(APP_DIRECTORY), classes="tree", id="database-tree"
-                    )
+            with Collapsible(
+                title=f"Database Location: {self.settings['db_path']}",
+                collapsed=True,
+                classes="tree-row",
+                id="database-folder",
+            ):
+                yield DatabaseTree(
+                    str(APP_DIRECTORY), classes="tree", id="database-tree"
+                )
 
-                with HorizontalGroup(classes="select-row"):
-                    yield Static(
-                        "Add To Loaded Accounts On Import: ", classes="select-label"
-                    )
-                    yield Select(
-                        [("Never", "Never"), ("Ask", "Ask"), ("Always", "Always")],
-                        value=self.settings["append_accounts_on_import"],
-                        allow_blank=False,
-                        id="append-accounts",
-                    )
+            with HorizontalGroup(classes="select-row"):
+                yield Static(
+                    "Add To Loaded Accounts On Import: ", classes="select-label"
+                )
+                yield Select(
+                    [("Never", "Never"), ("Ask", "Ask"), ("Always", "Always")],
+                    value=self.settings["append_accounts_on_import"],
+                    allow_blank=False,
+                    id="append-accounts",
+                )
 
-                with HorizontalGroup(classes="select-row"):
-                    yield Static(
-                        "Add To Loaded Transactions On Import: ", classes="select-label"
-                    )
-                    yield Select(
-                        [("Never", "Never"), ("Ask", "Ask"), ("Always", "Always")],
-                        value=self.settings["append_transactions_on_import"],
-                        allow_blank=False,
-                        id="append-transactions",
-                    )
+            with HorizontalGroup(classes="select-row"):
+                yield Static(
+                    "Add To Loaded Transactions On Import: ", classes="select-label"
+                )
+                yield Select(
+                    [("Never", "Never"), ("Ask", "Ask"), ("Always", "Always")],
+                    value=self.settings["append_transactions_on_import"],
+                    allow_blank=False,
+                    id="append-transactions",
+                )
 
-                with HorizontalGroup(classes="switch-row"):
-                    yield Static(
-                        "Auto Load From Database On Start: ", classes="switch-label"
-                    )
-                    yield Switch(
-                        value=self.settings["auto_load_from_db"] == "True",
-                        animate=True,
-                        id="load",
-                    )
+            with HorizontalGroup(classes="switch-row"):
+                yield Static(
+                    "Auto Load From Database On Start: ", classes="switch-label"
+                )
+                yield Switch(
+                    value=self.settings["auto_load_from_db"] == "True",
+                    animate=True,
+                    id="load",
+                )
 
-                with HorizontalGroup(classes="switch-row"):
-                    yield Static(
-                        "Auto Save To Database On Close: ", classes="switch-label"
-                    )
-                    yield Switch(
-                        value=self.settings["auto_save_to_db"] == "True",
-                        animate=True,
-                        id="save",
-                    )
+            with HorizontalGroup(classes="switch-row"):
+                yield Static("Auto Save To Database On Close: ", classes="switch-label")
+                yield Switch(
+                    value=self.settings["auto_save_to_db"] == "True",
+                    animate=True,
+                    id="save",
+                )
 
-                # Add buttons for backing up database, clearing loaded data, and clearing database
+            # Add buttons for backing up database, clearing loaded data, and clearing database
 
-            with VerticalGroup(classes="section"):
-                yield Static("FEE SETTINGS", classes="section-title")
+        # Fee settings section
+        with VerticalGroup(classes="section"):
+            yield Static("FEE SETTINGS", classes="section-title")
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static("Base Rate: ", classes="input-label")
-                    yield MaskedInput(
-                        "$9999;0",
-                        value=f'${self.settings["annual_fees_base_rate"]}',
-                        id="base",
-                    )
+            with HorizontalGroup(classes="input-row"):
+                yield Static("Base Rate: ", classes="input-label")
+                yield MaskedInput(
+                    "$9999;0",
+                    value=f'${self.settings["annual_fees_base_rate"]}',
+                    id="base",
+                )
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static("AC Charge: ", classes="input-label")
-                    yield MaskedInput(
-                        "$999;0",
-                        value=f'${self.settings["annual_fees_ac_rate"]}',
-                        id="ac",
-                    )
+            with HorizontalGroup(classes="input-row"):
+                yield Static("AC Charge: ", classes="input-label")
+                yield MaskedInput(
+                    "$999;0",
+                    value=f'${self.settings["annual_fees_ac_rate"]}',
+                    id="ac",
+                )
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static("Sewer Charge: ", classes="input-label")
-                    yield MaskedInput(
-                        "$999;0",
-                        value=f'${self.settings["annual_fees_sewer_rate"]}',
-                        id="sewer",
-                    )
+            with HorizontalGroup(classes="input-row"):
+                yield Static("Sewer Charge: ", classes="input-label")
+                yield MaskedInput(
+                    "$999;0",
+                    value=f'${self.settings["annual_fees_sewer_rate"]}',
+                    id="sewer",
+                )
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static(
-                        "Extra Nominated Visitors Charge: ", classes="input-label"
-                    )
-                    yield MaskedInput(
-                        "$99;0",
-                        value=f'${self.settings["annual_fees_extra_guests_rate"]}',
-                        id="extra-guests",
-                    )
+            with HorizontalGroup(classes="input-row"):
+                yield Static("Extra Nominated Visitors Charge: ", classes="input-label")
+                yield MaskedInput(
+                    "$99;0",
+                    value=f'${self.settings["annual_fees_extra_guests_rate"]}',
+                    id="extra-guests",
+                )
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static("On-Time Payment Discount: ", classes="input-label")
-                    yield MaskedInput(
-                        "$999;0",
-                        value=f'${self.settings["annual_fees_discount"]}',
-                        id="discount",
-                    )
+            with HorizontalGroup(classes="input-row"):
+                yield Static("On-Time Payment Discount: ", classes="input-label")
+                yield MaskedInput(
+                    "$999;0",
+                    value=f'${self.settings["annual_fees_discount"]}',
+                    id="discount",
+                )
 
-                with HorizontalGroup(classes="select-row"):
-                    yield Static("Annual Period", classes="select-label")
-                    yield Select(
-                        [("Financial Year", "FY"), ("Calendar Year", "CY")],
-                        value=self.settings["annual_period"],
-                        allow_blank=False,
-                        id="period",
-                    )
+            with HorizontalGroup(classes="select-row"):
+                yield Static("Annual Period", classes="select-label")
+                yield Select(
+                    [("Financial Year", "FY"), ("Calendar Year", "CY")],
+                    value=self.settings["annual_period"],
+                    allow_blank=False,
+                    id="period",
+                )
 
-    def action_back_screen(self):
-        self.dismiss()
-
-    def action_save(self) -> None:
+    def action_save_settings(self) -> None:
+        """Save current settings"""
 
         self.settings["business_name"] = str(
             self.query_one("#business-name", Input).value
@@ -224,6 +218,12 @@ class SettingsMenu(Screen):
     def on_directory_tree_directory_selected(
         self, event: DirectoryTree.DirectorySelected
     ) -> None:
+        """
+        Runs when a folder is selected
+
+        Args:
+            event: The event of the folder selection
+        """
 
         match event.control.id:
 

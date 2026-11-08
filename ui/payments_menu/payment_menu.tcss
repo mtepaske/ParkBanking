@@ -1,4 +1,4 @@
-#payment-screen {
+#payment-menu {
     layout: horizontal;
     align: center middle;
 }

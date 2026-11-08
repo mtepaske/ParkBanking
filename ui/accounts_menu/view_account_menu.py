@@ -3,19 +3,16 @@ from decimal import Decimal
 
 from rich.text import Text
 from textual import on, work
-from textual.binding import Binding
+from textual.app import ComposeResult
 from textual.containers import (
     HorizontalGroup,
     Vertical,
     VerticalGroup,
     VerticalScroll,
 )
-from textual.screen import Screen
 from textual.widgets import (
     Button,
     DataTable,
-    Footer,
-    Header,
     Input,
     MaskedInput,
     Select,
@@ -23,45 +20,36 @@ from textual.widgets import (
     Switch,
 )
 
-from application import Application
 from models.account import Account
 from models.transactions import Transaction
 from services.date import get_str_from_date, get_today
-from ui.custom_widgets import EnterAmountScreen, ReviewBalanceScreen
+from ui.custom_widgets import EnterAmountScreen, Menu, ReviewBalanceScreen
 
 
-class ViewAccountMenu(Screen):
+class ViewAccountMenu(Menu):
     """
-    A screen to view and edit a specific accounts information
+    A menu to view and edit a specific accounts information
 
     Attributes:
-        CSS_PATH: The path of the .tcss file for this screen
-        BINDINGS: The key bindings for this screen
-        app_state: The application instance for tracking state
-        account: The account to view
+        CSS_PATH: (str) The name of the file containing styling information for the app
+        account: (Account) The account to view
     """
 
     CSS_PATH = "view_account_menu.tcss"
-    BINDINGS = (
-        Binding("q", "back_screen", "Back"),
-        Binding("ctrl+w", "save_account", "Save"),
-    )
 
-    def __init__(self, app: Application, account: Account, **kwargs):
+    def __init__(self, account: Account, **kwargs) -> None:
         """
         Initialise the instance
 
         Args:
-            app: The application instance for tracking state
             account: The account to view
             **kwargs: Other key word arguments for base class
         """
 
         super().__init__(id="view-account-menu", **kwargs)
-        self.app_state = app
         self.account = account
 
-    def compose(self):
+    def compose(self) -> ComposeResult:
         """Construct the widgets on the screen"""
 
         balance = self.account.balance
@@ -77,9 +65,7 @@ class ViewAccountMenu(Screen):
 
         site_number_options = [(str(number), str(number)) for number in site_numbers]
 
-        # Show program name and keybindings
-        yield Header()
-        yield Footer()
+        yield from super().compose()
 
         # The account history section
         with Vertical(classes="section"):
@@ -171,12 +157,7 @@ class ViewAccountMenu(Screen):
                         id="frequency",
                     )
 
-    def action_back_screen(self):
-        """Go back to the main menu"""
-
-        self.dismiss()
-
-    def action_save_account(self) -> None:
+    def action_save(self) -> None:
         """Save updates to the database"""
 
         balance = self.account.balance
@@ -318,7 +299,7 @@ class ViewAccountMenu(Screen):
         Runs when a button is pressed
 
         Args:
-            event: The button press that triggered the method
+            event: The button presss
         """
 
         assert self.account.balance is not None

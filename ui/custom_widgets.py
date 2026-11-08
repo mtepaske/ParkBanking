@@ -5,18 +5,21 @@ from pathlib import Path
 from rich.text import Text
 from textual import on
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import (
     HorizontalGroup,
     Vertical,
     VerticalGroup,
     VerticalScroll,
 )
-from textual.screen import ModalScreen
+from textual.screen import ModalScreen, Screen
 from textual.widget import Widget
 from textual.widgets import (
     Button,
     DataTable,
     DirectoryTree,
+    Footer,
+    Header,
     Input,
     Label,
     Select,
@@ -28,35 +31,91 @@ from models.account import Account
 from models.transactions import Transaction
 
 
-class FolderTree(DirectoryTree):
+class Menu(Screen):
+    """
+    A menu screen
 
-    def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
-        return [
-            path
-            for path in paths
-            if path.is_dir()
-            and not path.name.startswith(".")
-            and not path.name.startswith("_")
-        ]
+    Attributes:
+        BINDINGS: (tuple[Binding]) The key bindings for the menu
+        app_state: (Application) The application state
+    """
 
+    BINDINGS = (
+        Binding("q", "back", "Back"),
+        Binding("ctrl+w", "save", "Save"),
+        Binding("ctrl+l", "load", "Load"),
+    )
 
-class DatabaseTree(DirectoryTree):
+    def __init__(self, app_state: Application, **kwargs):
+        """
+        Initialise the class
 
-    def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
-        return [
-            path for path in paths if path.is_dir() and not path.name.startswith("_")
-        ]
+        Args:
+            app_state: The application state
+            **kwargs: Other keyword arguments for the base class
+        """
+
+        super().__init__(**kwargs)
+        self.app_state = app_state
+
+    def compose(self) -> ComposeResult:
+        """Construct the widgets on the screen"""
+
+        yield Header()
+        yield Footer()
+
+    def action_back(self) -> None:
+        """Go back a screen or quit the app"""
+
+        self.dismiss()
+
+    def action_save(self) -> None:
+        """Save the current state to the database"""
+
+        self.app_state.repos.account_repo.save_accounts(self.app_state.state.accounts)
+        self.app_state.repos.account_repo.save_history(self.app_state.state.payments)
+        self.app_state.repos.account_repo.save_history(self.app_state.state.charges)
+        self.app_state.repos.ignore_repo.save_all_ignore(
+            self.app_state.state.words_to_ignore
+        )
+
+        self.app_state.state.clear_payments()
+        self.app_state.state.clear_charges()
+
+        self.notify("Saved To Database", timeout=5)
+
+    def action_load(self) -> None:
+        """Load from the database"""
+
+        self.app_state.load_from_db()
+
+        self.notify("Loaded From Database", timeout=5)
 
 
 class StatusBox(VerticalGroup):
+    """
+    Display the application state
 
-    def __init__(self, app: Application, **kwargs) -> None:
+    Attributes:
+        border_title: (str) The title of the widget
+        app_state: (Application) The application state
+    """
 
-        super().__init__(**kwargs)
+    def __init__(self, app_state: Application, **kwargs) -> None:
+        """
+        Initialise the widget
+
+        Args:
+            app_state: The application state
+            **kwargs: Other key word arguments
+        """
+
+        super().__init__(**kwargs, id="status-box")
         self.border_title = "Loaded Data"
-        self.app_state = app
+        self.app_state = app_state
 
     def compose(self) -> ComposeResult:
+        """Construct the widgets on the screen"""
 
         state = self.app_state.state
 
@@ -103,15 +162,18 @@ class StatusBox(VerticalGroup):
             )
 
     def on_mount(self) -> None:
+        """On starting of the widget"""
 
         self.app_state.state.subscribe(self.refresh_status)
         self.refresh_status()
 
     def on_unmount(self) -> None:
+        """On closing on the widget"""
 
         self.app_state.state.unsubscribe(self.refresh_status)
 
     def refresh_status(self) -> None:
+        """Refresh display"""
 
         state = self.app_state.state
 
@@ -126,14 +188,68 @@ class StatusBox(VerticalGroup):
         self.query_one("#status-ignore", Static).update(str(len(state.words_to_ignore)))
 
 
+class FolderTree(DirectoryTree):
+    """A directory tree to display folders"""
+
+    def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
+        """
+        Filter the display to display only folders
+
+        Args:
+            paths: The paths in the current working directory
+
+        Returns:
+            The paths of only folders
+        """
+
+        return [
+            path
+            for path in paths
+            if path.is_dir()
+            and not path.name.startswith(".")
+            and not path.name.startswith("_")
+        ]
+
+
+class DatabaseTree(DirectoryTree):
+    """A directory tree to display only folders but also hidden folders"""
+
+    def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
+        """
+        Filter display to show folders and hidden folders
+
+        Args:
+            paths: The paths in the current working directory
+
+        Returns:
+            The paths of folders and hidden folders
+        """
+
+        return [
+            path for path in paths if path.is_dir() and not path.name.startswith("_")
+        ]
+
+
 class ConfirmScreen(ModalScreen[bool]):
+    """
+    A popup screen to for confirmation
+
+    Attributes:
+        message: (str) The message to display
+    """
 
     def __init__(self, message: str) -> None:
+        """
+        Initialise the screen
 
+        Args:
+            message: The message to display
+        """
         super().__init__()
         self.message = message
 
     def compose(self) -> ComposeResult:
+        """Construct the widgets on the screen"""
 
         with VerticalScroll(classes="dialog"):
 
@@ -146,11 +262,18 @@ class ConfirmScreen(ModalScreen[bool]):
             yield Button.error("Cancel", id="cancel")
 
     def compose_content(self) -> Generator[Widget, None, None]:
+        """Construct widgets of subclasses"""
 
         yield from ()
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """
+        Runs when a button is pressed
+
+        Args:
+            event: The button presss
+        """
 
         if event.button.id == "confirm":
             self.dismiss(True)
@@ -160,13 +283,26 @@ class ConfirmScreen(ModalScreen[bool]):
 
 
 class AppendScreen(ModalScreen[str]):
+    """
+    A popup screen for getting user choice on adding to or replacing state
+
+    Attributes:
+        message: (str) The message to display
+    """
 
     def __init__(self, message: str) -> None:
+        """
+        Initialise the screen
+
+        Args:
+            message: The message to display
+        """
 
         super().__init__()
         self.message = message
 
     def compose(self) -> ComposeResult:
+        """Construct the widgets on the screen"""
 
         with Vertical(classes="dialog"):
 
@@ -177,20 +313,42 @@ class AppendScreen(ModalScreen[str]):
             yield Button.warning("Replace", id="replace")
             yield Button.error("Cancel", id="cancel")
 
+    @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """
+        Runs when a button is pressed
+
+        Args:
+            event: The button presss
+        """
 
         self.dismiss(event.button.id)
 
 
 class ImportBalancesScreen(ModalScreen[Path | None]):
+    """
+    A popup screen to import matching balances for account import
+
+    Attributes:
+        import_folder: (Path) The path of the folder to import from
+        filepath: (Path) The file to import
+    """
 
     def __init__(self, import_folder: Path) -> None:
+        """
+        Initialise the screen
+
+        Args:
+            import_folder: The folder to import from
+            filepath: The path of the file to import. None until selected from directory tree
+        """
 
         super().__init__()
         self.import_folder = import_folder
         self.filepath = None
 
     def compose(self) -> ComposeResult:
+        """Construct the widgets on the screen"""
 
         with Vertical(classes="dialog"):
 
@@ -211,12 +369,24 @@ class ImportBalancesScreen(ModalScreen[Path | None]):
     def on_directiory_tree_file_selected(
         self, event: DirectoryTree.FileSelected
     ) -> None:
+        """
+        Runs when a file is selected
+
+        Args:
+            event: The event of the file selection
+        """
 
         self.filepath = event.path
         self.query_one("#confirm", Button).disabled = False
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """
+        Runs when a button is pressed
+
+        Args:
+            event: The button presss
+        """
 
         if event.button.id == "confirm":
             self.dismiss(self.filepath)
@@ -225,34 +395,67 @@ class ImportBalancesScreen(ModalScreen[Path | None]):
 
 
 class ConfirmChargesScreen(ConfirmScreen):
+    """
+    A popup screen to confirm generated charges
+
+    Attributes:
+        charges: (list[Transaction]) A list of charges to confirm
+    """
 
     def __init__(self, message: str, charges: list[Transaction]) -> None:
+        """
+        Initialise the screen
+
+        Args:
+            message: The message to display
+            charges: A list of charges to confirm
+        """
 
         super().__init__(message)
         self.charges = charges
 
     def compose_content(self) -> Generator[Widget, None, None]:
+        """Construct the widgets on the screen"""
 
         charge_preview = DataTable(zebra_stripes=True, cursor_type="row")
         charge_preview.add_columns("Account", "Date", "Description", "Amount")
 
         for charge in self.charges:
             charge_preview.add_row(
-                charge.account, charge.date, charge.details, charge.amount
+                Text(f"{charge.account}", style="cyan"),
+                charge.date,
+                charge.details,
+                charge.amount,
             )
 
         yield charge_preview
 
 
 class AccountPicker(ModalScreen[Account | str | None]):
+    """
+    A popup screen for selecting an account
+
+    Attributes:
+        accounts: (list[Account]) The accounts to select from
+        message: (str) The message to display
+    """
 
     def __init__(self, message: str, accounts: list[Account]) -> None:
+        """
+        Initialise the screen
+
+        Args:
+            message: The message to display
+            accounts: The accounts to choose from
+        """
 
         super().__init__()
         self.accounts = accounts
         self.message = message
 
     def compose(self) -> ComposeResult:
+        """Construct the widgets on the screen"""
+
         with VerticalScroll(classes="dialog"):
 
             with HorizontalGroup():
@@ -264,6 +467,7 @@ class AccountPicker(ModalScreen[Account | str | None]):
             yield DataTable(zebra_stripes=True, cursor_type="row", id="accounts")
 
     def on_mount(self) -> None:
+        """On starting of the widget"""
 
         account_table = self.query_one("#accounts", DataTable)
         account_table.add_columns("Account ID", "Name", "Site Number", "Active")
@@ -279,6 +483,12 @@ class AccountPicker(ModalScreen[Account | str | None]):
 
     @on(DataTable.RowSelected)
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """
+        Runs when a row is selected
+
+        Args:
+            event: The row selection
+        """
 
         account_id = event.row_key.value
 
@@ -295,6 +505,12 @@ class AccountPicker(ModalScreen[Account | str | None]):
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """
+        Runs when a button is pressed
+
+        Args:
+            event: The button presss
+        """
 
         if event.button.id == "none":
             self.dismiss("None")
@@ -303,13 +519,26 @@ class AccountPicker(ModalScreen[Account | str | None]):
 
 
 class EnterAmountScreen(ModalScreen[str | None]):
+    """
+    A popup screen to enter an amount
+
+    Attributes:
+        message: (str) The message to display
+    """
 
     def __init__(self, message: str) -> None:
+        """
+        Initialise the screen
+
+        Args:
+            message: The message to display
+        """
 
         super().__init__()
         self.message = message
 
     def compose(self) -> ComposeResult:
+        """Construct the widgets on the screen"""
 
         with Vertical(classes="dialog"):
 
@@ -323,6 +552,12 @@ class EnterAmountScreen(ModalScreen[str | None]):
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """
+        Runs when a button is pressed
+
+        Args:
+            event: The button presss
+        """
 
         if event.button.id == "confirm":
             self.dismiss(self.query_one("#amount", Input).value)
@@ -331,10 +566,26 @@ class EnterAmountScreen(ModalScreen[str | None]):
 
 
 class ReviewBalanceScreen(ModalScreen[list[Account] | None]):
+    """
+    A popup screen to review payments
+
+    Attributes:
+        message: (str) The message to display
+        payments: (list[Transaction]) The payments to review
+        accounts: (list[Account]) The accounts to review
+    """
 
     def __init__(
         self, message: str, accounts: list[Account], payments: list[Transaction]
     ) -> None:
+        """
+        Initialise the screen
+
+        Args:
+            message: The message to display
+            payments: The payments to review
+            accounts: The accounts to review
+        """
 
         super().__init__()
         self.message = message
@@ -342,6 +593,7 @@ class ReviewBalanceScreen(ModalScreen[list[Account] | None]):
         self.accounts = deepcopy(accounts)
 
     def compose(self) -> ComposeResult:
+        """Construct the widgets on the screen"""
 
         with VerticalScroll(classes="dialog"):
 
@@ -354,6 +606,7 @@ class ReviewBalanceScreen(ModalScreen[list[Account] | None]):
             yield Button.error("Cancel", id="cancel")
 
     def on_mount(self) -> None:
+        """On starting of the widget"""
 
         review_table = self.query_one("#history", DataTable)
         review_table.add_columns(
@@ -422,6 +675,12 @@ class ReviewBalanceScreen(ModalScreen[list[Account] | None]):
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """
+        Runs when a button is pressed
+
+        Args:
+            event: The button presss
+        """
 
         if event.button.id == "confirm":
             self.dismiss(self.accounts)
@@ -431,8 +690,22 @@ class ReviewBalanceScreen(ModalScreen[list[Account] | None]):
 
 
 class ProccessUnknownScreen(ModalScreen[str | Account | None]):
+    """
+    A popup screen to get user choice for handlig an unknown word
+
+    Attributes:
+        unknown: (str) The word to handle
+        accounts: (list[Account]) A list of accounts that the word could be added as an alias for
+    """
 
     def __init__(self, unknown: str, accounts_state: list[Account]):
+        """
+        Initialise the screen
+
+        Args:
+            unknown: The unknown word
+            accounts: The accounts that the word could be added as an alias for
+        """
 
         super().__init__()
         self.unknown = unknown
@@ -442,6 +715,7 @@ class ProccessUnknownScreen(ModalScreen[str | Account | None]):
         ]
 
     def compose(self) -> ComposeResult:
+        """Construct the widgets on the screen"""
 
         with Vertical(classes="dialog"):
             with HorizontalGroup():
@@ -474,6 +748,12 @@ class ProccessUnknownScreen(ModalScreen[str | Account | None]):
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        """
+        Runs when a button is pressed
+
+        Args:
+            event: The button presss
+        """
 
         match event.button.id:
 
@@ -497,21 +777,37 @@ class ProccessUnknownScreen(ModalScreen[str | Account | None]):
 
     @on(Select.Changed)
     def on_select_changed(self) -> None:
+        """Runs when a select widget is changed"""
 
         self.query_one("#confirm", Button).disabled = False
 
 
 class ReviewUnknownScreen(ConfirmScreen):
+    """
+    A popup sreen to review unknown words
+
+    Attributes:
+        ignore_to_add: (set[str]) The words to add to the ignored words
+        alias_to_add: (dict[str, Account]) The words to add as aliases and the respective account
+    """
 
     def __init__(
         self, message: str, ignore_to_add: set, alias_to_add: dict[str, Account]
     ) -> None:
+        """
+        Initialise the screen
+
+        Args:
+            ignore_to_add: The words to add to ignored words
+            alias_to_add: The words to add as aliases and the respective account
+        """
 
         super().__init__(message)
         self.ignore_to_add = ignore_to_add
         self.alias_to_add = alias_to_add
 
     def compose_content(self) -> Generator[DataTable, None, None]:
+        """Construct the widgets on the screen"""
 
         unknown_table = DataTable(zebra_stripes=True, id="unknown")
         unknown_table.add_columns("Word", "Outcome")

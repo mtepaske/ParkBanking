@@ -1,3 +1,8 @@
+#settings-menu {
+    layout: horizontal;
+    align: center top;
+}
+
 .input-row {
     width: auto;
     height: 3;
