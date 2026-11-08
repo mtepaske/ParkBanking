@@ -1,5 +1,6 @@
 from collections.abc import Generator, Iterable
 from copy import deepcopy
+from datetime import date
 from pathlib import Path
 
 from rich.text import Text
@@ -22,6 +23,7 @@ from textual.widgets import (
     Header,
     Input,
     Label,
+    MaskedInput,
     Select,
     Static,
 )
@@ -29,6 +31,7 @@ from textual.widgets import (
 from application import Application
 from models.account import Account
 from models.transactions import Transaction
+from services.date import end_of_fy, get_date_from_str, start_of_fy
 from services.settings import get_setting
 
 
@@ -410,6 +413,67 @@ class ImportBalancesScreen(ModalScreen[Path | None]):
         if event.button.id == "confirm":
             self.dismiss(self.filepath)
         else:
+            self.dismiss()
+
+
+class SelectDateRange(ModalScreen[tuple[date, date] | None]):
+
+    def __init__(self, message: str):
+
+        super().__init__()
+        self.message = message
+        self.start_date = start_of_fy()
+        self.end_date = end_of_fy()
+
+    def compose(self) -> ComposeResult:
+
+        with VerticalGroup(classes="dialog"):
+
+            yield Label(self.message)
+
+            with HorizontalGroup():
+
+                with VerticalGroup():
+
+                    yield Static("Start Date")
+                    yield MaskedInput(
+                        "9999-99-99", value=str(self.start_date), id="start-date"
+                    )
+
+                with VerticalGroup():
+
+                    yield Static("End Date")
+                    yield MaskedInput(
+                        "9999-99-99", value=str(self.end_date), id="end-date"
+                    )
+
+            yield Button.success("Confirm", id="confirm")
+            yield Button.error("Cancel", id="cancel")
+
+    @on(MaskedInput.Submitted)
+    def on_maskedinput_submitted(self, event: MaskedInput.Submitted):
+
+        match event.control.id:
+
+            case "start-date":
+
+                start_date = self.query_one("#start-date", MaskedInput).value
+                self.start_date = get_date_from_str(start_date)
+
+            case "end-date":
+
+                end_date = self.query_one("#end-date", MaskedInput).value
+                self.end_date = get_date_from_str(end_date)
+
+    @on(Button.Pressed)
+    def on_button_pressed(self, event: Button.Pressed):
+
+        if event.button.id == "confirm":
+
+            self.dismiss((self.start_date, self.end_date))
+
+        else:
+
             self.dismiss()
 
 
