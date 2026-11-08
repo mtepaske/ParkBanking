@@ -123,14 +123,31 @@ class AppState:
         self.words_to_ignore: set[str] = set()
         self.notify_changed()
 
+    def add_unknown(self, word: str):
+        self.unknown_words.add(word)
+        self.notify_changed()
+
+    def remove_unknown(self, word: str):
+        self.unknown_words.remove(word)
+        self.notify_changed()
+
+    def clear_unknown(self):
+        self.unknown_words: set[str] = set()
+        self.notify_changed()
+
     def add_payment(self, payment: Transaction):
 
         for old_payment in self.payments:
             if (
                 payment.date == old_payment.date
                 and payment.amount == old_payment.amount
-                and payment.details == old_payment.details
+                and payment.original_details == old_payment.original_details
                 and payment.account_id == old_payment.account_id
+                and payment.account_id is not None
+                or payment.date == old_payment.date
+                and payment.amount == old_payment.amount
+                and payment.original_details == old_payment.original_details
+                and payment.account == old_payment.account
             ):
                 raise DuplicateTransaction(f"Transaction {payment} Is Already Loaded")
 
@@ -152,12 +169,12 @@ class AppState:
             if (
                 charge.date == old_charge.date
                 and charge.amount == old_charge.amount
-                and charge.details == old_charge.details
+                and charge.original_details == old_charge.original_details
                 and charge.account_id == old_charge.account_id
                 and charge.account_id is not None
                 or charge.date == old_charge.date
                 and charge.amount == old_charge.amount
-                and charge.details == old_charge.details
+                and charge.original_details == old_charge.original_details
                 and charge.account == old_charge.account
             ):
                 raise DuplicateTransaction(f"Transaction {charge} Is Already Loaded")

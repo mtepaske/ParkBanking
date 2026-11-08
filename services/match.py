@@ -17,8 +17,8 @@ class Matcher:
 
     def __init__(self, accounts: list[Account], ignore: set[str]) -> None:
         self.accounts = accounts
-        self.ignore = ignore
         self.unknown = set()
+        self.ignore = ignore
 
     def clean_desc(self, description: list[str]) -> list[str]:
         """
@@ -49,14 +49,18 @@ class Matcher:
         """
         possible = set()
         details = self.clean_desc(transaction.details)
+
         for word in details:
             found = False
+
             for account in self.accounts:
                 if word in account.aliases:
                     found = True
                     possible.add(account)
+
             if not found:
                 self.unknown.add(word)
+
         return list(possible)
 
 

@@ -229,7 +229,7 @@ class Balance:
 
         return money(balance / num_of_payments)
 
-    def add_payment(self, amount: Decimal) -> None:
+    def add_payment(self, amount: Decimal) -> tuple[Decimal, Decimal, Decimal]:
         """
         Minus an amount from total balance
 
@@ -240,6 +240,11 @@ class Balance:
             ValueError: If the amount is negative
         """
 
+        remaining = self.remaining
+        outstanding = self.outstanding
+        credit = self.credit
+        balance = self.balance
+
         # Normalise the amount to represent money
         amount = money(amount)
 
@@ -248,42 +253,65 @@ class Balance:
             raise ValueError("Amount must be greater than 0")
 
         # First removed from outstanding fees
-        if amount < self.outstanding:
-            self.outstanding -= amount
+        if amount < outstanding:
+            outstanding -= amount
 
         # Then removes from remaining fees
-        elif amount < self.balance:
-            amount -= self.outstanding
-            self.outstanding = Decimal("0.00")
-            self.remaining -= amount
+        elif amount < balance:
+            amount -= outstanding
+            outstanding = Decimal("0.00")
+            remaining -= amount
 
         # Adds left over amount to credit
         else:
-            amount -= self.outstanding
-            self.outstanding = Decimal("0.00")
-            amount -= self.remaining
-            self.remaining = Decimal("0.00")
-            self.credit += amount
+            amount -= outstanding
+            outstanding = Decimal("0.00")
+            amount -= remaining
+            remaining = Decimal("0.00")
+            credit += amount
 
-    def add_charge(self, amount: Decimal) -> None:
+        return (remaining, outstanding, credit)
 
+    def add_charge(self, amount: Decimal) -> tuple[Decimal, Decimal, Decimal]:
+
+        annual = self.annual
+        remaining = self.remaining
+        outstanding = self.outstanding
+        credit = self.credit
         amount = money(amount)
 
+        # Validation
         if amount >= 0:
             raise ValueError("Amount Must Be Less Than 0")
 
+        # Convert to positive value
         amount = abs(amount)
-        self.remaining += amount
-        if self.credit > Decimal(0):
-            if self.credit < self.remaining:
-                self.remaining -= self.credit
-                self.credit = Decimal(0)
+        remaining += amount
+
+        # If there is any credit, reduce remianing amount
+        if credit > Decimal(0):
+
+            # If the remaining is more then credit
+            if credit < remaining:
+                remaining -= credit
+                credit = Decimal(0)
+
+            # If remaining is less then the credit
             else:
-                self.credit -= self.remaining
-                self.remaining = Decimal(0)
-        if self.remaining > self.annual:
-            self.outstanding += self.remaining - self.annual
-            self.remaining -= self.outstanding
+                credit -= remaining
+                remaining = Decimal(0)
+
+        # If remaining is more then annual fees, add it to outstanding
+        if remaining > annual:
+            outstanding += remaining - annual
+            remaining -= outstanding
+
+        return (remaining, outstanding, credit)
+
+    def apply_transactions(self, amounts: tuple[Decimal, Decimal, Decimal]) -> None:
+        self.remaining = amounts[0]
+        self.outstanding = amounts[1]
+        self.credit = amounts[2]
 
     def expected_paid(self, as_of_date: date | None = None) -> Decimal:
         """

@@ -38,20 +38,12 @@
     color: green;
 }
 
-ConfirmScreen {
+ModalScreen {
     align: center middle;
 }
 
-ConfirmAppendScreen {
-    align: center middle;
-}
-
-ImportBalancesScreen {
-    align: center middle;
-}
-
-EnterAmount {
-    align: center middle;
+AccountPicker {
+    align: center top;
 }
 
 .dialog {
@@ -63,6 +55,7 @@ EnterAmount {
     align: center middle;
 }
 
+
 .dialog Label {
     text-style: bold;
     margin: 1;
@@ -70,15 +63,34 @@ EnterAmount {
 
 .dialog Button {
     width: 100%;
-    margin-top: 1;
+    margin: 1;
 }
 
 .dialog Datatable {
     width: auto;
     height: auto;
+    margin-top: 1;
 }
 
 .dialog Input {
     width: 50;
     height: auto;
+}
+
+.dialog HorizontalGroup {
+    width: auto;
+    height: auto;
+    align: center middle
+}
+
+.dialog HorizontalGroup Select {
+    width: 1fr;
+    height: auto;
+    margin: 1;
+}
+
+.dialog HorizontalGroup Button {
+    width: 1fr;
+    height: auto;
+    margin: 1;
 }
