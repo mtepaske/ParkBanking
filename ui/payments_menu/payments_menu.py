@@ -1,16 +1,17 @@
-from application import Application
-from models.account import Account
 from rich.text import Text
-from services.match import Matcher, match_transactions
 from textual import on, work
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Footer, Header, Static
+
+from application import Application
+from models.account import Account
+from services.match import Matcher, match_transactions
 from ui.custom_widgets import (
     AccountPicker,
-    ConfirmUnknownScreen,
+    ProccessUnknownScreen,
     ReviewBalanceScreen,
     ReviewUnknownScreen,
     StatusBox,
@@ -247,7 +248,7 @@ class PaymentMenu(Screen):
         for unknown in self.app_state.state.unknown_words.copy():
 
             choice = await self.app.push_screen_wait(
-                ReviewUnknownScreen(unknown, self.app_state.state.accounts)
+                ProccessUnknownScreen(unknown, self.app_state.state.accounts)
             )
 
             match choice:
@@ -273,7 +274,7 @@ class PaymentMenu(Screen):
                     continue
 
         confirm = await self.app.push_screen_wait(
-            ConfirmUnknownScreen(
+            ReviewUnknownScreen(
                 "Confirm The Following Changes", ignore_to_add, alias_to_add
             )
         )

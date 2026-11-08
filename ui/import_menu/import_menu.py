@@ -40,8 +40,8 @@ from services.imports import (
 from services.settings import APP_DIRECTORY, get_setting
 from ui.custom_widgets import (
     AccountPicker,
-    ConfirmAppendScreen,
-    ConfirmCharges,
+    AppendScreen,
+    ConfirmChargesScreen,
     ImportBalancesScreen,
     StatusBox,
 )
@@ -344,12 +344,13 @@ class ImportMenu(Screen):
         self._account_for_history = await self.app.push_screen_wait(
             AccountPicker("For Which Account?", self.app_state.state.accounts)
         )
-        if self._account_for_history is None:
+        if self._account_for_history is None or self._account_for_history == "None":
             self.notify(
                 "Account History Import Cancelled", severity="warning", timeout=5
             )
             return
 
+        assert isinstance(self._account_for_history, Account)
         try:
             self.loaded_file = import_history(
                 str(filepath).removesuffix(".csv"), account=self._account_for_history
@@ -461,7 +462,7 @@ class ImportMenu(Screen):
 
             elif get_setting("append_transactions_on_import") == "Ask":
                 choice = await self.app.push_screen_wait(
-                    ConfirmAppendScreen(
+                    AppendScreen(
                         message="Add To Or Replace Previously Loaded Transactions?"
                     )
                 )
@@ -484,7 +485,7 @@ class ImportMenu(Screen):
                     break
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
-                        ConfirmAppendScreen(
+                        AppendScreen(
                             f"{transaction} Matches A Transaction Thats Already Loaded"
                         )
                     )
@@ -531,7 +532,7 @@ class ImportMenu(Screen):
                         and get_setting("append_transactions_on_import") == "Ask"
                     ):
                         choice = await self.app.push_screen_wait(
-                            ConfirmAppendScreen(
+                            AppendScreen(
                                 "Add To Or Replace Previously Loaded Transactions?"
                             )
                         )
@@ -569,7 +570,7 @@ class ImportMenu(Screen):
 
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
-                        ConfirmAppendScreen(
+                        AppendScreen(
                             f"{unmatched} Matches A Transaction Thats Already Loaded"
                         )
                     )
@@ -606,7 +607,7 @@ class ImportMenu(Screen):
 
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
-                        ConfirmAppendScreen(
+                        AppendScreen(
                             f"{matched} Matches A Payment Thats Already Loaded"
                         )
                     )
@@ -650,7 +651,7 @@ class ImportMenu(Screen):
             # Ask for input
             elif get_setting("append_accounts_on_import") == "Ask":
                 choice = await self.app.push_screen_wait(
-                    ConfirmAppendScreen(
+                    AppendScreen(
                         message="Add To Or Replace Previously Loaded Accounts?"
                     )
                 )
@@ -661,7 +662,7 @@ class ImportMenu(Screen):
                     return
 
         charge_confirm = await self.app.push_screen_wait(
-            ConfirmCharges(
+            ConfirmChargesScreen(
                 message="Please Confirm Autonmatically Generated Charges Are Correct",
                 charges=self._generated_charges,
             )
@@ -681,7 +682,7 @@ class ImportMenu(Screen):
                     self.app_state.state.add_account(account)
                     break
                 except DuplicateAccount:
-                    confirm = ConfirmAppendScreen(
+                    confirm = AppendScreen(
                         f"There is Already An Active Account For {account.site_number}"
                     )
                     if confirm == "replace":
@@ -712,7 +713,7 @@ class ImportMenu(Screen):
 
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
-                        ConfirmAppendScreen(
+                        AppendScreen(
                             f"The Generated Charge {charge} Matches A Charge Thats Already Loaded"
                         )
                     )
@@ -743,7 +744,7 @@ class ImportMenu(Screen):
     async def import_history(self):
 
         assert self.loaded_file is not None
-        assert self._account_for_history is not None
+        assert isinstance(self._account_for_history, Account)
         charges_to_add = []
 
         for payment in self.loaded_file:
@@ -759,7 +760,7 @@ class ImportMenu(Screen):
 
             if len(database_charges) != 0:
                 delete_previous = await self.app.push_screen_wait(
-                    ConfirmCharges(
+                    ConfirmChargesScreen(
                         message="The Following Charges And Payments Were Found In The Database, Would You Like To Delete Them?",
                         charges=database_charges,
                     )
@@ -787,7 +788,7 @@ class ImportMenu(Screen):
 
         if len(charges_to_delete) != 0:
             delete_previous = await self.app.push_screen_wait(
-                ConfirmCharges(
+                ConfirmChargesScreen(
                     message="The Following Charges And Payments Were Found In The History, Would You Like To Delete Them?",
                     charges=charges_to_delete,
                 )

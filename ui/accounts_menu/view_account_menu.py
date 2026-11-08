@@ -25,7 +25,7 @@ from textual.widgets import (
 from application import Application
 from models.account import Account
 from models.transactions import Transaction
-from ui.custom_widgets import ConfirmScreen, EnterAmount
+from ui.custom_widgets import ConfirmScreen, EnterAmountScreen
 
 
 class ViewAccountMenu(Screen):
@@ -293,7 +293,7 @@ class ViewAccountMenu(Screen):
     @work
     async def add_payment(self) -> None:
         assert self.account.balance is not None
-        amount = await self.app.push_screen_wait(EnterAmount("Enter Amount"))
+        amount = await self.app.push_screen_wait(EnterAmountScreen("Enter Amount"))
         if amount is None:
             return
         self.account.balance.add_payment(Decimal(amount))
@@ -301,7 +301,7 @@ class ViewAccountMenu(Screen):
     @work
     async def add_charge(self) -> None:
         assert self.account.balance is not None
-        amount = await self.app.push_screen_wait(EnterAmount("Enter Amount"))
+        amount = await self.app.push_screen_wait(EnterAmountScreen("Enter Amount"))
         if amount is None:
             return
         self.account.balance.add_charge(Decimal(amount))

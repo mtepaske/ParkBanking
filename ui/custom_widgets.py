@@ -49,7 +49,8 @@ class DatabaseTree(DirectoryTree):
 
 class StatusBox(VerticalGroup):
 
-    def __init__(self, app: Application, **kwargs):
+    def __init__(self, app: Application, **kwargs) -> None:
+
         super().__init__(**kwargs)
         self.border_title = "Loaded Data"
         self.app_state = app
@@ -65,22 +66,27 @@ class StatusBox(VerticalGroup):
                 classes="number",
                 id="status-transactions",
             )
+
         with HorizontalGroup(classes="status-row"):
             yield Static("Matched Payments: ", classes="status")
             yield Static(
                 str(len(state.payments)), classes="number", id="status-payments"
             )
+
         with HorizontalGroup(classes="status-row"):
             yield Static("Un Committed Charges: ", classes="status")
             yield Static(str(len(state.charges)), classes="number", id="status-charges")
+
         with HorizontalGroup(classes="status-row"):
             yield Static("Sites: ", classes="status")
             yield Static(str(len(state.sites)), classes="number", id="status-sites")
+
         with HorizontalGroup(classes="status-row"):
             yield Static("Accounts: ", classes="status")
             yield Static(
                 str(len(state.accounts)), classes="number", id="status-accounts"
             )
+
         with HorizontalGroup(classes="status-row"):
             yield Static("Words: ", classes="status")
             yield Static(
@@ -89,14 +95,17 @@ class StatusBox(VerticalGroup):
                 id="status-ignore",
             )
 
-    def on_mount(self):
+    def on_mount(self) -> None:
+
         self.app_state.state.subscribe(self.refresh_status)
         self.refresh_status()
 
-    def on_unmount(self):
+    def on_unmount(self) -> None:
+
         self.app_state.state.unsubscribe(self.refresh_status)
 
-    def refresh_status(self):
+    def refresh_status(self) -> None:
+
         state = self.app_state.state
 
         self.query_one("#status-transactions", Static).update(
@@ -111,92 +120,111 @@ class StatusBox(VerticalGroup):
 
 class ConfirmScreen(ModalScreen[bool]):
 
-    def __init__(self, message: str):
+    def __init__(self, message: str) -> None:
+
         super().__init__()
         self.message = message
 
     def compose(self) -> ComposeResult:
+
         with Vertical(classes="dialog"):
-            yield Label(self.message)
+
+            with HorizontalGroup():
+                yield Label(self.message)
+
             yield from self.compose_content()
+
             yield Button.success("Confirm", id="confirm")
             yield Button.error("Cancel", id="cancel")
 
     def compose_content(self) -> Generator[Widget, None, None]:
+
         yield from ()
 
-    def on_button_pressed(self, event: Button.Pressed):
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+
         if event.button.id == "confirm":
             self.dismiss(True)
+
         else:
             self.dismiss(False)
 
 
-class ConfirmAppendScreen(ModalScreen[str]):
+class AppendScreen(ModalScreen[str]):
 
     def __init__(self, message: str) -> None:
+
         super().__init__()
         self.message = message
 
     def compose(self) -> ComposeResult:
+
         with Vertical(classes="dialog"):
-            yield Label(self.message)
+
+            with HorizontalGroup():
+                yield Label(self.message)
+
             yield Button.success("Add To", id="append")
             yield Button.warning("Replace", id="replace")
             yield Button.error("Cancel", id="cancel")
 
-    def on_button_pressed(self, event: Button.Pressed):
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+
         self.dismiss(event.button.id)
 
 
 class ImportBalancesScreen(ModalScreen[Path | None]):
 
-    def __init__(self, import_folder: Path):
+    def __init__(self, import_folder: Path) -> None:
+
         super().__init__()
         self.import_folder = import_folder
         self.filepath = None
 
     def compose(self) -> ComposeResult:
+
         with Vertical(classes="dialog"):
-            yield Label(
-                "Please Selected File Containing Balance Information For Imported Accounts"
-            )
-            yield DirectoryTree(
-                str(self.import_folder), classes="tree", id="balance-tree"
-            )
+
+            with HorizontalGroup():
+                yield Label(
+                    "Please Selected File Containing Balance Information For Imported Accounts"
+                )
+
+            with HorizontalGroup():
+                yield DirectoryTree(
+                    str(self.import_folder), classes="tree", id="balance-tree"
+                )
+
             yield Button.success("Confirm", disabled=True, id="confirm")
             yield Button.error("Cancel", id="cancel")
 
     @on(DirectoryTree.FileSelected)
-    def on_directiory_tree_file_selected(self, event: DirectoryTree.FileSelected):
+    def on_directiory_tree_file_selected(
+        self, event: DirectoryTree.FileSelected
+    ) -> None:
+
         self.filepath = event.path
         self.query_one("#confirm", Button).disabled = False
 
     @on(Button.Pressed)
-    def on_button_pressed(self, event: Button.Pressed):
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+
         if event.button.id == "confirm":
             self.dismiss(self.filepath)
         else:
             self.dismiss()
 
 
-class ConfirmCharges(ModalScreen[bool | None]):
+class ConfirmChargesScreen(ConfirmScreen):
 
     def __init__(self, message: str, charges: list[Transaction]) -> None:
-        super().__init__()
-        self.message = message
+
+        super().__init__(message)
         self.charges = charges
 
-    def compose(self) -> ComposeResult:
-        with VerticalScroll(classes="dialog"):
-            yield Label(self.message)
-            yield DataTable(zebra_stripes=True, id="charge-preview")
-            yield Button.success("Confirm", id="confirm")
-            yield Button.error("Cancel", id="cancel")
+    def compose_content(self) -> Generator[Widget, None, None]:
 
-    def on_mount(self) -> None:
-        charge_preview = self.query_one("#charge-preview", DataTable)
-
+        charge_preview = DataTable()
         charge_preview.add_columns("Account", "Date", "Description", "Amount")
 
         for charge in self.charges:
@@ -204,29 +232,30 @@ class ConfirmCharges(ModalScreen[bool | None]):
                 charge.account, charge.date, charge.original_details, charge.amount
             )
 
-    @on(Button.Pressed)
-    def on_button_pressed(self, event: Button.Pressed):
-        if event.button.id == "confirm":
-            self.dismiss(True)
-        else:
-            self.dismiss(False)
+        yield charge_preview
 
 
 class AccountPicker(ModalScreen[Account | str | None]):
 
-    def __init__(self, message: str, accounts: list[Account]):
+    def __init__(self, message: str, accounts: list[Account]) -> None:
+
         super().__init__()
         self.accounts = accounts
         self.message = message
 
     def compose(self) -> ComposeResult:
         with VerticalScroll(classes="dialog"):
-            yield Label(self.message)
-            yield Button.warning("No Match", id="none")
+
+            with HorizontalGroup():
+                yield Label(self.message)
+
+            yield Button.warning("No Account", id="none")
             yield Button.error("Cancel", id="cancel")
+
             yield DataTable(zebra_stripes=True, cursor_type="row", id="accounts")
 
-    def on_mount(self):
+    def on_mount(self) -> None:
+
         account_table = self.query_one("#accounts", DataTable)
         account_table.add_columns("Account ID", "Name", "Site Number", "Active")
 
@@ -241,13 +270,16 @@ class AccountPicker(ModalScreen[Account | str | None]):
 
     @on(DataTable.RowSelected)
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+
         self.notify("Row Selected")
         account_id = event.row_key.value
+
         if account_id is None:
             selected: list = event.data_table.get_row(event.row_key)
             for account in self.accounts:
                 if selected[1] == account.name:
                     self.dismiss(account)
+
         else:
             for account in self.accounts:
                 if account_id == str(account.account_id):
@@ -255,49 +287,51 @@ class AccountPicker(ModalScreen[Account | str | None]):
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
+
         if event.button.id == "none":
             self.dismiss("None")
         else:
             self.dismiss()
 
 
-class EnterAmount(ModalScreen[str | None]):
+class EnterAmountScreen(ModalScreen[str | None]):
 
     def __init__(self, message: str) -> None:
+
         super().__init__()
         self.message = message
 
     def compose(self) -> ComposeResult:
+
         with Vertical(classes="dialog"):
-            yield Label(self.message, id="amount")
+
+            with HorizontalGroup():
+                yield Label(self.message, id="amount")
+
             yield Input(placeholder="$0")
+
             yield Button.success("Confirm", id="confirm")
             yield Button.error("Cancel", id="cancel")
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
+
         if event.button.id == "confirm":
             self.dismiss(self.query_one("#amount", Input).value)
         else:
             self.dismiss()
 
 
-class ReviewBalanceScreen(ModalScreen[bool | None]):
+class ReviewBalanceScreen(ConfirmScreen):
 
     def __init__(self, message: str, payments: list[Transaction]) -> None:
-        super().__init__()
-        self.message = message
+
+        super().__init__(message)
         self.payments = payments
 
-    def compose(self) -> ComposeResult:
-        with Vertical(classes="dialog"):
-            yield Label(self.message)
-            yield DataTable(zebra_stripes=True, id="review")
-            yield Button.success("Confirm", id="confirm")
-            yield Button.error("Cancel", id="cancel")
+    def content_compose(self) -> Generator[Widget, None, None]:
 
-    def on_mount(self) -> None:
-        review_table = self.query_one("#review", DataTable)
+        review_table = DataTable()
         review_table.add_columns(
             "Account",
             "Old Remaining",
@@ -354,15 +388,10 @@ class ReviewBalanceScreen(ModalScreen[bool | None]):
                 ),
             )
 
-    @on(Button.Pressed)
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "confirm":
-            self.dismiss(True)
-        else:
-            self.dismiss(False)
+        yield review_table
 
 
-class ReviewUnknownScreen(ModalScreen[None | Account | str]):
+class ProccessUnknownScreen(ModalScreen[str | Account | None]):
 
     def __init__(self, unknown: str, accounts_state: list[Account]):
 
@@ -400,21 +429,16 @@ class ReviewUnknownScreen(ModalScreen[None | Account | str]):
                     id="confirm",
                 )
 
-            with HorizontalGroup():
-                yield Button.warning("Skip", id="skip")
-
-            with HorizontalGroup():
-                yield Button.error("Skip All", id="skip-all")
-
-            with HorizontalGroup():
-                yield Button.error("Cancel", id="cancel")
+            yield Button.warning("Skip", id="skip")
+            yield Button.error("Skip All", id="skip-all")
+            yield Button.error("Cancel", id="cancel")
 
     @on(Button.Pressed)
-    def on_button_pressed(self, event: Button.Pressed):
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+
         match event.button.id:
 
             case "confirm":
-
                 account = self.query_one("#account", Select).value
 
                 if isinstance(account, Account):
@@ -433,27 +457,29 @@ class ReviewUnknownScreen(ModalScreen[None | Account | str]):
                 self.dismiss("ignore")
 
     @on(Select.Changed)
-    def on_select_changed(self):
+    def on_select_changed(self) -> None:
+
         self.query_one("#confirm", Button).disabled = False
 
 
-class ConfirmUnknownScreen(ConfirmScreen):
+class ReviewUnknownScreen(ConfirmScreen):
 
     def __init__(
         self, message: str, ignore_to_add: set, alias_to_add: dict[str, Account]
     ) -> None:
+
         super().__init__(message)
         self.ignore_to_add = ignore_to_add
         self.alias_to_add = alias_to_add
 
-    def compose_content(self):
+    def compose_content(self) -> Generator[DataTable, None, None]:
 
         unknown_table = DataTable(zebra_stripes=True, id="unknown")
-
         unknown_table.add_columns("Word", "Outcome")
 
         for ignore in self.ignore_to_add:
             unknown_table.add_row(ignore, "Add To Words To Ignore")
+
         for alias, account in self.alias_to_add.items():
             unknown_table.add_row(
                 alias, f"Add As Alias For {account.site_number}: {account.name}"
