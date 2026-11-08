@@ -3,7 +3,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from rich.text import Text
-from textual import on
+from textual import on, work
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import (
@@ -29,6 +29,7 @@ from textual.widgets import (
 from application import Application
 from models.account import Account
 from models.transactions import Transaction
+from services.settings import get_setting
 
 
 class Menu(Screen):
@@ -41,6 +42,7 @@ class Menu(Screen):
     """
 
     BINDINGS = (
+        Binding("Q", "quit", "Quit Application"),
         Binding("q", "back", "Back"),
         Binding("ctrl+w", "save", "Save"),
         Binding("ctrl+l", "load", "Load"),
@@ -63,6 +65,21 @@ class Menu(Screen):
 
         yield Header()
         yield Footer()
+
+    @work
+    async def action_quit(self) -> None:
+
+        if get_setting("auto_save_to_db") == "True":
+            self.action_save()
+            self.app.exit()
+        else:
+            confirm = await self.app.push_screen_wait(
+                ConfirmScreen("Unsaved Progress Will Be Lost. Do You Want To Continue?")
+            )
+            if confirm:
+                self.app.exit()
+            else:
+                return
 
     def action_back(self) -> None:
         """Go back a screen or quit the app"""

@@ -32,7 +32,7 @@ class MainMenu(Menu):
         # The buttons
         with VerticalGroup(id="buttons"):
             yield Button("Manage Accounts", id="accounts")
-            yield Button("Matching Menu", id="payments")
+            yield Button("Manage Payments", id="payments")
             yield Button("Import Files", id="import")
             yield Button("Export Files", id="export")
             yield Button("Settings", id="settings")
