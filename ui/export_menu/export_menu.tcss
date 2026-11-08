@@ -10,26 +10,26 @@
 
 #confirm-stack {
     align: center middle;
-    margin-top: 2;
     width: 100%;
     height: auto;
+    margin-top: 2;
 }
 
 #name-row {
-    height: auto;
     align: center middle;
+    height: auto;
 }
 
 #file-name {
+    content-align: center middle;
     width: 70%;
     height: auto;
-    content-align: center middle;
     margin: 1;
 }
 
 #confirm-row {
-    height: auto;
     align: center middle;
+    height: auto;
 }
 
 #confirm {

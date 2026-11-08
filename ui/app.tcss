@@ -23,10 +23,10 @@
 }
 
 .input-row Static {
+    content-align: left middle;
     text-style: bold;
     width: 20;
     height: 3;
-    content-align: left middle;
 }
 
 .input-row Input {
@@ -40,36 +40,36 @@
 }
 
 .select-row {
+    align: left middle;
     width: auto;
     height: 3;
-    align: left middle;
     margin: 1;
 }
 
-.select-row Static {
+.select-label {
+    content-align: left middle;
     text-style: bold;
     width: 20;
     height: 3;
-    content-align: left middle;
 }
 
 .select-row Select {
     width: 40;
-    height: auto;
+    height: 3;
 }
 
 .switch-row {
+    align: left middle;
     width: 60;
     height: 3;
-    align: left middle;
     margin: 1;
 }
 
 .switch-row Static {
+    content-align: left middle;
     text-style: bold;
     width: 40;
     height: 3;
-    content-align: left middle;
 }
 
 .switch-row Switch {
@@ -78,9 +78,9 @@
 }
 
 .tree-row {
+    align: left top;
     width: 90%;
     height: auto;
-    align: left top;
     margin: 1;
 }
 
@@ -90,17 +90,17 @@
 }
 
 /* Application status box */
-#app-status {
+.status-box {
     align: center bottom;
     width: auto;
     border: round $primary;
-    dock: bottom;
     padding: 1;
+    dock: bottom;
 }
 
 .status-row {
-    height: 2;
     width: auto;
+    height: 2;
 }
 
 .status {
@@ -124,12 +124,12 @@ AccountPicker {
 }
 
 .dialog {
+    align: center middle;
     width: auto;
     height: auto;
-    padding: 2;
     border: round $accent;
     background: $surface;
-    align: center middle;
+    padding: 2;
 }
 
 
@@ -155,9 +155,9 @@ AccountPicker {
 }
 
 .dialog HorizontalGroup {
+    align: center middle;
     width: auto;
     height: auto;
-    align: center middle
 }
 
 .dialog HorizontalGroup Select {

@@ -4,21 +4,21 @@
 }
 
 #menu {
+    align-horizontal: center;
     width: auto;
     height: auto;
-    align-horizontal: center;
 }
 
 #menu .header {
-    width: auto;
     text-style: bold;
     text-align: center;
+    width: auto;
 }
 
 #buttons {
+    align: center middle;
     width: 100%;
     height: auto;
-    align: center middle;
 }
 
 #buttons Button {

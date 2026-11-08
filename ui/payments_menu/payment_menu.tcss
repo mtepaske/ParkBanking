@@ -1,12 +1,12 @@
-#payment-menu {
+#payments-menu {
     layout: horizontal;
     align: center middle;
 }
 
 .button-row {
+    align: center middle;
     width: 100%;
     height: auto;
-    align: center middle;
     margin: 1;
 }
 

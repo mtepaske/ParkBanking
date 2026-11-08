@@ -46,7 +46,7 @@ class ViewAccountMenu(Menu):
             **kwargs: Other key word arguments for base class
         """
 
-        super().__init__(id="view-account-menu", **kwargs)
+        super().__init__(**kwargs)
         self.account = account
 
     def compose(self) -> ComposeResult:
@@ -96,21 +96,21 @@ class ViewAccountMenu(Menu):
                 yield Static("CONTACT DETAILS", classes="settings-title")
 
                 with HorizontalGroup(classes="input-row"):
-                    yield Static("Name: ", classes="label")
+                    yield Static("Name: ")
                     yield Input(value=self.account.name, id="name")
 
                 with HorizontalGroup(classes="input-row"):
-                    yield Static("Phone Number: ", classes="label")
+                    yield Static("Phone Number: ")
                     yield MaskedInput(
                         template="9999 999 999;0", value="0484 250 494", id="phone"
                     )
 
                 with HorizontalGroup(classes="input-row"):
-                    yield Static("Email Address: ", classes="label")
+                    yield Static("Email Address: ")
                     yield Input("placeholder", id="email")
 
                 with HorizontalGroup(classes="input-row"):
-                    yield Static("Postal Address: ", classes="label")
+                    yield Static("Postal Address: ")
                     yield Input("placeholder", id="address")
 
                 yield Static("SITE DETAILS", classes="settings-title")
@@ -125,25 +125,25 @@ class ViewAccountMenu(Menu):
                     )
 
                 with HorizontalGroup(classes="input-row"):
-                    yield Static("Extra Guests: ", classes="label")
+                    yield Static("Extra Guests: ")
                     yield MaskedInput("9;0", value="0", id="guests")
 
                 with HorizontalGroup(classes="switch-row"):
-                    yield Static("Air Conditioner", classes="switch-label")
+                    yield Static("Air Conditioner")
                     yield Switch(value=True, animate=True, id="ac")
 
                 with HorizontalGroup(classes="switch-row"):
-                    yield Static("Sewer", classes="switch-label")
+                    yield Static("Sewer")
                     yield Switch(value=False, animate=True, id="sewer")
 
                 with HorizontalGroup(classes="switch-row"):
-                    yield Static("Cabin", classes="switch-label")
+                    yield Static("Cabin")
                     yield Switch(value=False, animate=True, id="type")
 
                 yield Static("BALANCE DETAILS", classes="settings-title")
 
                 with HorizontalGroup(classes="input-row"):
-                    yield Static("Annual Fees: ", classes="label")
+                    yield Static("Annual Fees: ")
                     yield MaskedInput(
                         "$9999;0", value=f"${balance.annual}", id="annual"
                     )
@@ -209,7 +209,7 @@ class ViewAccountMenu(Menu):
 
     def get_account_history(self) -> list[Transaction]:
         """
-        Gets the account histoyr from the database and current app state
+        Gets the account history from the database and current app state
 
         Returns:
             A list of transactions representing the account history
@@ -220,7 +220,7 @@ class ViewAccountMenu(Menu):
         # Get the existsing history from the database
         if self.account.account_id is not None:
             history: list[Transaction] = self.app_state.repos.account_repo.get_history(
-                self.account.account_id
+                self.account
             )
         else:
             history: list[Transaction] = []
@@ -283,14 +283,14 @@ class ViewAccountMenu(Menu):
 
         # Populate the table
         history_table = self.query_one("#history", DataTable)
-        for index, (date, description, debit, credit, balance) in enumerate(rows):
+        history_table.clear()
+        for date, description, debit, credit, balance in rows:
             history_table.add_row(
                 Text(date, style="cyan"),
                 description,
                 Text(debit, style="red"),
                 Text(credit, style="green"),
                 balance,
-                key=str(index),
             )
 
     @on(Button.Pressed)
@@ -377,6 +377,7 @@ class ViewAccountMenu(Menu):
             type_str="Custom Payment",
         )
         payment.add_account(self.account)
+        assert payment.account is not None
 
         # Apply the paymet
         new_balance = self.account.balance.add_payment(payment.amount)
@@ -402,10 +403,11 @@ class ViewAccountMenu(Menu):
 
         charge = Transaction(
             date=get_str_from_date(get_today()),
-            amount=Decimal(amount),
+            amount=0 - Decimal(amount),
             type_str="Custom Charge",
         )
         charge.add_account(self.account)
+        assert charge.account is not None
 
         # Apply the charge
         new_balance = self.account.balance.add_charge(charge.amount)

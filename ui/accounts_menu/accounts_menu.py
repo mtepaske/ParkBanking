@@ -177,7 +177,11 @@ class AccountsMenu(Menu):
 
                 if selected[1].plain == account.name:
                     self.app.push_screen(
-                        ViewAccountMenu(app=self.app_state, account=account),
+                        ViewAccountMenu(
+                            app_state=self.app_state,
+                            account=account,
+                            id="view-account-menu",
+                        ),
                         callback=self.on_screen_close,
                     )
                     return
@@ -189,7 +193,11 @@ class AccountsMenu(Menu):
 
                 if account_id == str(account.account_id):
                     self.app.push_screen(
-                        ViewAccountMenu(app=self.app_state, account=account),
+                        ViewAccountMenu(
+                            app_state=self.app_state,
+                            account=account,
+                            id="view-account-menu",
+                        ),
                         callback=self.on_screen_close,
                     )
                     return

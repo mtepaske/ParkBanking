@@ -9,8 +9,8 @@
 }
 
 #confirm-row {
-    margin-top: 2;
     align: center middle;
+    margin-top: 2;
 }
 
 #confirm {

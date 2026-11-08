@@ -88,7 +88,7 @@ class ExportMenu(Menu):
                         "Export Selected File", disabled=True, id="confirm"
                     )
 
-            yield StatusBox(app_state=self.app_state, id="app-status")
+            yield StatusBox(app_state=self.app_state)
 
         # File preview
         with Vertical(classes="section"):

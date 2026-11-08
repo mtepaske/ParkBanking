@@ -3,14 +3,6 @@
     align: center top;
 }
 
-.section-title {
-    text-style: bold;
-    margin-top: 1;
-    margin-bottom: 1;
-    border-bottom: solid $accent;
-    padding-bottom: 1;
-}
-
 #actions {
     width: 100%;
     height: auto;

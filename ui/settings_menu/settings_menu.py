@@ -51,7 +51,7 @@ class SettingsMenu(Menu):
             yield Static("BUSINESS SETTINGS", classes="section-title")
 
             with HorizontalGroup(classes="input-row"):
-                yield Static("Business Name: ", classes="input-label")
+                yield Static("Business Name: ")
                 yield Input(value=self.settings["business_name"], id="business-name")
 
         # Data settings section
@@ -108,9 +108,7 @@ class SettingsMenu(Menu):
                 )
 
             with HorizontalGroup(classes="switch-row"):
-                yield Static(
-                    "Auto Load From Database On Start: ", classes="switch-label"
-                )
+                yield Static("Auto Load From Database On Start: ")
                 yield Switch(
                     value=self.settings["auto_load_from_db"] == "True",
                     animate=True,
@@ -118,7 +116,7 @@ class SettingsMenu(Menu):
                 )
 
             with HorizontalGroup(classes="switch-row"):
-                yield Static("Auto Save To Database On Close: ", classes="switch-label")
+                yield Static("Auto Save To Database On Close: ")
                 yield Switch(
                     value=self.settings["auto_save_to_db"] == "True",
                     animate=True,
@@ -132,7 +130,7 @@ class SettingsMenu(Menu):
             yield Static("FEE SETTINGS", classes="section-title")
 
             with HorizontalGroup(classes="input-row"):
-                yield Static("Base Rate: ", classes="input-label")
+                yield Static("Base Rate: ")
                 yield MaskedInput(
                     "$9999;0",
                     value=f'${self.settings["annual_fees_base_rate"]}',
@@ -140,7 +138,7 @@ class SettingsMenu(Menu):
                 )
 
             with HorizontalGroup(classes="input-row"):
-                yield Static("AC Charge: ", classes="input-label")
+                yield Static("AC Charge: ")
                 yield MaskedInput(
                     "$999;0",
                     value=f'${self.settings["annual_fees_ac_rate"]}',
@@ -148,7 +146,7 @@ class SettingsMenu(Menu):
                 )
 
             with HorizontalGroup(classes="input-row"):
-                yield Static("Sewer Charge: ", classes="input-label")
+                yield Static("Sewer Charge: ")
                 yield MaskedInput(
                     "$999;0",
                     value=f'${self.settings["annual_fees_sewer_rate"]}',
@@ -156,7 +154,7 @@ class SettingsMenu(Menu):
                 )
 
             with HorizontalGroup(classes="input-row"):
-                yield Static("Extra Nominated Visitors Charge: ", classes="input-label")
+                yield Static("Extra Nominated Visitors Charge: ")
                 yield MaskedInput(
                     "$99;0",
                     value=f'${self.settings["annual_fees_extra_guests_rate"]}',
@@ -164,7 +162,7 @@ class SettingsMenu(Menu):
                 )
 
             with HorizontalGroup(classes="input-row"):
-                yield Static("On-Time Payment Discount: ", classes="input-label")
+                yield Static("On-Time Payment Discount: ")
                 yield MaskedInput(
                     "$999;0",
                     value=f'${self.settings["annual_fees_discount"]}',
@@ -172,7 +170,7 @@ class SettingsMenu(Menu):
                 )
 
             with HorizontalGroup(classes="select-row"):
-                yield Static("Annual Period", classes="select-label")
+                yield Static("Annual Period: ", classes="select-label")
                 yield Select(
                     [("Financial Year", "FY"), ("Calendar Year", "CY")],
                     value=self.settings["annual_period"],

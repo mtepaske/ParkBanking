@@ -829,7 +829,7 @@ class ImportMenu(Menu):
         if self._account_for_history.account_id is not None:
 
             database_charges = self.app_state.repos.account_repo.get_history(
-                self._account_for_history.account_id
+                self._account_for_history
             )
 
             if len(database_charges) != 0:

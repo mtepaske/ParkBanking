@@ -110,7 +110,7 @@ class StatusBox(VerticalGroup):
             **kwargs: Other key word arguments
         """
 
-        super().__init__(**kwargs, id="status-box")
+        super().__init__(**kwargs, classes="status-box")
         self.border_title = "Loaded Data"
         self.app_state = app_state
 
@@ -543,9 +543,9 @@ class EnterAmountScreen(ModalScreen[str | None]):
         with Vertical(classes="dialog"):
 
             with HorizontalGroup():
-                yield Label(self.message, id="amount")
+                yield Label(self.message)
 
-            yield Input(placeholder="$0")
+            yield Input(placeholder="$0", id="amount")
 
             yield Button.success("Confirm", id="confirm")
             yield Button.error("Cancel", id="cancel")
@@ -652,17 +652,17 @@ class ReviewBalanceScreen(ModalScreen[list[Account] | None]):
                     else ""
                 ),
                 Text(" -> ", style="cyan"),
-                Text(f"{sign}${payment.amount:,.2f}", style="cyan"),
+                Text(f"{sign}${abs(payment.amount):,.2f}", style="cyan"),
                 Text(" -> ", style="cyan"),
                 Text(f"${new_balance[0]:,.2f}", style="green"),
                 (
                     Text(f"${new_balance[1]:,.2f}", style="green")
-                    if old_balance[1] != 0
+                    if new_balance[1] != 0
                     else ""
                 ),
                 (
                     Text(f"${new_balance[2]:,.2f}", style="green")
-                    if old_balance[2] != 0
+                    if new_balance[2] != 0
                     else ""
                 ),
                 Text(
