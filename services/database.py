@@ -316,6 +316,30 @@ class AccountRepository(Repository):
             for row in payment_rows
         ]
 
+    def get_payments_by_range(self, start: str, end: str) -> list[Transaction]:
+
+        statement_rows = self.execute(
+            """
+            SELECT *
+            FROM payments
+            WHERE amount > 0
+            AND date BETWEEN ? AND ?
+            """,
+            (start, end),
+        )
+
+        return [
+            Transaction(
+                date=row["date"],
+                amount=money(row["amount"]),
+                details=row["details"],
+                type_str=row["particulars"],
+                account_id=row["account_id"],
+                transaction_id=row["id"],
+            )
+            for row in statement_rows
+        ]
+
     def save_accounts(self, accounts: list[Account]) -> dict[str, int]:
         """
         Save a list of accounts to the database
