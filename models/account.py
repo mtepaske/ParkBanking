@@ -9,22 +9,23 @@ class Account:
 
 
     Attributes:
-        account_id: (int) The ID used for database queries. Gets assigned on first insertion to database
+        site_number: (str) The site number for the account
         name: (str) The name of the primary site holder
         balance: (Balance) The balance connected to the account. Should be assigned at or soon after initialisation
         active: (bool) The active status of the account
-        site_number: (str) The site number for the account
+        account_id: (int) The Account ID used for database queries. Gets assigned on first insertion to database
+        balance_id: (int) The Balance ID used for database queries. Gets assigned on first insertion to database
         aliases: (list[str]) A list of keywords to match agaisnt
     """
 
-    aliases: list[str]
+    aliases: set[str]
 
     def __init__(
         self,
         site_number: str | int,
         name: str,
         balance: Balance | None = None,
-        aliases: list[str] | None = None,
+        aliases: set[str] | None = None,
         active: bool = True,
         account_id: int | None = None,
         balance_id: int | None = None,
@@ -37,8 +38,9 @@ class Account:
             name: The name of the primary site holder
             balance: The balance connected to the account
             aliases: A list of keywords to match agaisnt. If empty will construct a list from the name and site number
-            account_id: The ID used for database queries. Gets assigned on first insertion to database
             active: The active status of the account
+            account_id: The Account ID used for database queries. Gets assigned on first insertion to database
+            balance_id: The Balance ID used for database queries. Gets assigned on first insertion to database
         """
 
         self.site_number = str(site_number)
@@ -49,15 +51,20 @@ class Account:
         self.balance_id = balance_id
 
         # If no aliases are supplied, construct a list from name and site number
-        self.aliases = aliases if aliases is not None else []
+        self.aliases = aliases if aliases is not None else set()
         if len(self.aliases) == 1 or len(self.aliases) == 0:
             names = self.name.split(" ")
             self.aliases.pop()
+
+            # Add all names to aliases
             for alias in names:
-                self.aliases.append(alias)
-                self.aliases.append(alias.upper())
-            self.aliases.append(self.site_number)
-            self.aliases.append(str(site_number))
+                self.aliases.add(alias)
+                self.aliases.add(alias.upper())
+                self.aliases.add(alias.lower())
+
+            # Add site number to aliases
+            self.aliases.add(self.site_number)
+            self.aliases.add(str(site_number))
 
         # Normalises site number to two digits
         if len(self.site_number) == 1:
@@ -98,6 +105,7 @@ class Account:
         else:
             account_id = int(account_id)
 
+        # Checks for a balance ID. If none is found it assigns None
         if balance_id == "None" or balance_id == "":
             balance_id = None
         else:
@@ -107,7 +115,7 @@ class Account:
         return cls(
             site_number=site_number,
             name=name,
-            aliases=aliases,
+            aliases=set(aliases),
             active=active,
             account_id=account_id,
             balance_id=balance_id,
@@ -136,14 +144,17 @@ class Account:
             new_site: The site number to change too
         """
 
-        self.site_number = new_site
+        # Remove the old site number from aliases
+        self.aliases.remove(self.site_number)
 
         # Adds new site number to existing aliases
-        self.aliases.append(new_site)
+        self.aliases.add(new_site)
 
         # Changes the site number of the assocciated balance
         if self.balance is not None:
             self.balance.site_number = new_site
+
+        self.site_number = new_site
 
     def change_name(self, new_name: str) -> None:
         """
@@ -153,34 +164,24 @@ class Account:
             new_name: The name to change too
         """
 
-        self.name = new_name
+        # Remove the old name from aliases
+        for name in self.name:
+            self.aliases.remove(name)
+            self.aliases.remove(name.upper())
+            self.aliases.remove(name.lower())
 
         # Adds new name to existing aliases
         new_name_split = new_name.split(" ")
         for name in new_name_split:
-            self.aliases.append(name)
-            self.aliases.append(name.upper())
+            self.aliases.add(name)
+            self.aliases.add(name.upper())
+
+        self.name = new_name
 
     def switch_active(self) -> None:
         """Switch the active status of the account"""
+
         self.active = not self.active
-
-    def add_alias(self, alias: str) -> bool:
-        """
-        Add a word to the existing aliases
-
-        Args:
-            alias: The word to add
-
-        Returns:
-            True if alias added. False if already already exists
-        """
-
-        if alias in self.aliases:
-            return False
-        else:
-            self.aliases.append(alias)
-            return True
 
     def to_dict(self) -> dict[str, str]:
         """

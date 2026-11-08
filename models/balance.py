@@ -20,6 +20,7 @@ def money(value: Decimal | float | str) -> Decimal:
     Returns:
         The normalised value
     """
+
     return Decimal(str(value)).quantize(CENT, rounding=ROUND_HALF_UP)
 
 
@@ -28,14 +29,14 @@ class Balance:
     Tracks balance information
 
     Attributes:
-        id: (int) The ID used for database queries. Gets assigned on first insertion
         account_id: (int) The ID for the associated account. Gets assigned on accounts first insertion
         site_number: (str) The site number for the account
         annual: (Decimal) The amount of annual fees for current financial period
         remaining: (Decimal) The amount of remaining fees for the current financial period
         outstanding: (Decimal) The amount of outstanding fees from previous financial periods
-        credit: (Decimal) The amount of credit
         pay_frequency: ('m', 'q', 'a') The indicated payment frequency
+        credit: (Decimal) The amount of credit. Defaults to $0
+        balance_id: (int) The ID used for database queries. Gets assigned on first insertion
     """
 
     def __init__(
@@ -80,7 +81,7 @@ class Balance:
         # Checks for valid pay frequency. If its invalid it reassigns as monthly
         try:
             if pay_frequency not in ["a", "q", "m"]:
-                raise ValueError("Invalid Pay Frequencyl, reassigning to m")
+                raise ValueError("Invalid Pay Frequency, reassigning to m")
         except ValueError:
             pay_frequency = "m"
         self.pay_frequency = pay_frequency
@@ -145,11 +146,13 @@ class Balance:
     @property
     def balance(self) -> Decimal:
         """The total fees owed"""
+
         return (self.outstanding + self.remaining) - self.credit
 
     @property
     def outstanding(self) -> Decimal:
         """The fees outsanding from previous financial periods"""
+
         return self._outstanding
 
     @outstanding.setter
@@ -173,6 +176,7 @@ class Balance:
     @property
     def remaining(self) -> Decimal:
         """The remianing fees from this financial period"""
+
         return self._remaining
 
     @remaining.setter
@@ -185,6 +189,7 @@ class Balance:
         Raises:
             ValueError: If the amount is negative
         """
+
         amount = money(amount)
         if amount < 0:
             raise ValueError("Remaining can not be negative")
@@ -198,6 +203,7 @@ class Balance:
         Args:
             new_frequency: Frequency to change to
         """
+
         self.pay_frequency = new_frequency
 
     def calc_payments(self, balance: Decimal, num_of_payments: int = 0) -> Decimal:
@@ -214,6 +220,7 @@ class Balance:
         Raises:
             ValueError: If the number of payments is less than 0
         """
+
         if num_of_payments < 0:
             raise ValueError("Number of payments must be greater then 0")
 
@@ -229,26 +236,40 @@ class Balance:
 
         return money(balance / num_of_payments)
 
-    def add_payment(self, amount: Decimal) -> tuple[Decimal, Decimal, Decimal]:
+    def add_payment(
+        self,
+        amount: Decimal,
+        initial: tuple[Decimal, Decimal, Decimal] | None = None,
+    ) -> tuple[Decimal, Decimal, Decimal]:
         """
-        Minus an amount from total balance
+        Returns what the new balance would be if a payment is added
 
         Args:
             amount: The amount to remove
+            initial: The balance amounts to work off. Defaults to current amounts
+
+        Returns:
+            A tuple containing the new balance amounts
 
         Raises:
             ValueError: If the amount is negative
         """
 
-        remaining = self.remaining
-        outstanding = self.outstanding
-        credit = self.credit
-        balance = self.balance
+        # Assign initial amounts
+        if initial is None:
+            remaining = self.remaining
+            outstanding = self.outstanding
+            credit = self.credit
+            balance = self.balance
+
+        else:
+            remaining, outstanding, credit = initial
+            balance = remaining + outstanding - credit
 
         # Normalise the amount to represent money
         amount = money(amount)
 
-        # Checks for negative amounts
+        # Validation
         if amount <= 0:
             raise ValueError("Amount must be greater than 0")
 
@@ -272,15 +293,36 @@ class Balance:
 
         return (remaining, outstanding, credit)
 
-    def add_charge(self, amount: Decimal) -> tuple[Decimal, Decimal, Decimal]:
+    def add_charge(
+        self,
+        amount: Decimal,
+        balance_amounts: tuple[Decimal, Decimal, Decimal] | None = None,
+    ) -> tuple[Decimal, Decimal, Decimal]:
+        """
+        Returns what the new balance would be if a charge is added
 
+        Args:
+            amount: The amount to add
+            initial: The balance amounts to work off. Defaults to current amounts
+
+        Returns:
+            A tuple containing the new balance amounts
+
+        Raises:
+            ValueError: If the amount is positive
+        """
+
+        # Assign initial amounts
         annual = self.annual
-        remaining = self.remaining
-        outstanding = self.outstanding
-        credit = self.credit
-        amount = money(amount)
+        if balance_amounts is None:
+            remaining = self.remaining
+            outstanding = self.outstanding
+            credit = self.credit
+        else:
+            remaining, outstanding, credit = balance_amounts
 
         # Validation
+        amount = money(amount)
         if amount >= 0:
             raise ValueError("Amount Must Be Less Than 0")
 
@@ -308,7 +350,14 @@ class Balance:
 
         return (remaining, outstanding, credit)
 
-    def apply_transactions(self, amounts: tuple[Decimal, Decimal, Decimal]) -> None:
+    def apply_new_amounts(self, amounts: tuple[Decimal, Decimal, Decimal]) -> None:
+        """
+        Applies new balance amounts calculated from add_charge or add_payment
+
+        Args:
+            amounts: A tuple containing new balance amounts
+        """
+
         self.remaining = amounts[0]
         self.outstanding = amounts[1]
         self.credit = amounts[2]
@@ -323,6 +372,7 @@ class Balance:
         Returns:
             The amount that is expected to be paid
         """
+
         count = 0
         month_offset = 0
 
@@ -371,17 +421,35 @@ class Balance:
         actual_paid = self.annual - self.remaining
         return actual_paid >= expected
 
-    def recalculate_from_history(self, history: list) -> None:
+    def recalculate_from_history(
+        self, history: list
+    ) -> tuple[Decimal, Decimal, Decimal]:
+        """
+        Recalculate the current balance amounts from the account history
 
-        self.remaining = money("0")
-        self.outstanding = money("0")
-        self.credit = money("0")
+        Args:
+            history: A list of charges and payments
+        """
+
+        # Set inital amounts to 0
+        remaining = money("0")
+        outstanding = money("0")
+        credit = money("0")
 
         for transaction in history:
+
+            # If the amount is negative
             if transaction.amount > 0:
-                self.add_payment(transaction.amount)
+                remaining, outstanding, credit = self.add_payment(
+                    transaction.amount, (remaining, outstanding, credit)
+                )
+            # If the amount is positive
             else:
-                self.add_charge(transaction.amount)
+                remaining, outstanding, credit = self.add_charge(
+                    transaction.amount, (remaining, outstanding, credit)
+                )
+
+        return (remaining, outstanding, credit)
 
     def to_dict(self) -> dict[str, str]:
         """

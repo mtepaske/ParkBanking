@@ -11,13 +11,14 @@ class Transaction:
     Represents a payment or charge
 
     Attributes:
-        id: (int) The ID used for database queries. Gets assigned on first insertion to the database
         date: (str) The date of the transaction given in %Y-%m-%d or %d %b %y form
         amount: (Decimal) The monetary amount of the transaction
         account: (Account | None) The account the transaction is associated with. Defaults to None if no account associated
         original_details: (str) The details listed on the transaction
         details: (list[str]) A list containing the details for the transaction. Is cleaned during matching
         type: (str) A description of the type of transaction. Used for payment history and statement generating
+        account_id: (int) The Account ID of the account that this transaction is matched too. Used for database queries. Gets assigned on accounts first insertion
+        transaction_id: (int) The ID used for database queries. Gets assigned on first insertion to the database
     """
 
     account: None | Account
@@ -39,7 +40,8 @@ class Transaction:
             amount: The amount of the transaction
             details: The details of the transaction
             type: A description of the type of transaction. Defaults to None
-            id: The ID used for database queries. Gets assigned on first insertion to database
+            account_id: The Account ID of the account that this transaction is matched too. Used for database queries. Gets assigned on accounts first insertion
+            transaction_id: The ID used for database queries. Gets assigned on first insertion to the database
         """
 
         self.date = convert_to_iso(date)
@@ -104,6 +106,7 @@ class Transaction:
         else:
             transaction_id = int(transaction_id)
 
+        # Construct the class
         transaction = cls(
             date=date,
             amount=Decimal(amount),
@@ -114,7 +117,7 @@ class Transaction:
 
         for account in accounts:
 
-            # Attempts to match of account_id if one exists
+            # Attempts to match off account_id if one exists
             if transaction.account_id is not None:
                 if account.account_id == transaction.account_id:
                     transaction.account = account
@@ -130,18 +133,29 @@ class Transaction:
 
     @classmethod
     def from_history_csv(cls, row: dict[str, str], account: Account) -> Transaction:
+        """
+        Constructs an instance from a row of a CSV file containing a history of charges and payments
 
+        Args:
+            row: The row of the CSV file
+            account: The account that the history is for
+
+        Returns:
+            The transaction instance containing the information
+        """
         date = row["Date"]
         description = row["Description"]
         debit = row["Debit"]
         credit = row["Credit"]
 
+        # Construct the class
         transaction = Transaction(
             date=date,
             amount=Decimal(credit) if credit != "" else Decimal(0 - Decimal(debit)),
             type_str=description,
         )
 
+        # Sets the matched account and account_id
         transaction.account = account
         transaction.account_id = account.account_id
 
@@ -174,10 +188,10 @@ class Transaction:
 
     def __str__(self) -> str:
         """
-        A string representation of the account
+        A string representation of the transaction
 
         Returns:
-            A string representation fo the account
+            A string representation fo the transaction
         """
 
         return f"Date: {self.date}, Amount: {self.amount}, Details: {self.details} -> {self.account}"
