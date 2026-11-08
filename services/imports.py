@@ -131,7 +131,7 @@ def import_account_info_from_csv(
         balances_file: The name of the file containing balance information
 
     Returns:
-        The account information, as well as a generated history of payments
+        The account information, as well as a generated history of payments if the account has never been instered to the database
 
     Raises:
         MissingBalance: If no matching balance can be found for an account
@@ -144,17 +144,20 @@ def import_account_info_from_csv(
     for account in accounts:
         for balance in balances:
 
+            # If the account has previously been inserted to the database
             if account.account_id is not None:
                 if account.account_id == balance.account_id:
                     account.add_balance(balance)
                     break
 
+            # If the account has not being inserted in the database before
             else:
                 if account.site_number == balance.site_number:
                     account.add_balance(balance)
                     old_charges.extend(add_annual_fees_to_history(account))
                     break
 
+        # If the account has no matching balance from the imported balances
         if account.balance is None:
             raise MissingBalance(f"No Matching Balance Found For {account}")
 
@@ -184,7 +187,7 @@ def add_annual_fees_to_history(account: Account) -> list[Transaction]:
     annual_fee = Transaction(date, amount, details)
     annual_fee.account = account
     annual_fee.account_id = account.account_id
-    annual_fee.type = annual_fee.original_details
+    annual_fee.type = annual_fee.details
     charges.append(annual_fee)
 
     # Generate information for balance brought forward from untracked history
@@ -201,16 +204,27 @@ def add_annual_fees_to_history(account: Account) -> list[Transaction]:
     brought_forward = Transaction(date, amount, details)
     brought_forward.account = account
     brought_forward.account_id = account.account_id
-    brought_forward.type = brought_forward.original_details
+    brought_forward.type = brought_forward.details
     charges.append(brought_forward)
 
     return charges
 
 
 def import_history(filename: str, account: Account) -> list[Transaction]:
+    """
+    Imports the history for an account from a CSV file
+
+    Args:
+        filename: The name of the file containing the account history
+        account: The account the history is for
+
+    Returns:
+        A list of transactions representing the account history
+    """
 
     with open(
         f"{import_folder / filename}.csv", newline="", encoding="utf-8-sig"
     ) as file:
+
         reader = csv.DictReader(file)
         return [Transaction.from_history_csv(row, account) for row in reader]

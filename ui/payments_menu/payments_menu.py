@@ -75,13 +75,13 @@ class PaymentMenu(Screen):
 
         transactions = self.app_state.state.transactions
         accounts = self.app_state.state.accounts
-        payments = self.app_state.state.payments
+        unapplied = self.app_state.state.unapplied
         unknown_words = self.app_state.state.unknown_words
 
         if len(transactions) > 0 and len(accounts) > 0:
             self.query_one("#match", Button).disabled = False
 
-        if len(payments) > 0 and len(accounts) > 0:
+        if len(unapplied) > 0 and len(accounts) > 0:
             self.query_one("#payments", Button).disabled = False
 
         if len(unknown_words) > 0 and len(accounts) > 0:
@@ -89,11 +89,11 @@ class PaymentMenu(Screen):
 
     def populate_matched(self) -> None:
 
-        payments = self.app_state.state.payments
+        unapplied = self.app_state.state.unapplied
         payment_table = self.query_one("#matched", DataTable)
         payment_table.clear()
 
-        for payment in payments:
+        for payment in unapplied:
 
             assert payment.account is not None
 
@@ -103,7 +103,7 @@ class PaymentMenu(Screen):
                 Text(payment.account.name, style="cyan"),
                 Text(f"${payment.amount:,.2f}", style="green"),
                 payment.type,
-                payment.original_details,
+                payment.details,
             )
 
     def populate_unmatched(self) -> None:
@@ -119,7 +119,7 @@ class PaymentMenu(Screen):
             transaction_table.add_row(
                 Text(transaction.date, style="cyan"),
                 Text(f"${transaction.amount:,.2f}", style="red"),
-                transaction.original_details,
+                transaction.details,
             )
 
     def action_back_screen(self):
@@ -163,20 +163,20 @@ class PaymentMenu(Screen):
 
                 elif match is None:
                     self.notify("Matching Cancelled", severity="warning", timeout=5)
-                    return
+                    break
 
                 else:
                     assert isinstance(match, Account)
                     transaction.account = match
                     transaction.type = "Unknown"
                     self.app_state.state.remove_transaction(transaction)
-                    self.app_state.state.add_payment(transaction)
+                    self.app_state.state.add_unapplied(transaction)
 
             elif len(possibilities) == 1:
                 transaction.account = possibilities[0]
                 transaction.type = "Direct Debit"
                 self.app_state.state.remove_transaction(transaction)
-                self.app_state.state.add_payment(transaction)
+                self.app_state.state.add_unapplied(transaction)
 
             else:
                 match = await self.app.push_screen_wait(
@@ -191,15 +191,14 @@ class PaymentMenu(Screen):
 
                 elif match is None:
                     self.notify("Matching Cancelled", severity="warning", timeout=5)
-                    return
+                    break
 
                 else:
-
                     assert isinstance(match, Account)
                     transaction.account = match
                     transaction.type = "Direct Debit"
                     self.app_state.state.remove_transaction(transaction)
-                    self.app_state.state.add_payment(transaction)
+                    self.app_state.state.add_unapplied(transaction)
 
             self.populate_matched()
             self.populate_unmatched()
@@ -214,27 +213,26 @@ class PaymentMenu(Screen):
     @work
     async def proccess_payments(self):
 
-        payments = self.app_state.state.payments
+        unapplied = self.app_state.state.unapplied.copy()
+        accounts = self.app_state.state.accounts
         choice = await self.app.push_screen_wait(
-            ReviewBalanceScreen("Reviewing Updated Balances", payments)
+            ReviewBalanceScreen("Reviewing Updated Balances", accounts, unapplied)
         )
 
         if choice:
+            for transaction in unapplied:
 
-            for payment in payments:
-
-                account = payment.account
+                account = transaction.account
                 assert account is not None
                 balance = account.balance
                 assert balance is not None
 
-                balance.apply_transactions(balance.add_payment(payment.amount))
+                balance.apply_new_amounts(balance.add_payment(transaction.amount))
+                self.app_state.state.apply_unapplied(transaction)
 
-            self.notify(f"{len(payments)} Payments Applied", timeout=5)
-            self.app_state.state.clear_payments()
+            self.notify(f"{len(unapplied)} Payments Applied", timeout=5)
 
         else:
-
             self.notify("Payment Proccessing Cancelled", severity="warning", timeout=5)
 
         self.find_available()
@@ -245,7 +243,7 @@ class PaymentMenu(Screen):
         ignore_to_add: set[str] = set()
         alias_to_add: dict[str, Account] = {}
 
-        for unknown in self.app_state.state.unknown_words.copy():
+        for unknown in self.app_state.state.unknown_words:
 
             choice = await self.app.push_screen_wait(
                 ProccessUnknownScreen(unknown, self.app_state.state.accounts)
@@ -265,6 +263,7 @@ class PaymentMenu(Screen):
                         severity="warning",
                         timeout=5,
                     )
+                    self.find_available()
                     return
 
                 case "skip-all":
@@ -286,7 +285,9 @@ class PaymentMenu(Screen):
                 self.app_state.state.remove_unknown(ignore)
 
             for alias, account in alias_to_add.items():
-                account.add_alias(alias)
+                account.aliases.add(alias)
                 self.app_state.state.remove_unknown(alias)
 
             self.notify("Unknown Words Proccessed", timeout=5)
+
+        self.find_available()

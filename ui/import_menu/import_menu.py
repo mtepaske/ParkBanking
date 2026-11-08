@@ -215,7 +215,7 @@ class ImportMenu(Screen):
         statement_table.add_columns("Date", "Amount", "Transaction Details")
 
         for row in self.loaded_file:
-            statement_table.add_row(row.date, row.amount, row.original_details)
+            statement_table.add_row(row.date, row.amount, row.details)
 
         self.loaded_file_type = "statement"
         self.query_one("#confirm", Button).disabled = False
@@ -501,11 +501,9 @@ class ImportMenu(Screen):
                         return
 
                     else:
-                        transaction.original_details = (
-                            f"{transaction.original_details} (Duplicate)"
-                        )
+                        transaction.details = f"{transaction.details} (Duplicate)"
                         self.notify(
-                            f"Transaction Details Have Been Changed To {transaction.original_details}",
+                            f"Transaction Details Have Been Changed To {transaction.details}",
                             timeout=5,
                         )
 
@@ -589,20 +587,19 @@ class ImportMenu(Screen):
                         return
 
                     else:
-                        unmatched.original_details = (
-                            f"{unmatched.original_details} (Duplicate)"
-                        )
+                        unmatched.details = f"{unmatched.details} (Duplicate)"
                         self.notify(
-                            f"Unmatched Transaction Details Have Been Chnaged To {unmatched.original_details}",
+                            f"Unmatched Transaction Details Have Been Chnaged To {unmatched.details}",
                             timeout=5,
                         )
 
-        original_payments = self.app_state.state.payments.copy()
+        original_payments = self.app_state.state.unapplied.copy()
+
         for matched in matched_to_add:
 
             while True:
                 try:
-                    self.app_state.state.add_payment(matched)
+                    self.app_state.state.add_unapplied(matched)
                     break
 
                 except DuplicateTransaction:
@@ -616,18 +613,16 @@ class ImportMenu(Screen):
                         break
 
                     elif confirm is None or confirm == "cancel":
-                        self.app_state.state.payments = original_payments
+                        self.app_state.state.unapplied = original_payments
                         self.app_state.state.transactions = original_transactions
                         self.app_state.state.notify_changed()
                         self.notify("Matched Statement Import Cancelled")
                         return
 
                     else:
-                        matched.original_details = (
-                            f"{matched.original_details} (Duplicate)"
-                        )
+                        matched.details = f"{matched.details} (Duplicate)"
                         self.notify(
-                            f"Matched Transaction Details Have Been Chnaged To {matched.original_details}",
+                            f"Matched Transaction Details Have Been Chnaged To {matched.details}",
                             timeout=5,
                         )
 
@@ -729,11 +724,9 @@ class ImportMenu(Screen):
                         return
 
                     else:
-                        charge.original_details = (
-                            f"{charge.original_details} (Duplicate)"
-                        )
+                        charge.details = f"{charge.details} (Duplicate)"
                         self.notify(
-                            f"Charge Details Have Been Changed To {charge.original_details}",
+                            f"Charge Details Have Been Changed To {charge.details}",
                             timeout=5,
                         )
 
@@ -745,16 +738,16 @@ class ImportMenu(Screen):
 
         assert self.loaded_file is not None
         assert isinstance(self._account_for_history, Account)
-        charges_to_add = []
+        transactions_to_add = []
 
         for payment in self.loaded_file:
 
             assert isinstance(payment, Transaction)
-            charges_to_add.append(payment)
+            transactions_to_add.append(payment)
 
         if self._account_for_history.account_id is not None:
 
-            database_charges = self.app_state.repos.account_repo.get_payments(
+            database_charges = self.app_state.repos.account_repo.get_history(
                 self._account_for_history.account_id
             )
 
@@ -773,7 +766,7 @@ class ImportMenu(Screen):
                     )
                     return
                 elif delete_previous is True:
-                    self.app_state.repos.account_repo.delete_payments_by_account(
+                    self.app_state.repos.account_repo.delete_history_by_account(
                         self._account_for_history
                     )
                     self.notify(
@@ -806,8 +799,11 @@ class ImportMenu(Screen):
                     timeout=5,
                 )
 
-        for charge in charges_to_add:
-            self.app_state.state.add_charge(charge)
+        for transaction in transactions_to_add:
+            if transaction.amount > 0:
+                self.app_state.state.add_payment(transaction)
+            else:
+                self.app_state.state.add_charge(transaction)
 
         self.query_one("#confirm", Button).disabled = True
         self.query_one("#file-preview", DataTable).clear(columns=True)

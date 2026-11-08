@@ -62,9 +62,9 @@ class MainMenu(Screen):
 
     def action_save_to_database(self) -> None:
         self.app_state.repos.account_repo.save_accounts(self.app_state.state.accounts)
-        self.app_state.repos.account_repo.save_payments(self.app_state.state.payments)
-        self.app_state.repos.account_repo.save_payments(self.app_state.state.charges)
-        self.app_state.repos.ignore_repo.replace_all_ignore(
+        self.app_state.repos.account_repo.save_history(self.app_state.state.payments)
+        self.app_state.repos.account_repo.save_history(self.app_state.state.charges)
+        self.app_state.repos.ignore_repo.save_all_ignore(
             self.app_state.state.words_to_ignore
         )
         self.app_state.state.clear_payments()

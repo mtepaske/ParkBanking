@@ -1,3 +1,8 @@
+#view-account-menu {
+    layout: horizontal;
+    align: center top;
+}
+
 .section-title {
     text-style: bold;
     margin-top: 1;

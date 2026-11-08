@@ -1,4 +1,5 @@
 from collections.abc import Generator, Iterable
+from copy import deepcopy
 from pathlib import Path
 
 from rich.text import Text
@@ -68,13 +69,19 @@ class StatusBox(VerticalGroup):
             )
 
         with HorizontalGroup(classes="status-row"):
-            yield Static("Matched Payments: ", classes="status")
+            yield Static("Unapplied Payments/Charges: ", classes="status")
+            yield Static(
+                str(len(state.unapplied)), classes="number", id="status-unapplied"
+            )
+
+        with HorizontalGroup(classes="status-row"):
+            yield Static("Unsaved Payments: ", classes="status")
             yield Static(
                 str(len(state.payments)), classes="number", id="status-payments"
             )
 
         with HorizontalGroup(classes="status-row"):
-            yield Static("Un Committed Charges: ", classes="status")
+            yield Static("Unsaved Charges: ", classes="status")
             yield Static(str(len(state.charges)), classes="number", id="status-charges")
 
         with HorizontalGroup(classes="status-row"):
@@ -111,6 +118,7 @@ class StatusBox(VerticalGroup):
         self.query_one("#status-transactions", Static).update(
             str(len(state.transactions))
         )
+        self.query_one("#status-unapplied", Static).update(str(len(state.unapplied)))
         self.query_one("#status-payments", Static).update(str(len(state.payments)))
         self.query_one("#status-charges", Static).update(str(len(state.charges)))
         self.query_one("#status-sites", Static).update(str(len(state.sites)))
@@ -127,7 +135,7 @@ class ConfirmScreen(ModalScreen[bool]):
 
     def compose(self) -> ComposeResult:
 
-        with Vertical(classes="dialog"):
+        with VerticalScroll(classes="dialog"):
 
             with HorizontalGroup():
                 yield Label(self.message)
@@ -141,6 +149,7 @@ class ConfirmScreen(ModalScreen[bool]):
 
         yield from ()
 
+    @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed) -> None:
 
         if event.button.id == "confirm":
@@ -224,12 +233,12 @@ class ConfirmChargesScreen(ConfirmScreen):
 
     def compose_content(self) -> Generator[Widget, None, None]:
 
-        charge_preview = DataTable()
+        charge_preview = DataTable(zebra_stripes=True, cursor_type="row")
         charge_preview.add_columns("Account", "Date", "Description", "Amount")
 
         for charge in self.charges:
             charge_preview.add_row(
-                charge.account, charge.date, charge.original_details, charge.amount
+                charge.account, charge.date, charge.details, charge.amount
             )
 
         yield charge_preview
@@ -271,7 +280,6 @@ class AccountPicker(ModalScreen[Account | str | None]):
     @on(DataTable.RowSelected)
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
 
-        self.notify("Row Selected")
         account_id = event.row_key.value
 
         if account_id is None:
@@ -322,16 +330,32 @@ class EnterAmountScreen(ModalScreen[str | None]):
             self.dismiss()
 
 
-class ReviewBalanceScreen(ConfirmScreen):
+class ReviewBalanceScreen(ModalScreen[list[Account] | None]):
 
-    def __init__(self, message: str, payments: list[Transaction]) -> None:
+    def __init__(
+        self, message: str, accounts: list[Account], payments: list[Transaction]
+    ) -> None:
 
-        super().__init__(message)
+        super().__init__()
+        self.message = message
         self.payments = payments
+        self.accounts = deepcopy(accounts)
 
-    def content_compose(self) -> Generator[Widget, None, None]:
+    def compose(self) -> ComposeResult:
 
-        review_table = DataTable()
+        with VerticalScroll(classes="dialog"):
+
+            yield DataTable(zebra_stripes=True, cursor_type="row", id="history")
+
+            with HorizontalGroup():
+                yield Label(self.message)
+
+            yield Button.success("Confirm", id="confirm")
+            yield Button.error("Cancel", id="cancel")
+
+    def on_mount(self) -> None:
+
+        review_table = self.query_one("#history", DataTable)
         review_table.add_columns(
             "Account",
             "Old Remaining",
@@ -353,7 +377,13 @@ class ReviewBalanceScreen(ConfirmScreen):
             assert balance is not None
 
             old_balance = (balance.remaining, balance.outstanding, balance.credit)
-            new_balance = balance.add_payment(payment.amount)
+
+            if payment.amount > 0:
+                new_balance = balance.add_payment(payment.amount)
+                sign = "-"
+            else:
+                new_balance = balance.add_charge(payment.amount)
+                sign = "+"
 
             review_table.add_row(
                 Text(f"{account.site_number}: {account.name}", style="cyan"),
@@ -369,7 +399,7 @@ class ReviewBalanceScreen(ConfirmScreen):
                     else ""
                 ),
                 Text(" -> ", style="cyan"),
-                Text(f"-${payment.amount:,.2f}", style="cyan"),
+                Text(f"{sign}${payment.amount:,.2f}", style="cyan"),
                 Text(" -> ", style="cyan"),
                 Text(f"${new_balance[0]:,.2f}", style="green"),
                 (
@@ -388,7 +418,16 @@ class ReviewBalanceScreen(ConfirmScreen):
                 ),
             )
 
-        yield review_table
+            balance.apply_new_amounts(new_balance)
+
+    @on(Button.Pressed)
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+
+        if event.button.id == "confirm":
+            self.dismiss(self.accounts)
+
+        else:
+            self.dismiss()
 
 
 class ProccessUnknownScreen(ModalScreen[str | Account | None]):

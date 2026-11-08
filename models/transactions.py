@@ -47,8 +47,7 @@ class Transaction:
         self.date = convert_to_iso(date)
         self.amount = amount
         self.account = None
-        self.original_details = details
-        self.details = details.split(" ")
+        self.details = details
         self.type = type_str
         self.account_id = account_id
         self.transaction_id = transaction_id
@@ -161,6 +160,17 @@ class Transaction:
 
         return transaction
 
+    def add_account(self, account: Account) -> None:
+        """
+        Add an account to this transaction
+
+        Args:
+            account: The account to add
+        """
+
+        self.account = account
+        self.account_id = account.account_id
+
     def to_dict(self) -> dict[str, str]:
         """
         Constructs a dictionary containing information required to reconstruct the transaction. Used for exporting to CSV
@@ -177,7 +187,7 @@ class Transaction:
             ),
             "Name": (self.account.name if self.account is not None else "Unmatched"),
             "Amount": str(self.amount),
-            "Details": self.original_details,
+            "Details": self.details,
             "Account ID": (
                 str(self.account.account_id) if self.account is not None else "??"
             ),

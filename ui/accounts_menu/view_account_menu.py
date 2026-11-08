@@ -1,11 +1,12 @@
+from copy import deepcopy
 from decimal import Decimal
 
 from rich.text import Text
 from textual import on, work
 from textual.binding import Binding
 from textual.containers import (
-    Horizontal,
     HorizontalGroup,
+    Vertical,
     VerticalGroup,
     VerticalScroll,
 )
@@ -25,29 +26,48 @@ from textual.widgets import (
 from application import Application
 from models.account import Account
 from models.transactions import Transaction
-from ui.custom_widgets import ConfirmScreen, EnterAmountScreen
+from services.date import get_str_from_date, get_today
+from ui.custom_widgets import EnterAmountScreen, ReviewBalanceScreen
 
 
 class ViewAccountMenu(Screen):
+    """
+    A screen to view and edit a specific accounts information
+
+    Attributes:
+        CSS_PATH: The path of the .tcss file for this screen
+        BINDINGS: The key bindings for this screen
+        app_state: The application instance for tracking state
+        account: The account to view
+    """
 
     CSS_PATH = "view_account_menu.tcss"
-
     BINDINGS = (
         Binding("q", "back_screen", "Back"),
         Binding("ctrl+w", "save_account", "Save"),
     )
 
-    def __init__(self, app: Application, account: Account):
-        super().__init__()
+    def __init__(self, app: Application, account: Account, **kwargs):
+        """
+        Initialise the instance
+
+        Args:
+            app: The application instance for tracking state
+            account: The account to view
+            **kwargs: Other key word arguments for base class
+        """
+
+        super().__init__(id="view-account-menu", **kwargs)
         self.app_state = app
         self.account = account
-        self.history = []
 
     def compose(self):
+        """Construct the widgets on the screen"""
 
         balance = self.account.balance
         assert balance is not None
 
+        # Generate possible site numbers
         site_numbers = []
         for number in range(1, 101):
             if len(str(number)) == 1:
@@ -57,114 +77,110 @@ class ViewAccountMenu(Screen):
 
         site_number_options = [(str(number), str(number)) for number in site_numbers]
 
+        # Show program name and keybindings
         yield Header()
         yield Footer()
 
-        with Horizontal():
+        # The account history section
+        with Vertical(classes="section"):
+            yield Static(
+                f"STATEMENT FOR SITE {self.account.site_number}, {self.account.name}",
+                classes="section-title",
+            )
+            with VerticalScroll():
+                yield DataTable(id="history", cursor_type="row", zebra_stripes=True)
 
-            with VerticalGroup():
-                yield Static(
-                    f"STATEMENT FOR SITE {self.account.site_number}, {self.account.name}",
-                    classes="section-title",
+        # The account actions section
+        with Vertical(classes="section"):  # Have to link buttons with payment screen
+            yield Static("ACCOUNT ACTIONS", classes="section-title")
+
+            with VerticalGroup(id="actions"):
+                yield Button.success("Add Payment", id="payment")
+                yield Button.error("Add Charge", id="charge")
+                yield Button.warning("Make Inactive", id="status")
+                yield Button.error(
+                    "Recalculate Balance From Payment History", id="recalculate"
                 )
-                with VerticalScroll():
-                    yield DataTable(id="history", cursor_type="row", zebra_stripes=True)
 
-            with VerticalGroup():  # Have to link buttons with payment screen
-                yield Static("ACCOUNT ACTIONS", classes="section-title")
+        # The edit account section
+        with VerticalScroll(classes="section"):
+            yield Static("EDIT ACCOUNT", classes="section-title")
+            with VerticalGroup():
 
-                with VerticalGroup(id="actions"):
-                    yield Button.success("Add Payment", id="payment")
-                    yield Button.error("Add Charge", id="charge")
-                    yield Button.warning("Make Inactive", id="status")
-                    yield Button.error(
-                        "Recalculate Balance From Payment History", id="recalculate"
+                yield Static("CONTACT DETAILS", classes="settings-title")
+
+                with HorizontalGroup(classes="input-row"):
+                    yield Static("Name: ", classes="label")
+                    yield Input(value=self.account.name, id="name")
+
+                with HorizontalGroup(classes="input-row"):
+                    yield Static("Phone Number: ", classes="label")
+                    yield MaskedInput(
+                        template="9999 999 999;0", value="0484 250 494", id="phone"
                     )
 
-            with VerticalScroll():
-                yield Static("EDIT ACCOUNT", classes="section-title")
-                with VerticalGroup():
+                with HorizontalGroup(classes="input-row"):
+                    yield Static("Email Address: ", classes="label")
+                    yield Input("placeholder", id="email")
 
-                    yield Static("CONTACT DETAILS", classes="settings-title")
+                with HorizontalGroup(classes="input-row"):
+                    yield Static("Postal Address: ", classes="label")
+                    yield Input("placeholder", id="address")
 
-                    with HorizontalGroup(classes="input-row"):
-                        yield Static("Name: ", classes="label")
-                        yield Input(value=self.account.name, id="name")
+                yield Static("SITE DETAILS", classes="settings-title")
 
-                    with HorizontalGroup(classes="input-row"):
-                        yield Static("Phone Number: ", classes="label")
-                        yield MaskedInput(
-                            template="9999 999 999;0", value="0484 250 494", id="phone"
-                        )
+                with HorizontalGroup(classes="select-row"):
+                    yield Static("Site Number: ", classes="select-label")
+                    yield Select(
+                        site_number_options,
+                        value=self.account.site_number,
+                        allow_blank=False,
+                        id="number",
+                    )
 
-                    with HorizontalGroup(classes="input-row"):
-                        yield Static("Email Address: ", classes="label")
-                        yield Input("placeholder", id="email")
+                with HorizontalGroup(classes="input-row"):
+                    yield Static("Extra Guests: ", classes="label")
+                    yield MaskedInput("9;0", value="0", id="guests")
 
-                    with HorizontalGroup(classes="input-row"):
-                        yield Static("Postal Address: ", classes="label")
-                        yield Input("placeholder", id="address")
+                with HorizontalGroup(classes="switch-row"):
+                    yield Static("Air Conditioner", classes="switch-label")
+                    yield Switch(value=True, animate=True, id="ac")
 
-                    yield Static("SITE DETAILS", classes="settings-title")
+                with HorizontalGroup(classes="switch-row"):
+                    yield Static("Sewer", classes="switch-label")
+                    yield Switch(value=False, animate=True, id="sewer")
 
-                    with HorizontalGroup(classes="select-row"):
-                        yield Static("Site Number: ", classes="select-label")
-                        yield Select(
-                            site_number_options,
-                            value=self.account.site_number,
-                            allow_blank=False,
-                            id="number",
-                        )
+                with HorizontalGroup(classes="switch-row"):
+                    yield Static("Cabin", classes="switch-label")
+                    yield Switch(value=False, animate=True, id="type")
 
-                    with HorizontalGroup(classes="input-row"):
-                        yield Static("Extra Guests: ", classes="label")
-                        yield MaskedInput("9;0", value="0", id="guests")
+                yield Static("BALANCE DETAILS", classes="settings-title")
 
-                    with HorizontalGroup(classes="switch-row"):
-                        yield Static("Air Conditioner", classes="switch-label")
-                        yield Switch(value=True, animate=True, id="ac")
+                with HorizontalGroup(classes="input-row"):
+                    yield Static("Annual Fees: ", classes="label")
+                    yield MaskedInput(
+                        "$9999;0", value=f"${balance.annual}", id="annual"
+                    )
 
-                    with HorizontalGroup(classes="switch-row"):
-                        yield Static("Sewer", classes="switch-label")
-                        yield Switch(value=False, animate=True, id="sewer")
-
-                    with HorizontalGroup(classes="switch-row"):
-                        yield Static("Cabin", classes="switch-label")
-                        yield Switch(value=False, animate=True, id="type")
-
-                    yield Static("BALANCE DETAILS", classes="settings-title")
-
-                    with HorizontalGroup(classes="input-row"):
-                        yield Static("Annual Fees: ", classes="label")
-                        yield MaskedInput(
-                            "$9999;0", value=f"${balance.annual}", id="annual"
-                        )
-
-                    with HorizontalGroup(classes="select-row"):
-                        yield Static("Pay Period: ", classes="select-label")
-                        yield Select(
-                            [("Monthly", "m"), ("Quarterly", "q"), ("Annually", "a")],
-                            value=f"{balance.pay_frequency}",
-                            allow_blank=False,
-                            id="frequency",
-                        )
-
-    def on_mount(self) -> None:
-        history_table = self.query_one("#history", DataTable)
-        history_table.add_columns("Date", "Description", "Debit", "Credit", "Balance")
-        self.populate_history_table()
+                with HorizontalGroup(classes="select-row"):
+                    yield Static("Pay Period: ", classes="select-label")
+                    yield Select(
+                        [("Monthly", "m"), ("Quarterly", "q"), ("Annually", "a")],
+                        value=f"{balance.pay_frequency}",
+                        allow_blank=False,
+                        id="frequency",
+                    )
 
     def action_back_screen(self):
+        """Go back to the main menu"""
+
         self.dismiss()
 
     def action_save_account(self) -> None:
+        """Save updates to the database"""
+
         balance = self.account.balance
         assert balance is not None
-
-        self.app_state.repos.account_repo.save_accounts([self.account])
-        self.app_state.repos.account_repo.save_payments(self.history)
-        self.app_state.state.clear_payments()
-        self.app_state.state.clear_charges()
 
         # Contact Details
         self.account.name = str(self.query_one("#name", Input).value)
@@ -185,23 +201,55 @@ class ViewAccountMenu(Screen):
         )
         balance.pay_frequency = str(self.query_one("#frequency", Select).value)
 
-    def populate_history_table(self) -> None:
+        # Save updates to database
+        history = self.get_account_history()
+        self.app_state.repos.account_repo.save_accounts([self.account])
+        self.app_state.repos.account_repo.save_history(history)
+
+        # Clear payments and charges from the application state
+        for transaction in history:
+
+            try:
+                self.app_state.state.remove_payment(transaction)
+            except ValueError:
+                pass
+
+            try:
+                self.app_state.state.remove_charge(transaction)
+            except ValueError:
+                pass
+
+    def on_mount(self) -> None:
+        """Initialise the account history table"""
+
+        history_table = self.query_one("#history", DataTable)
+        history_table.add_columns("Date", "Description", "Debit", "Credit", "Balance")
+        self.populate_history_table()
+
+    def get_account_history(self) -> list[Transaction]:
+        """
+        Gets the account histoyr from the database and current app state
+
+        Returns:
+            A list of transactions representing the account history
+        """
 
         assert self.account.balance is not None
 
-        # Get any existing payments from the database
+        # Get the existsing history from the database
         if self.account.account_id is not None:
-            history: list[Transaction] = self.app_state.repos.account_repo.get_payments(
+            history: list[Transaction] = self.app_state.repos.account_repo.get_history(
                 self.account.account_id
             )
         else:
             history: list[Transaction] = []
 
-        # Get any payments not in database
+        # Get any applied payments not in database
         for payment in self.app_state.state.payments:
             if payment.account == self.account:
                 history.append(payment)
 
+        # Get any applied charges not in the database
         for charge in self.app_state.state.charges:
             if charge.account == self.account:
                 history.append(charge)
@@ -209,10 +257,21 @@ class ViewAccountMenu(Screen):
         # Sort history by date so newest payment first
         history.sort(key=lambda t: t.date, reverse=True)
 
+        return history
+
+    def populate_history_table(self) -> None:
+        """Populate the account history table"""
+
+        assert self.account.balance is not None
+
+        history = self.get_account_history()
+
         # Add each payment to a list of rows calculating running balance
         running_balance = self.account.balance.balance
         rows = []
+
         for payment in history:
+
             if payment.amount > 0:
                 rows.append(
                     (
@@ -224,6 +283,7 @@ class ViewAccountMenu(Screen):
                     )
                 )
                 running_balance += payment.amount
+
             else:
                 amount = abs(payment.amount)
                 rows.append(
@@ -251,13 +311,20 @@ class ViewAccountMenu(Screen):
                 balance,
                 key=str(index),
             )
-        history.reverse()
-        self.history = history
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed):
+        """
+        Runs when a button is pressed
+
+        Args:
+            event: The button press that triggered the method
+        """
+
         assert self.account.balance is not None
+
         match event.button.id:
+
             case "payment":
                 self.add_payment()
 
@@ -275,33 +342,94 @@ class ViewAccountMenu(Screen):
 
     @work
     async def recalculate_balance(self):
-        assert self.account.balance is not None
+        """Recalculates the account balance from the current account history"""
 
+        balance = self.account.balance
+        assert balance is not None
+
+        # Get the current history with oldest payment first
+        history = self.get_account_history()
+        history.reverse()
+
+        # Recaculate the new balance
+        new_balance = balance.recalculate_from_history(history)
+
+        old_balance = deepcopy(balance)
+        balance.apply_new_amounts((Decimal(0), Decimal(0), Decimal(0)))
+
+        # Confirm the new account balance
         confirm = await self.app.push_screen_wait(
-            ConfirmScreen("This Action Is Irreverable. Are You Sure?")
+            ReviewBalanceScreen(
+                "Confirm New Balance", accounts=[self.account], payments=history
+            )
         )
 
-        if confirm is None or False:
-            self.notify("Recalculation Cancelled", timeout=5)
-            return
+        # Apply new account balance
+        if confirm:
+            balance.apply_new_amounts(new_balance)
+            self.notify("Balance Recalculated", timeout=5)
+            self.query_one("#history", DataTable).clear()
+            self.populate_history_table()
 
-        self.account.balance.recalculate_from_history(self.history)
-        self.notify("Balance Recalculated", timeout=5)
-        self.query_one("#history", DataTable).clear()
-        self.populate_history_table()
+        # Cancel recalculation
+        else:
+            balance = old_balance
+            self.notify("Recalculation Cancelled", severity="warning", timeout=5)
 
     @work
     async def add_payment(self) -> None:
+        """Add a payment to the account"""
+
         assert self.account.balance is not None
+
+        # Get the amount to add
         amount = await self.app.push_screen_wait(EnterAmountScreen("Enter Amount"))
+
+        # Cancel adding the payment
         if amount is None:
+            self.notify("Cancelled Adding Payment", severity="warning", timeout=5)
             return
-        self.account.balance.add_payment(Decimal(amount))
+
+        payment = Transaction(
+            date=get_str_from_date(get_today()),
+            amount=Decimal(amount),
+            type_str="Custom Payment",
+        )
+        payment.add_account(self.account)
+
+        # Apply the paymet
+        new_balance = self.account.balance.add_payment(payment.amount)
+        self.account.balance.apply_new_amounts(new_balance)
+        self.app_state.state.add_payment(payment)
+
+        self.notify("New Payment Added", timeout=5)
+        self.populate_history_table()
 
     @work
     async def add_charge(self) -> None:
+        """Add a charge to the account"""
+
         assert self.account.balance is not None
+
+        # Get the amount to add
         amount = await self.app.push_screen_wait(EnterAmountScreen("Enter Amount"))
+
+        # Cancel adding the charge
         if amount is None:
+            self.notify("Cancelled Adding Charge", severity="warning", timeout=5)
             return
-        self.account.balance.add_charge(Decimal(amount))
+
+        charge = Transaction(
+            date=get_str_from_date(get_today()),
+            amount=Decimal(amount),
+            type_str="Custom Charge",
+        )
+        charge.add_account(self.account)
+
+        # Apply the charge
+        new_balance = self.account.balance.add_charge(charge.amount)
+        self.account.balance.apply_new_amounts(new_balance)
+        self.app_state.state.add_charge(charge)
+
+        self.notify("New Charge Added", timeout=5)
+        self.populate_history_table()

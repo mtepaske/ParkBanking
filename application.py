@@ -42,6 +42,7 @@ class AppState:
     payments: list[Transaction] = field(default_factory=list)
     charges: list[Transaction] = field(default_factory=list)
     # Refactor code to add charges to correct list
+    unapplied: list[Transaction] = field(default_factory=list)
     sites: list[Site] = field(default_factory=list)
 
     _listeners: list[Callable] = field(
@@ -94,7 +95,7 @@ class AppState:
             if (
                 transaction.date == old_transaction.date
                 and transaction.amount == old_transaction.amount
-                and transaction.original_details == old_transaction.original_details
+                and transaction.details == old_transaction.details
             ):
                 raise DuplicateTransaction(
                     f"Transaction {transaction} Is Already Loaded"
@@ -141,12 +142,12 @@ class AppState:
             if (
                 payment.date == old_payment.date
                 and payment.amount == old_payment.amount
-                and payment.original_details == old_payment.original_details
+                and payment.details == old_payment.details
                 and payment.account_id == old_payment.account_id
                 and payment.account_id is not None
                 or payment.date == old_payment.date
                 and payment.amount == old_payment.amount
-                and payment.original_details == old_payment.original_details
+                and payment.details == old_payment.details
                 and payment.account == old_payment.account
             ):
                 raise DuplicateTransaction(f"Transaction {payment} Is Already Loaded")
@@ -169,12 +170,12 @@ class AppState:
             if (
                 charge.date == old_charge.date
                 and charge.amount == old_charge.amount
-                and charge.original_details == old_charge.original_details
+                and charge.details == old_charge.details
                 and charge.account_id == old_charge.account_id
                 and charge.account_id is not None
                 or charge.date == old_charge.date
                 and charge.amount == old_charge.amount
-                and charge.original_details == old_charge.original_details
+                and charge.details == old_charge.details
                 and charge.account == old_charge.account
             ):
                 raise DuplicateTransaction(f"Transaction {charge} Is Already Loaded")
@@ -188,6 +189,18 @@ class AppState:
 
     def clear_charges(self):
         self.charges: list[Transaction] = []
+        self.notify_changed()
+
+    def add_unapplied(self, transaction: Transaction):
+        self.unapplied.append(transaction)
+        self.notify_changed()
+
+    def apply_unapplied(self, transaction: Transaction):
+        self.unapplied.remove(transaction)
+        if transaction.amount > 0:
+            self.add_payment(transaction)
+        else:
+            self.add_charge(transaction)
         self.notify_changed()
 
     def add_site(self, site: Site):

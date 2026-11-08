@@ -174,7 +174,7 @@ def edit_account(account: Account, app: Application) -> list[Transaction]:
 
         # Gets the payment history from the database if it exists
         if account.account_id is not None:
-            history = app.repos.account_repo.get_payments(account.account_id)
+            history = app.repos.account_repo.get_history(account.account_id)
         else:
             history = []
 

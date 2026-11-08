@@ -11,7 +11,6 @@ export_folder.mkdir(parents=True, exist_ok=True)
 
 
 def export_accounts_to_csv(accounts: list[Account], filename: str) -> None:
-    # Change to add ID based on settings?
     """
     Export account information as a CSV file
 
@@ -41,7 +40,6 @@ def export_accounts_to_csv(accounts: list[Account], filename: str) -> None:
 
 
 def export_balances_to_csv(balances: list[Balance], filename: str) -> None:
-    # Change to add ID and account ID based on settings?
     """
     Export balance information as a CSV file
 

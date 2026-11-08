@@ -159,12 +159,12 @@ def save_all_to_db(app: Application) -> None:
     )
 
     # Save payment information
-    app.repos.account_repo.save_payments(payments)
+    app.repos.account_repo.save_history(payments)
     app.state.payments = []
     print("Payments Saved")
 
     # Save words to ignore
-    app.repos.ignore_repo.replace_all_ignore(ignore)
+    app.repos.ignore_repo.save_all_ignore(ignore)
     print("Words to Ignore Saved")
 
 

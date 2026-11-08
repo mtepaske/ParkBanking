@@ -429,6 +429,9 @@ class Balance:
 
         Args:
             history: A list of charges and payments
+
+        Returns:
+            A tuple containing the new balance amounts
         """
 
         # Set inital amounts to 0

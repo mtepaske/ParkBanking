@@ -11,11 +11,19 @@ class Matcher:
 
     Attributes:
         accounts: (list[Account]) A list of accounts to match too
-        ignore: (list[str]) A list of words to ignore during matching
-        unknown: (set[str]) A list of unknown words encountered during matching
+        ignore: (set[str]) A set of words to ignore during matching
+        unknown: (set[str]) A set of unknown words encountered during matching
     """
 
     def __init__(self, accounts: list[Account], ignore: set[str]) -> None:
+        """
+        Initialise the instance
+
+        Args:
+            accounts: A list of accounts to match against
+            ignore: A set of words to ignore while matching
+        """
+
         self.accounts = accounts
         self.unknown = set()
         self.ignore = ignore
@@ -35,6 +43,7 @@ class Matcher:
         for word in description:
             if word not in self.ignore:
                 filtered.append(word)
+
         return filtered
 
     def keyword_match(self, transaction: Transaction) -> list[Account]:
@@ -47,17 +56,20 @@ class Matcher:
         Returns:
             A set of possible matches
         """
+
         possible = set()
-        details = self.clean_desc(transaction.details)
+        details = self.clean_desc(transaction.details.split())
 
         for word in details:
             found = False
 
+            # Iterate through accounts to find a match for an account alias
             for account in self.accounts:
                 if word in account.aliases:
                     found = True
                     possible.add(account)
 
+            # If a match wasn't found, add to unknown words
             if not found:
                 self.unknown.add(word)
 
@@ -82,7 +94,7 @@ def match_transactions(
     return possibilities
 
 
-def review_payment(
+def review_payment(  # Possibly redundent with new textual interface?
     balance: Balance, amount: Decimal
 ) -> tuple[dict[str, Decimal], dict[str, Decimal]]:
     """
@@ -107,6 +119,7 @@ def review_payment(
     # Normalises the amount as money
     amount = money(amount)
 
+    # If the payment amount is less then 0
     if amount <= 0:
         raise ValueError("Amount must be greater than 0")
 

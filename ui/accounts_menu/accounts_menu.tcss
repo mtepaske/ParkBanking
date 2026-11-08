@@ -1,21 +1,26 @@
-#tabs {
+#accounts-menu {
+    layout: vertical;
+    align: center top;
+}
+
+.tabs {
     height: 3;
     width: 100%;
     align: left middle;
 }
 
-#tabs Button {
+.tabs Button {
     height: 3;
     width: 20;
     margin: 0 1;
 }
 
-#tables {
+.tables {
     height: 1fr;
     width: 100%;
 }
 
-#tables DataTable {
+.tables DataTable {
     height: 1fr;
     width: 100%;
 }
