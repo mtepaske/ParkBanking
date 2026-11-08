@@ -3,6 +3,7 @@
     width: 1fr;
 }
 
+/* Menus */
 .section-title {
     content-align: left middle;
     text-style: bold;
@@ -14,6 +15,81 @@
     dock: top;
 }
 
+.input-row {
+    align: left middle;
+    width: auto;
+    height: 3;
+    margin: 1;
+}
+
+.input-row Static {
+    text-style: bold;
+    width: 20;
+    height: 3;
+    content-align: left middle;
+}
+
+.input-row Input {
+    width: 40;
+    height: 3;
+}
+
+.input-row MaskedInput {
+    width: 40;
+    height: 3;
+}
+
+.select-row {
+    width: auto;
+    height: 3;
+    align: left middle;
+    margin: 1;
+}
+
+.select-row Static {
+    text-style: bold;
+    width: 20;
+    height: 3;
+    content-align: left middle;
+}
+
+.select-row Select {
+    width: 40;
+    height: auto;
+}
+
+.switch-row {
+    width: 60;
+    height: 3;
+    align: left middle;
+    margin: 1;
+}
+
+.switch-row Static {
+    text-style: bold;
+    width: 40;
+    height: 3;
+    content-align: left middle;
+}
+
+.switch-row Switch {
+    width: auto;
+    height: 3;
+}
+
+.tree-row {
+    width: 90%;
+    height: auto;
+    align: left top;
+    margin: 1;
+}
+
+.tree {
+    width: auto;
+    height: auto;
+}
+
+/* Application status box */
 #app-status {
     align: center bottom;
     width: auto;
@@ -38,6 +114,7 @@
     color: green;
 }
 
+/* Popup Screens */
 ModalScreen {
     align: center middle;
 }

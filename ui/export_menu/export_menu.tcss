@@ -8,18 +8,6 @@
     width: 100%;
 }
 
-.tree-row {
-    width: 90%;
-    height: auto;
-    align: left top;
-    margin: 1;
-}
-
-.tree {
-    width: auto;
-    height: auto;
-}
-
 #confirm-stack {
     align: center middle;
     margin-top: 2;
