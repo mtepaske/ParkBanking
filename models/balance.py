@@ -270,7 +270,7 @@ class Balance:
         amount = money(amount)
 
         # Validation
-        if amount <= 0:
+        if amount < 0:
             raise ValueError("Amount must be greater than 0")
 
         # First removed from outstanding fees
@@ -322,9 +322,9 @@ class Balance:
             remaining, outstanding, credit = balance_amounts
 
         # Validation
-        amount = money(amount)
-        if amount >= 0:
+        if amount > 0:
             raise ValueError("Amount Must Be Less Than 0")
+        amount = money(amount)
 
         # Convert to positive value
         amount = abs(amount)

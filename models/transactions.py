@@ -29,6 +29,7 @@ class Transaction:
         amount: Decimal,
         details: str = "",
         type_str: str = "",
+        account: Account | None = None,
         account_id: int | None = None,
         transaction_id: int | None = None,
     ) -> None:
@@ -46,11 +47,14 @@ class Transaction:
 
         self.date = convert_to_iso(date)
         self.amount = amount
-        self.account = None
+        self.account = account
         self.details = details
         self.type = type_str
         self.account_id = account_id
         self.transaction_id = transaction_id
+
+        if self.account is not None:
+            self.account_id = self.account.account_id
 
     @classmethod
     def from_csv(cls, row: dict[str, str]) -> Transaction:

@@ -148,7 +148,7 @@ def get_str_from_date(date: date) -> str:
         The date in ISO format
     """
 
-    return date.strftime("%Y=%m-%d")
+    return date.strftime("%Y-%m-%d")
 
 
 def get_date_from_str_iso(date: str) -> date:

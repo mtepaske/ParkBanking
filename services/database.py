@@ -283,7 +283,7 @@ class AccountRepository(Repository):
 
         return {row["alias"] for row in alias_rows}
 
-    def get_history(self, account_id: int) -> list[Transaction]:
+    def get_history(self, account: Account) -> list[Transaction]:
         """
         Get the history of associated with an account from the database
 
@@ -301,7 +301,7 @@ class AccountRepository(Repository):
             WHERE account_id = ?
             ORDER BY date ASC
             """,
-            (account_id,),
+            (account.account_id,),
         )
 
         return [
@@ -310,7 +310,7 @@ class AccountRepository(Repository):
                 amount=money(row["amount"]),
                 details=row["details"],
                 type_str=row["particulars"],
-                account_id=account_id,
+                account=account,
                 transaction_id=row["id"],
             )
             for row in payment_rows
