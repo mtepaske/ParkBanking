@@ -32,7 +32,7 @@
     height: auto;
 }
 
-#confirm {
+#confirm-row Button {
     content-align: center middle;
     width: 30%;
     margin: 1;
