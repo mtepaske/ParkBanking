@@ -476,7 +476,7 @@ class Balance:
         remaining = str(remaining)
 
         return {
-            "Site": site_number,
+            "Site Number": site_number,
             "Annual Fee": annual,
             "Remaining from this FY": remaining,
             "Outstanding from previous FYs": outstanding,

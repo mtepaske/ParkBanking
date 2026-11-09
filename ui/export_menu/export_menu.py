@@ -1,3 +1,5 @@
+from typing import cast
+
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import (
@@ -8,7 +10,16 @@ from textual.containers import (
 )
 from textual.widgets import Button, Collapsible, DataTable, DirectoryTree, Input, Static
 
-from models.transactions import match_transaction_on_account_id
+from models.account import Account
+from models.balance import Balance
+from models.transactions import Transaction, match_transaction_on_account_id
+from services.date import get_today
+from services.exports import (
+    export_accounts_to_csv,
+    export_balances_to_csv,
+    export_ignore_to_csv,
+    export_payments_to_csv,
+)
 from services.settings import APP_DIRECTORY, get_setting
 from ui.custom_widgets import FolderTree, Menu, SelectDateRange, StatusBox
 
@@ -110,32 +121,32 @@ class ExportMenu(Menu):
             yield Static("File Preview", classes="section-title")
             yield DataTable(zebra_stripes=True, id="file-preview")
 
-    @on(Input.Changed)
-    def on_input_changed(self):
-
-        self.query_one("#confirm", Button).disabled = False
-
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed):
 
         if event.button.id == "confirm":
 
+            filename = self.query_one("#file-name", Input).value
+            if filename == "":
+                self.notify("Please Enter A File Name", severity="warning", timeout=5)
+                return
+
             match self.loaded_file_type:
 
                 case "statement":
-                    pass
+                    self.export_statement(filename)
 
                 case "accounts":
-                    pass
+                    self.export_accounts(filename)
 
                 case "balances":
-                    pass
+                    self.export_balances(filename)
 
                 case "site":
-                    pass
+                    self.export_sites(filename)
 
                 case "ignore":
-                    pass
+                    self.export_ignore(filename)
 
     @on(DirectoryTree.DirectorySelected)
     def on_directory_tree_directory_selected(
@@ -158,6 +169,35 @@ class ExportMenu(Menu):
 
             case "ignore-tree":
                 self.preview_ignore()
+
+    def set_default_filename(self):
+
+        today = get_today()
+
+        match self.loaded_file_type:
+
+            case "statement":
+                self.query_one("#file-name", Input).value = (
+                    f"{today.month} {today.year} - Statement"
+                )
+
+            case "accounts":
+                self.query_one("#file-name", Input).value = (
+                    f"{today.month} {today.year} - Accounts"
+                )
+
+            case "balances":
+                self.query_one("#file-name", Input).value = (
+                    f"{today.month} {today.year} - Balances"
+                )
+
+            case "site":
+                self.query_one("#file-name", Input).value = (
+                    f"{today.month} {today.year} - Sites"
+                )
+
+            case "ignore":
+                self.query_one("#file-name", Input).value = "Words To Ignore"
 
     @work
     async def preview_statement(self):
@@ -190,7 +230,7 @@ class ExportMenu(Menu):
         statement_table = self.query_one("#file-preview", DataTable)
         statement_table.clear(columns=True)
         statement_table.add_columns(
-            "Date", "Site Number", "Name", "Amount", "Description, Transaction ID"
+            "Date", "Site Number", "Name", "Amount", "Description", "Transaction ID"
         )
 
         for row in self.loaded_file:
@@ -206,6 +246,7 @@ class ExportMenu(Menu):
         self.loaded_file_type = "statement"
         self.query_one("#confirm", Button).disabled = False
         self.query_one("#file-name", Input).disabled = False
+        self.set_default_filename()
 
     def preview_accounts(self):
 
@@ -230,10 +271,14 @@ class ExportMenu(Menu):
         self.loaded_file_type = "accounts"
         self.query_one("#confirm", Button).disabled = False
         self.query_one("#file-name", Input).disabled = False
+        self.set_default_filename()
 
     def preview_balances(self):
 
-        self.loaded_file = self.app_state.state.accounts
+        self.loaded_file = []
+        for account in self.app_state.state.accounts:
+            assert account.balance is not None
+            self.loaded_file.append(account.balance)
 
         balance_table = self.query_one("#file-preview", DataTable)
         balance_table.clear(columns=True)
@@ -247,21 +292,21 @@ class ExportMenu(Menu):
             "Balance ID",
         )
 
-        for account in self.loaded_file:
-            balance = account.balance
+        for balance in self.loaded_file:
             balance_table.add_row(
-                account.site_number,
+                balance.site_number if balance is not None else "??",
                 str(balance.annual) if balance is not None else "??",
                 str(balance.remaining) if balance is not None else "??",
                 str(balance.outstanding) if balance is not None else "??",
                 balance.pay_frequency if balance is not None else "??",
-                str(account.account_id) if account.account_id is not None else "??",
+                str(balance.account_id) if balance is not None else "??",
                 str(balance.balance_id) if balance is not None else "??",
             )
 
-        self.loaded_file_type = "balance"
+        self.loaded_file_type = "balances"
         self.query_one("#confirm", Button).disabled = False
         self.query_one("#file-name", Input).disabled = False
+        self.set_default_filename()
 
     def preview_sites(self):
         pass
@@ -280,18 +325,59 @@ class ExportMenu(Menu):
         self.loaded_file_type = "ignore"
         self.query_one("#confirm", Button).disabled = False
         self.query_one("#file-name", Input).disabled = False
+        self.set_default_filename()
 
     def export_statement(self, filename: str):
-        pass
+
+        filename = self.query_one("#file-name", Input).value
+        self.loaded_file = cast(list[Transaction], self.loaded_file)
+        export_payments_to_csv(payments=self.loaded_file, filename=filename)
+
+        self.query_one("#confirm", Button).disabled = True
+        self.query_one("#file-name", Input).disabled = True
+        self.query_one("#file-name", Input).value = ""
+        self.query_one("#file-preview", DataTable).clear(columns=True)
+        self.loaded_file = None
+        self.loaded_file_type = None
 
     def export_accounts(self, filename: str):
-        pass
+
+        filename = self.query_one("#file-name", Input).value
+        self.loaded_file = cast(list[Account], self.loaded_file)
+        export_accounts_to_csv(accounts=self.loaded_file, filename=filename)
+
+        self.query_one("#confirm", Button).disabled = True
+        self.query_one("#file-name", Input).disabled = True
+        self.query_one("#file-name", Input).value = ""
+        self.query_one("#file-preview", DataTable).clear(columns=True)
+        self.loaded_file = None
+        self.loaded_file_type = None
 
     def export_balances(self, filename: str):
-        pass
+
+        filename = self.query_one("#file-name", Input).value
+        self.loaded_file = cast(list[Balance], self.loaded_file)
+        export_balances_to_csv(balances=self.loaded_file, filename=filename)
+
+        self.query_one("#confirm", Button).disabled = True
+        self.query_one("#file-name", Input).disabled = True
+        self.query_one("#file-name", Input).value = ""
+        self.query_one("#file-preview", DataTable).clear(columns=True)
+        self.loaded_file = None
+        self.loaded_file_type = None
 
     def export_sites(self, filename: str):
-        pass
+        filename = self.query_one("#file-name", Input).value
 
     def export_ignore(self, filename: str):
-        pass
+
+        filename = self.query_one("#file-name", Input).value
+        self.loaded_file = cast(set[str], self.loaded_file)
+        export_ignore_to_csv(words=self.loaded_file, filename=filename)
+
+        self.query_one("#confirm", Button).disabled = True
+        self.query_one("#file-name", Input).disabled = True
+        self.query_one("#file-name", Input).value = ""
+        self.query_one("#file-preview", DataTable).clear(columns=True)
+        self.loaded_file = None
+        self.loaded_file_type = None

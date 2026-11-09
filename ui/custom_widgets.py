@@ -455,8 +455,8 @@ class SelectDateRange(ModalScreen[tuple[str, str] | None]):
             yield Button.success("Confirm", id="confirm")
             yield Button.error("Cancel", id="cancel")
 
-    @on(MaskedInput.Submitted)
-    def on_maskedinput_submitted(self, event: MaskedInput.Submitted):
+    @on(MaskedInput.Changed)
+    def on_maskedinput_submitted(self, event: MaskedInput.Changed):
 
         match event.control.id:
 
