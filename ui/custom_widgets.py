@@ -1,6 +1,5 @@
 from collections.abc import Generator, Iterable
 from copy import deepcopy
-from datetime import date
 from pathlib import Path
 
 from rich.text import Text
@@ -31,7 +30,7 @@ from textual.widgets import (
 from application import Application
 from models.account import Account
 from models.transactions import Transaction
-from services.date import end_of_fy, get_date_from_str, start_of_fy
+from services.date import end_of_fy, get_str_from_date, start_of_fy
 from services.settings import get_setting
 
 
@@ -416,14 +415,14 @@ class ImportBalancesScreen(ModalScreen[Path | None]):
             self.dismiss()
 
 
-class SelectDateRange(ModalScreen[tuple[date, date] | None]):
+class SelectDateRange(ModalScreen[tuple[str, str] | None]):
 
     def __init__(self, message: str):
 
         super().__init__()
         self.message = message
-        self.start_date = start_of_fy()
-        self.end_date = end_of_fy()
+        self.start_date = get_str_from_date(start_of_fy())
+        self.end_date = get_str_from_date(end_of_fy())
 
     def compose(self) -> ComposeResult:
 
@@ -457,13 +456,11 @@ class SelectDateRange(ModalScreen[tuple[date, date] | None]):
 
             case "start-date":
 
-                start_date = self.query_one("#start-date", MaskedInput).value
-                self.start_date = get_date_from_str(start_date)
+                self.start_date = self.query_one("#start-date", MaskedInput).value
 
             case "end-date":
 
-                end_date = self.query_one("#end-date", MaskedInput).value
-                self.end_date = get_date_from_str(end_date)
+                self.end_date = self.query_one("#end-date", MaskedInput).value
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed):

@@ -6,6 +6,16 @@ from models.account import Account
 from services.date import convert_to_iso
 
 
+def match_transaction_on_account_id(
+    transaction: Transaction, accounts: list[Account]
+) -> None:
+
+    for account in accounts:
+        if transaction.account_id == account.account_id:
+            transaction.account = account
+            return
+
+
 class Transaction:
     """
     Represents a payment or charge
