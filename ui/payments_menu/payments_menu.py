@@ -165,7 +165,8 @@ class PaymentMenu(Menu):
             if len(possibilities) == 0:
                 match = await self.app.push_screen_wait(
                     AccountPicker(
-                        f"No Matches For {transaction} Found, Please Pick An Account",
+                        "No Matches Found. Please Pick An Account",
+                        f"Date: {transaction.date} - Amount: {transaction.amount} - Details: {transaction.details}",
                         self.app_state.state.accounts,
                     )
                 )
@@ -195,7 +196,8 @@ class PaymentMenu(Menu):
             else:
                 match = await self.app.push_screen_wait(
                     AccountPicker(
-                        f"Multiple Matches for {transaction} Found, Please Pick An Account",
+                        "Multiple Matches Found. Please Pick An Account",
+                        f"Date: {transaction.date} - Amount: {transaction.amount} - Details: {transaction.details}",
                         possibilities,
                     )
                 )

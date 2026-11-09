@@ -387,7 +387,11 @@ class ImportMenu(Menu):
 
         # Select the account to import the history of
         self._account_for_history = await self.app.push_screen_wait(
-            AccountPicker("For Which Account?", self.app_state.state.accounts)
+            AccountPicker(
+                "For Which Account?",
+                f"File Name: {filepath}",
+                self.app_state.state.accounts,
+            )
         )
         if self._account_for_history is None or self._account_for_history == "None":
             self.notify(
@@ -529,7 +533,8 @@ class ImportMenu(Menu):
             elif get_setting("append_transactions_on_import") == "Ask":
                 choice = await self.app.push_screen_wait(
                     AppendScreen(
-                        message="Add To Or Replace Previously Loaded Transactions?"
+                        "Add To Or Replace Previously Loaded Transactions?",
+                        f"{len(self.app_state.state.transactions)} Previously Loaded",
                     )
                 )
 
@@ -553,9 +558,7 @@ class ImportMenu(Menu):
                 # If there is a duplicate transaction
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
-                        AppendScreen(
-                            f"{transaction} Matches A Transaction Thats Already Loaded"
-                        )
+                        AppendScreen("Duplicate Transaction Found", f"{transaction}")
                     )
 
                     if confirm == "replace":
@@ -602,7 +605,8 @@ class ImportMenu(Menu):
                     ):
                         choice = await self.app.push_screen_wait(
                             AppendScreen(
-                                "Add To Or Replace Previously Loaded Transactions?"
+                                "Add To Or Replace Previously Loaded Transactions?",
+                                f"{len(self.app_state.state.transactions)} Previously Loaded",
                             )
                         )
                         if choice == "replace":
@@ -641,9 +645,7 @@ class ImportMenu(Menu):
                 # If there is a duplicate transaction
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
-                        AppendScreen(
-                            f"{unmatched} Matches A Transaction Thats Already Loaded"
-                        )
+                        AppendScreen("Duplicate Transaction Found", f"{unmatched}")
                     )
 
                     if confirm == "replace":
@@ -679,9 +681,7 @@ class ImportMenu(Menu):
                 # If there is a duplicate transaction
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
-                        AppendScreen(
-                            f"{matched} Matches A Payment Thats Already Loaded"
-                        )
+                        AppendScreen("Duplicate Transaction Found", f"{matched}")
                     )
 
                     if confirm == "replace":
@@ -721,7 +721,8 @@ class ImportMenu(Menu):
             elif get_setting("append_accounts_on_import") == "Ask":
                 choice = await self.app.push_screen_wait(
                     AppendScreen(
-                        message="Add To Or Replace Previously Loaded Accounts?"
+                        "Add To Or Replace Previously Loaded Transactions?",
+                        f"{len(self.app_state.state.transactions)} Previously Loaded",
                     )
                 )
 
@@ -755,7 +756,8 @@ class ImportMenu(Menu):
                 # If there is a duplicate account
                 except DuplicateAccount:
                     confirm = AppendScreen(
-                        f"There is Already An Active Account For {account.site_number}"
+                        "There is Already An Active Account For",
+                        f"{account.site_number}",
                     )
                     if confirm == "replace":
                         self.app_state.state.deactivate_by_site_number(
@@ -787,9 +789,7 @@ class ImportMenu(Menu):
                 # If there is a duplicate transaction
                 except DuplicateTransaction:
                     confirm = await self.app.push_screen_wait(
-                        AppendScreen(
-                            f"The Generated Charge {charge} Matches A Charge Thats Already Loaded"
-                        )
+                        AppendScreen("Duplicate Charge Found", f"{charge}")
                     )
 
                     if confirm == "replace":

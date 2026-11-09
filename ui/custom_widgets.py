@@ -7,6 +7,7 @@ from textual import on, work
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import (
+    Horizontal,
     HorizontalGroup,
     Vertical,
     VerticalGroup,
@@ -274,7 +275,7 @@ class ConfirmScreen(ModalScreen[bool]):
 
         with VerticalScroll(classes="dialog"):
 
-            with HorizontalGroup():
+            with HorizontalGroup(classes="dialog-title"):
                 yield Label(self.message)
 
             yield from self.compose_content()
@@ -311,7 +312,7 @@ class AppendScreen(ModalScreen[str]):
         message: (str) The message to display
     """
 
-    def __init__(self, message: str) -> None:
+    def __init__(self, message: str, context: str) -> None:
         """
         Initialise the screen
 
@@ -321,14 +322,18 @@ class AppendScreen(ModalScreen[str]):
 
         super().__init__()
         self.message = message
+        self.context = context
 
     def compose(self) -> ComposeResult:
         """Construct the widgets on the screen"""
 
         with Vertical(classes="dialog"):
 
-            with HorizontalGroup():
-                yield Label(self.message)
+            with VerticalGroup(classes="append-title"):
+                with HorizontalGroup(classes="label-stack"):
+                    yield Label(self.message)
+                with HorizontalGroup(classes="label-stack"):
+                    yield Label(self.context, id="context")
 
             yield Button.success("Add To", id="append")
             yield Button.warning("Replace", id="replace")
@@ -373,12 +378,12 @@ class ImportBalancesScreen(ModalScreen[Path | None]):
 
         with Vertical(classes="dialog"):
 
-            with HorizontalGroup():
+            with HorizontalGroup(classes="dialog-title"):
                 yield Label(
                     "Please Selected File Containing Balance Information For Imported Accounts"
                 )
 
-            with HorizontalGroup():
+            with HorizontalGroup(classes="tree-row"):
                 yield DirectoryTree(
                     str(self.import_folder), classes="tree", id="balance-tree"
                 )
@@ -428,20 +433,21 @@ class SelectDateRange(ModalScreen[tuple[str, str] | None]):
 
         with VerticalGroup(classes="dialog"):
 
-            yield Label(self.message)
+            with Horizontal(classes="dialog-header"):
+                yield Label(self.message)
 
-            with HorizontalGroup():
+            with HorizontalGroup(classes="stack-row"):
 
-                with VerticalGroup():
+                with VerticalGroup(classes="input-stack"):
 
-                    yield Static("Start Date")
+                    yield Label("Start Date")
                     yield MaskedInput(
                         "9999-99-99", value=str(self.start_date), id="start-date"
                     )
 
-                with VerticalGroup():
+                with VerticalGroup(classes="input-stack"):
 
-                    yield Static("End Date")
+                    yield Label("End Date")
                     yield MaskedInput(
                         "9999-99-99", value=str(self.end_date), id="end-date"
                     )
@@ -497,7 +503,9 @@ class ConfirmChargesScreen(ConfirmScreen):
     def compose_content(self) -> Generator[Widget, None, None]:
         """Construct the widgets on the screen"""
 
-        charge_preview = DataTable(zebra_stripes=True, cursor_type="row")
+        charge_preview = DataTable(
+            zebra_stripes=True, cursor_type="row", classes="charge-table"
+        )
         charge_preview.add_columns("Account", "Date", "Description", "Amount")
 
         for charge in self.charges:
@@ -520,7 +528,7 @@ class AccountPicker(ModalScreen[Account | str | None]):
         message: (str) The message to display
     """
 
-    def __init__(self, message: str, accounts: list[Account]) -> None:
+    def __init__(self, message: str, context: str, accounts: list[Account]) -> None:
         """
         Initialise the screen
 
@@ -532,28 +540,60 @@ class AccountPicker(ModalScreen[Account | str | None]):
         super().__init__()
         self.accounts = accounts
         self.message = message
+        self.context = context
 
     def compose(self) -> ComposeResult:
         """Construct the widgets on the screen"""
 
-        with VerticalScroll(classes="dialog"):
+        with VerticalGroup(classes="dialog"):
 
-            with HorizontalGroup():
-                yield Label(self.message)
+            with VerticalGroup(classes="dialog-header"):
+                with HorizontalGroup(classes="label-stack"):
+                    yield Label(self.message)
+                with HorizontalGroup(classes="label-stack"):
+                    yield Label(self.context, id="context")
 
             yield Button.warning("No Account", id="none")
             yield Button.error("Cancel", id="cancel")
 
-            yield DataTable(zebra_stripes=True, cursor_type="row", id="accounts")
+            with HorizontalGroup(classes="table-row"):
+                yield DataTable(
+                    zebra_stripes=True,
+                    cursor_type="row",
+                    classes="accounts-table",
+                    id="accounts-1",
+                )
+                yield DataTable(
+                    zebra_stripes=True,
+                    cursor_type="row",
+                    classes="accounts-table",
+                    id="accounts-2",
+                )
 
     def on_mount(self) -> None:
         """On starting of the widget"""
 
-        account_table = self.query_one("#accounts", DataTable)
-        account_table.add_columns("Account ID", "Name", "Site Number", "Active")
+        account_1 = self.query_one("#accounts-1", DataTable)
+        account_1.add_columns("Account ID", "Name", "Site Number", "Active")
 
-        for account in self.accounts:
-            account_table.add_row(
+        account_2 = self.query_one("#accounts-2", DataTable)
+        account_2.add_columns("Account ID", "Name", "Site Number", "Active")
+
+        midpoint = len(self.accounts) // 2
+
+        for index in range(midpoint):
+            account = self.accounts[index]
+            account_1.add_row(
+                Text(f"{account.account_id}", style="cyan"),
+                account.name,
+                account.site_number,
+                account.active,
+                key=str(account.account_id) if account.account_id is not None else None,
+            )
+
+        for index in range(midpoint, len(self.accounts)):
+            account = self.accounts[index]
+            account_2.add_row(
                 Text(f"{account.account_id}", style="cyan"),
                 account.name,
                 account.site_number,
@@ -622,7 +662,7 @@ class EnterAmountScreen(ModalScreen[str | None]):
 
         with Vertical(classes="dialog"):
 
-            with HorizontalGroup():
+            with HorizontalGroup(classes="dialog-header"):
                 yield Label(self.message)
 
             yield Input(placeholder="$0", id="amount")
@@ -677,10 +717,10 @@ class ReviewBalanceScreen(ModalScreen[list[Account] | None]):
 
         with VerticalScroll(classes="dialog"):
 
-            yield DataTable(zebra_stripes=True, cursor_type="row", id="history")
-
-            with HorizontalGroup():
+            with HorizontalGroup(classes="dialog-header"):
                 yield Label(self.message)
+
+            yield DataTable(zebra_stripes=True, cursor_type="row", id="history")
 
             yield Button.success("Confirm", id="confirm")
             yield Button.error("Cancel", id="cancel")
@@ -797,17 +837,17 @@ class ProccessUnknownScreen(ModalScreen[str | Account | None]):
     def compose(self) -> ComposeResult:
         """Construct the widgets on the screen"""
 
-        with Vertical(classes="dialog"):
-            with HorizontalGroup():
-                yield Label("Proccessing Unknown Words")
+        with VerticalGroup(classes="dialog"):
 
-            with HorizontalGroup():
-                yield Label(f"{self.unknown}")
+            with VerticalGroup(classes="dialog-header"):
+                with HorizontalGroup(classes="label-stack"):
+                    yield Label("Proccessing Unknown Words")
+                with HorizontalGroup(classes="label-stack"):
+                    yield Label(f"{self.unknown}", id="context")
 
-            with HorizontalGroup():
-                yield Button.success("Ignore This Word", id="ignore")
+            yield Button.success("Ignore This Word", id="ignore")
 
-            with HorizontalGroup():
+            with HorizontalGroup(classes="row"):
 
                 yield Select(
                     self.accounts,

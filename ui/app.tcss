@@ -132,6 +132,12 @@ AccountPicker {
     padding: 2;
 }
 
+.dialog-title {
+    align: center middle;
+    width: auto;
+    height: auto;
+    border: round $primary;
+}
 
 .dialog Label {
     text-style: bold;
@@ -143,31 +149,112 @@ AccountPicker {
     margin: 1;
 }
 
-.dialog Datatable {
-    width: auto;
+.append-title {
+    align: center middle;
+    width: 120;
     height: auto;
-    margin-top: 1;
+    border: round $primary;
 }
 
-.dialog Input {
-    width: 50;
+.dialog-header {
+    align: center middle;
+    width: 100%;
     height: auto;
+    border: round $primary;
 }
 
-.dialog HorizontalGroup {
+.stack-row {
     align: center middle;
     width: auto;
     height: auto;
 }
 
-.dialog HorizontalGroup Select {
+.input-stack {
+    align: center middle;
+    width: auto;
+    height: auto;
+}
+
+.input-stack MaskedInput {
+    width: 40;
+    height: 3;
+}
+
+.dialog .label-stack {
+    align: center middle;
+    width: 100%;
+    height: auto;
+}
+
+.label-stack #context {
+    color: green;
+}
+
+ConfirmChargesScreen .dialog-title {
+    width: 100%;
+}
+
+.dialog .charge-table {
+    width: auto;
+    height: auto;
+}
+
+.dialog .table-row {
+    align: center middle;
+    width: 120;
+    height: auto;
+}
+
+.dialog .accounts-table {
     width: 1fr;
     height: auto;
     margin: 1;
 }
 
-.dialog HorizontalGroup Button {
-    width: 1fr;
+.dialog #amount {
+    width: 50;
+    height: auto;
+}
+
+.dialog #history {
+    width: auto;
+}
+
+ProccessUnknownScreen .row {
+    width: auto;
+    height: auto;
+}
+
+ProccessUnknownScreen .row Select {
+    width: 50;
     height: auto;
     margin: 1;
+}
+
+ProccessUnknownScreen .row Button {
+    width: 50;
+    height: auto;
+    margin: 1;
+}
+
+/* .dialog HorizontalGroup { */
+/*     align: center middle; */
+/*     width: auto; */
+/*     height: auto; */
+/* } */
+
+/* .dialog HorizontalGroup Select { */
+/*     width: 1fr; */
+/*     height: auto; */
+/*     margin: 1; */
+/* } */
+
+/* .dialog HorizontalGroup Button { */
+/*     width: 1fr; */
+/*     height: auto; */
+/*     margin: 1; */
+/* } */
+
+.test {
+    border: ascii green;
 }
