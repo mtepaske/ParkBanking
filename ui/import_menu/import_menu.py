@@ -4,9 +4,8 @@ from rich.text import Text
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import (
-    HorizontalGroup,
+    Horizontal,
     Vertical,
-    VerticalGroup,
     VerticalScroll,
 )
 from textual.widgets import (
@@ -76,69 +75,67 @@ class ImportMenu(Menu):
 
             yield Static("Import Files", classes="section-title")
 
-            with VerticalGroup(id="file-select"):
+            with Collapsible(
+                title="Import Bank Statement",
+                collapsed=True,
+                classes="tree-row",
+                id="statement",
+            ):
+                yield DirectoryTree(
+                    str(self.import_folder), classes="tree", id="statement-tree"
+                )
 
-                with Collapsible(
-                    title="Import Bank Statement",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="statement",
-                ):
-                    yield DirectoryTree(
-                        str(self.import_folder), classes="tree", id="statement-tree"
-                    )
+            with Collapsible(
+                title="Import Previously Matched Transactions",
+                collapsed=True,
+                classes="tree-row",
+                id="matched",
+            ):
+                yield DirectoryTree(
+                    str(self.import_folder), classes="tree", id="matched-tree"
+                )
 
-                with Collapsible(
-                    title="Import Previously Matched Transactions",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="matched",
-                ):
-                    yield DirectoryTree(
-                        str(self.import_folder), classes="tree", id="matched-tree"
-                    )
+            with Collapsible(
+                title="Import Accounts",
+                collapsed=True,
+                classes="tree-row",
+                id="accounts",
+            ):
+                yield DirectoryTree(
+                    str(self.import_folder), classes="tree", id="accounts-tree"
+                )
 
-                with Collapsible(
-                    title="Import Accounts",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="accounts",
-                ):
-                    yield DirectoryTree(
-                        str(self.import_folder), classes="tree", id="accounts-tree"
-                    )
+            with Collapsible(
+                title="Import Account History",
+                collapsed=True,
+                classes="tree-row",
+                id="history",
+            ):
+                yield DirectoryTree(
+                    str(self.import_folder), classes="tree", id="history-tree"
+                )
 
-                with Collapsible(
-                    title="Import Account History",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="history",
-                ):
-                    yield DirectoryTree(
-                        str(self.import_folder), classes="tree", id="history-tree"
-                    )
+            with Collapsible(
+                title="Import Site Information",
+                collapsed=True,
+                classes="tree-row",
+                id="site",
+            ):
+                yield DirectoryTree(
+                    str(self.import_folder), classes="tree", id="site-tree"
+                )
 
-                with Collapsible(
-                    title="Import Site Information",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="site",
-                ):
-                    yield DirectoryTree(
-                        str(self.import_folder), classes="tree", id="site-tree"
-                    )
+            with Collapsible(
+                title="Import Words To Ignore",
+                collapsed=True,
+                classes="tree-row",
+                id="ignore",
+            ):
+                yield DirectoryTree(
+                    str(self.import_folder), classes="tree", id="ignore-tree"
+                )
 
-                with Collapsible(
-                    title="Import Words To Ignore",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="ignore",
-                ):
-                    yield DirectoryTree(
-                        str(self.import_folder), classes="tree", id="ignore-tree"
-                    )
-
-            with HorizontalGroup(id="confirm-row"):
+            with Horizontal(classes="row", id="confirm-row"):
                 yield Button.success(
                     "Import Selected File", disabled=True, id="confirm"
                 )

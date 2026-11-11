@@ -5,7 +5,6 @@ from textual.app import ComposeResult
 from textual.containers import (
     Horizontal,
     Vertical,
-    VerticalGroup,
     VerticalScroll,
 )
 from textual.widgets import Button, Collapsible, DataTable, DirectoryTree, Input, Static
@@ -51,67 +50,63 @@ class ExportMenu(Menu):
         with VerticalScroll(classes="section"):
             yield Static("Export Files", classes="section-title")
 
-            with VerticalGroup(id="file-select"):
+            with Collapsible(
+                title="Export Matched Transactions",
+                collapsed=True,
+                classes="tree-row",
+                id="statement",
+            ):
+                yield FolderTree(
+                    str(self.export_folder), classes="tree", id="statement-tree"
+                )
 
-                with Collapsible(
-                    title="Export Matched Transactions",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="statement",
-                ):
-                    yield FolderTree(
-                        str(self.export_folder), classes="tree", id="statement-tree"
-                    )
+            with Collapsible(
+                title="Export Accounts",
+                collapsed=True,
+                classes="tree-row",
+                id="accounts",
+            ):
+                yield FolderTree(
+                    str(self.export_folder), classes="tree", id="accounts-tree"
+                )
 
-                with Collapsible(
-                    title="Export Accounts",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="accounts",
-                ):
-                    yield FolderTree(
-                        str(self.export_folder), classes="tree", id="accounts-tree"
-                    )
+            with Collapsible(
+                title="Export Balances",
+                collapsed=True,
+                classes="tree-row",
+                id="balances",
+            ):
+                yield FolderTree(
+                    str(self.export_folder), classes="tree", id="balances-tree"
+                )
 
-                with Collapsible(
-                    title="Export Balances",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="balances",
-                ):
-                    yield FolderTree(
-                        str(self.export_folder), classes="tree", id="balances-tree"
-                    )
+            with Collapsible(
+                title="Export Site Information",
+                collapsed=True,
+                classes="tree-row",
+                id="site",
+            ):
+                yield FolderTree(
+                    str(self.export_folder), classes="tree", id="site-tree"
+                )
 
-                with Collapsible(
-                    title="Export Site Information",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="site",
-                ):
-                    yield FolderTree(
-                        str(self.export_folder), classes="tree", id="site-tree"
-                    )
+            with Collapsible(
+                title="Export Words To Ignore",
+                collapsed=True,
+                classes="tree-row",
+                id="ignore",
+            ):
+                yield FolderTree(
+                    str(self.export_folder), classes="tree", id="ignore-tree"
+                )
 
-                with Collapsible(
-                    title="Export Words To Ignore",
-                    collapsed=True,
-                    classes="tree-row",
-                    id="ignore",
-                ):
-                    yield FolderTree(
-                        str(self.export_folder), classes="tree", id="ignore-tree"
-                    )
+            with Horizontal(classes="row"):
+                yield Input(placeholder="File Name", disabled=True, id="file-name")
 
-            with Vertical(id="confirm-stack"):
-
-                with Horizontal(id="name-row"):
-                    yield Input(placeholder="File Name", disabled=True, id="file-name")
-
-                with Horizontal(id="confirm-row"):
-                    yield Button.success(
-                        "Export Selected File", disabled=True, id="confirm"
-                    )
+            with Horizontal(classes="row"):
+                yield Button.success(
+                    "Export Selected File", disabled=True, id="confirm"
+                )
 
             yield StatusBox(app_state=self.app_state)
 

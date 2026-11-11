@@ -1,13 +1,14 @@
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import (
-    HorizontalGroup,
-    VerticalGroup,
+    Horizontal,
+    Vertical,
 )
 from textual.widgets import (
     Collapsible,
     DirectoryTree,
     Input,
+    Label,
     MaskedInput,
     Select,
     Static,
@@ -47,15 +48,15 @@ class SettingsMenu(Menu):
         yield from super().compose()
 
         # Business settings section
-        with VerticalGroup(classes="section"):
+        with Vertical(classes="section"):
             yield Static("BUSINESS SETTINGS", classes="section-title")
 
-            with HorizontalGroup(classes="input-row"):
-                yield Static("Business Name: ")
+            with Horizontal(classes="row"):
+                yield Label("Business Name: ")
                 yield Input(value=self.settings["business_name"], id="business-name")
 
         # Data settings section
-        with VerticalGroup(classes="section"):
+        with Vertical(classes="section"):
             yield Static("DATA SETTINGS", classes="section-title")
 
             with Collapsible(
@@ -85,8 +86,8 @@ class SettingsMenu(Menu):
                     str(APP_DIRECTORY), classes="tree", id="database-tree"
                 )
 
-            with HorizontalGroup(classes="select-row"):
-                yield Static(
+            with Horizontal(classes="row"):
+                yield Label(
                     "Add To Loaded Accounts On Import: ", classes="select-label"
                 )
                 yield Select(
@@ -96,8 +97,8 @@ class SettingsMenu(Menu):
                     id="append-accounts",
                 )
 
-            with HorizontalGroup(classes="select-row"):
-                yield Static(
+            with Horizontal(classes="row"):
+                yield Label(
                     "Add To Loaded Transactions On Import: ", classes="select-label"
                 )
                 yield Select(
@@ -107,16 +108,16 @@ class SettingsMenu(Menu):
                     id="append-transactions",
                 )
 
-            with HorizontalGroup(classes="switch-row"):
-                yield Static("Auto Load From Database On Start: ")
+            with Horizontal(classes="row"):
+                yield Label("Auto Load From Database On Start: ")
                 yield Switch(
                     value=self.settings["auto_load_from_db"] == "True",
                     animate=True,
                     id="load",
                 )
 
-            with HorizontalGroup(classes="switch-row"):
-                yield Static("Auto Save To Database On Close: ")
+            with Horizontal(classes="row"):
+                yield Label("Auto Save To Database On Close: ")
                 yield Switch(
                     value=self.settings["auto_save_to_db"] == "True",
                     animate=True,
@@ -126,51 +127,51 @@ class SettingsMenu(Menu):
             # Add buttons for backing up database, clearing loaded data, and clearing database
 
         # Fee settings section
-        with VerticalGroup(classes="section"):
+        with Vertical(classes="section"):
             yield Static("FEE SETTINGS", classes="section-title")
 
-            with HorizontalGroup(classes="input-row"):
-                yield Static("Base Rate: ")
+            with Horizontal(classes="row"):
+                yield Label("Base Rate: ")
                 yield MaskedInput(
                     "$9999;0",
                     value=f'${self.settings["annual_fees_base_rate"]}',
                     id="base",
                 )
 
-            with HorizontalGroup(classes="input-row"):
-                yield Static("AC Charge: ")
+            with Horizontal(classes="row"):
+                yield Label("AC Charge: ")
                 yield MaskedInput(
                     "$999;0",
                     value=f'${self.settings["annual_fees_ac_rate"]}',
                     id="ac",
                 )
 
-            with HorizontalGroup(classes="input-row"):
-                yield Static("Sewer Charge: ")
+            with Horizontal(classes="row"):
+                yield Label("Sewer Charge: ")
                 yield MaskedInput(
                     "$999;0",
                     value=f'${self.settings["annual_fees_sewer_rate"]}',
                     id="sewer",
                 )
 
-            with HorizontalGroup(classes="input-row"):
-                yield Static("Extra Nominated Visitors Charge: ")
+            with Horizontal(classes="row"):
+                yield Label("Extra Nominated Visitors Charge: ")
                 yield MaskedInput(
                     "$99;0",
                     value=f'${self.settings["annual_fees_extra_guests_rate"]}',
                     id="extra-guests",
                 )
 
-            with HorizontalGroup(classes="input-row"):
-                yield Static("On-Time Payment Discount: ")
+            with Horizontal(classes="row"):
+                yield Label("On-Time Payment Discount: ")
                 yield MaskedInput(
                     "$999;0",
                     value=f'${self.settings["annual_fees_discount"]}',
                     id="discount",
                 )
 
-            with HorizontalGroup(classes="select-row"):
-                yield Static("Annual Period: ", classes="select-label")
+            with Horizontal(classes="row"):
+                yield Label("Annual Period: ", classes="select-label")
                 yield Select(
                     [("Financial Year", "FY"), ("Calendar Year", "CY")],
                     value=self.settings["annual_period"],

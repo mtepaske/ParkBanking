@@ -23,7 +23,8 @@ class Parkbanking(App):
         sub_title: (str) The screen subtitle
     """
 
-    CSS_PATH = "app.tcss"
+    # CSS_PATH = "app.tcss"
+    CSS_PATH = "new_app.tcss"
 
     def __init__(self):
         """Initialise the application"""

@@ -3,24 +3,7 @@
     align: center top;
 }
 
-#actions {
-    width: 100%;
-    height: auto;
-    align: center middle;
-}
-
-#actions Button {
-    width: 40;
-    height: 5;
-    margin: 1;
+.row Select {
     content-align: center middle;
-}
-
-.settings-title {
-    text-style: bold;
-    width: 60;
-    margin-top: 1;
-    margin-bottom: 1;
-    border: solid $primary;
-    content-align: center middle;
+    width: 2fr;
 }

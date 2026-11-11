@@ -3,37 +3,13 @@
     align: center top;
 }
 
-#file-select {
-    align: center top;
-    width: 100%;
-}
-
-#confirm-stack {
-    align: center middle;
-    width: 100%;
-    height: auto;
+.row Input {
+    content-align: center middle;
+    width: 70%;
     margin-top: 2;
 }
 
-#name-row {
-    align: center middle;
-    height: auto;
-}
-
-#file-name {
-    content-align: center middle;
-    width: 70%;
-    height: auto;
-    margin: 1;
-}
-
-#confirm-row {
-    align: center middle;
-    height: auto;
-}
-
-#confirm-row Button {
-    content-align: center middle;
+.row Button {
     width: 30%;
-    margin: 1;
+    margin-top: 2;
 }

@@ -49,13 +49,13 @@ class PaymentMenu(Menu):
         # Actions section
         with Vertical(classes="section"):
             yield Static("Actions", classes="section-title")
-            with Horizontal(classes="button-row"):
+            with Horizontal(classes="row"):
                 yield Button.success(
                     "Match Tranactions To Accounts", id="match", disabled=True
                 )
-            with Horizontal(classes="button-row"):
+            with Horizontal(classes="row"):
                 yield Button.warning("Proccess Payments", id="payments", disabled=True)
-            with Horizontal(classes="button-row"):
+            with Horizontal(classes="row"):
                 yield Button.warning(
                     "Proccess Unknown Words", id="unknown", disabled=True
                 )

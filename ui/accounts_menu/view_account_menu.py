@@ -5,15 +5,14 @@ from rich.text import Text
 from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import (
-    HorizontalGroup,
+    Horizontal,
     Vertical,
-    VerticalGroup,
-    VerticalScroll,
 )
 from textual.widgets import (
     Button,
     DataTable,
     Input,
+    Label,
     MaskedInput,
     Select,
     Static,
@@ -76,92 +75,100 @@ class ViewAccountMenu(Menu):
         # The account history section
         with Vertical(classes="section"):
             yield Static(
-                f"STATEMENT FOR SITE {self.account.site_number}, {self.account.name}",
+                f"STATEMENT FOR SITE {Text(f"{self.account.site_number}, {self.account.name}", style='green')}",
                 classes="section-title",
             )
-            with VerticalScroll():
-                yield DataTable(id="history", cursor_type="row", zebra_stripes=True)
+            yield DataTable(id="history", cursor_type="row", zebra_stripes=True)
 
         # The account actions section
         with Vertical(classes="section"):  # Have to link buttons with payment screen
             yield Static("ACCOUNT ACTIONS", classes="section-title")
 
-            with VerticalGroup(id="actions"):
+            with Horizontal(classes="row"):
                 yield Button.success("Add Payment", id="payment")
+
+            with Horizontal(classes="row"):
                 yield Button.error("Add Charge", id="charge")
+
+            with Horizontal(classes="row"):
                 yield Button.warning("Make Inactive", id="status")
+
+            with Horizontal(classes="row"):
                 yield Button.error(
                     "Recalculate Balance From Payment History", id="recalculate"
                 )
 
         # The edit account section
-        with VerticalScroll(classes="section"):
+        with Vertical(classes="section"):
             yield Static("EDIT ACCOUNT", classes="section-title")
-            with VerticalGroup():
 
-                yield Static("CONTACT DETAILS", classes="settings-title")
+            with Horizontal(classes="row"):
+                yield Static("CONTACT DETAILS", classes="sub-title")
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static("Name: ")
-                    yield Input(value=self.account.name, id="name")
+            with Horizontal(classes="row"):
+                yield Label("Name: ")
+                yield Input(value=self.account.name, id="name")
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static("Phone Number: ")
-                    yield MaskedInput(
-                        template="9999 999 999;0", value="0484 250 494", id="phone"
-                    )
+            with Horizontal(classes="row"):
+                yield Label("Phone Number: ")
+                yield MaskedInput(
+                    template="9999 999 999;0", value="0484 250 494", id="phone"
+                )
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static("Email Address: ")
-                    yield Input("placeholder", id="email")
+            with Horizontal(classes="row"):
+                yield Label("Email Address: ")
+                yield Input("placeholder", id="email")
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static("Postal Address: ")
-                    yield Input("placeholder", id="address")
+            with Horizontal(classes="row"):
+                yield Label("Postal Address: ")
+                yield Input("placeholder", id="address")
 
-                yield Static("SITE DETAILS", classes="settings-title")
+            with Horizontal(classes="row"):
+                yield Static("SITE DETAILS", classes="sub-title")
 
-                with HorizontalGroup(classes="select-row"):
-                    yield Static("Site Number: ", classes="select-label")
-                    yield Select(
-                        site_number_options,
-                        value=self.account.site_number,
-                        allow_blank=False,
-                        id="number",
-                    )
+            with Horizontal(classes="row"):
+                yield Label("Site Number: ", classes="label")
+                yield Select(
+                    site_number_options,
+                    value=self.account.site_number,
+                    allow_blank=False,
+                    id="number",
+                )
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static("Extra Guests: ")
-                    yield MaskedInput("9;0", value="0", id="guests")
+            with Horizontal(classes="row"):
+                yield Label("Extra Guests: ")
+                yield MaskedInput("9;0", value="0", id="guests")
 
-                with HorizontalGroup(classes="switch-row"):
-                    yield Static("Air Conditioner")
+            with Horizontal(classes="row"):
+                yield Label("Air Conditioner: ")
+                with Horizontal(classes="switch"):
                     yield Switch(value=True, animate=True, id="ac")
 
-                with HorizontalGroup(classes="switch-row"):
-                    yield Static("Sewer")
+            with Horizontal(classes="row"):
+                yield Label("Sewer: ")
+                with Horizontal(classes="switch"):
                     yield Switch(value=False, animate=True, id="sewer")
 
-                with HorizontalGroup(classes="switch-row"):
-                    yield Static("Cabin")
+            with Horizontal(classes="row"):
+                yield Label("Cabin: ")
+                with Horizontal(classes="switch"):
                     yield Switch(value=False, animate=True, id="type")
 
-                yield Static("BALANCE DETAILS", classes="settings-title")
+            with Horizontal(classes="row"):
+                yield Static("BALANCE DETAILS", classes="sub-title")
 
-                with HorizontalGroup(classes="input-row"):
-                    yield Static("Annual Fees: ")
-                    yield MaskedInput(
-                        "$9999;0", value=f"${balance.annual}", id="annual"
-                    )
+            with Horizontal(classes="row"):
+                yield Label("Annual Fees: ")
+                yield MaskedInput("$9999;0", value=f"${balance.annual}", id="annual")
 
-                with HorizontalGroup(classes="select-row"):
-                    yield Static("Pay Period: ", classes="select-label")
-                    yield Select(
-                        [("Monthly", "m"), ("Quarterly", "q"), ("Annually", "a")],
-                        value=f"{balance.pay_frequency}",
-                        allow_blank=False,
-                        id="frequency",
-                    )
+            with Horizontal(classes="row"):
+                yield Label("Pay Period: ", classes="label")
+                yield Select(
+                    [("Monthly", "m"), ("Quarterly", "q"), ("Annually", "a")],
+                    value=f"{balance.pay_frequency}",
+                    allow_blank=False,
+                    id="frequency",
+                )
 
     def action_save(self) -> None:
         """Save updates to the database"""
@@ -435,3 +442,4 @@ class ViewAccountMenu(Menu):
     @work
     async def edit_history(self, history_item: Transaction):
         await self.app.push_screen_wait(EditHistoryScreen(history_item))
+        self.populate_history_table()

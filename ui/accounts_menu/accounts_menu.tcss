@@ -4,23 +4,23 @@
 }
 
 .tabs {
-    height: 3;
-    width: 100%;
     align: left middle;
+    width: 100%;
+    height: 3;
 }
 
 .tabs Button {
-    height: 3;
     width: 20;
+    height: 3;
     margin: 0 1;
 }
 
 .tables {
-    height: 1fr;
     width: 100%;
+    height: 1fr;
 }
 
 .tables DataTable {
-    height: 1fr;
     width: 100%;
+    height: 1fr;
 }

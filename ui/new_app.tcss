@@ -1,0 +1,92 @@
+/* Status Box */
+.status-box {
+    align: center bottom;
+    width: auto;
+    border: round $primary;
+    padding: 1;
+    dock: bottom;
+}
+
+.status-row {
+    width: auto;
+    height: 2;
+}
+
+.status {
+    width: 30;
+    height: 2;
+}
+
+.number {
+    width: 3;
+    height: 2;
+    color: green;
+}
+
+/* Menus */
+.section {
+    align: center top;
+    width: 1fr;
+    height: 100%;
+}
+
+.section-title {
+    content-align: left middle;
+    text-style: bold;
+    margin-top: 1;
+    margin-bottom: 1;
+    border-bottom: solid $accent;
+    padding-bottom: 1;
+    padding-left: 1;
+    dock: top;
+}
+
+.sub-title {
+    content-align: center middle;
+    text-style: bold;
+    width: 70%;
+    border: solid $primary;
+}
+
+.row {
+    align: center middle;
+    width: 100%;
+    height: auto;
+    margin: 1;
+}
+
+.row Label {
+    content-align: left middle;
+    text-style: bold;
+    width: 1fr;
+    height: 3;
+}
+
+.row Input {
+    width: 2fr;
+    height: 3;
+}
+
+.row Button {
+    content-align: center middle;
+    width: 50%;
+    height: auto;
+}
+
+.row .switch {
+    align: center middle;
+    width: 2fr;
+    height: 100%;
+}
+
+.tree-row {
+    align:  left top;
+    width: 100%;
+    height: auto;
+    margin: 1;
+}
+
+.tree {
+    width: auto;
+    height: auto;
+}

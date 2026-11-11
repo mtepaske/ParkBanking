@@ -3,17 +3,10 @@
     align: center top;
 }
 
-#file-select {
-    align: center top;
-    width: 100%;
-}
-
 #confirm-row {
-    align: center middle;
     margin-top: 2;
 }
 
-#confirm {
-    content-align: center middle;
+#confirm-row Button {
+    width: 30%;
 }
-
