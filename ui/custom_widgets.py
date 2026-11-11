@@ -941,3 +941,36 @@ class ReviewUnknownScreen(ConfirmScreen):
             )
 
         yield unknown_table
+
+
+class EditHistoryScreen(ModalScreen[None]):
+
+    def __init__(self, history_item: Transaction):
+        super().__init__()
+        self.history_item = history_item
+
+    def compose(self) -> ComposeResult:
+
+        with VerticalGroup(classes="dialog"):
+
+            with VerticalGroup():
+
+                yield Label("Edit History Item")
+
+            with HorizontalGroup():
+
+                yield Label("Date: ")
+                yield MaskedInput("9999-99-99", value=self.history_item.date)
+
+            with HorizontalGroup():
+
+                yield Label("Amount: ")
+                yield Input(value=str(self.history_item.amount))
+
+            with HorizontalGroup():
+
+                yield Label("Description: ")
+                yield Input(value=self.history_item.type)
+
+            yield Button.success("Confirm", id="confirm")
+            yield Button.error("Delete History Item", id="delete")

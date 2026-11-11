@@ -23,7 +23,12 @@ from textual.widgets import (
 from models.account import Account
 from models.transactions import Transaction
 from services.date import get_str_from_date, get_today
-from ui.custom_widgets import EnterAmountScreen, Menu, ReviewBalanceScreen
+from ui.custom_widgets import (
+    EditHistoryScreen,
+    EnterAmountScreen,
+    Menu,
+    ReviewBalanceScreen,
+)
 
 
 class ViewAccountMenu(Menu):
@@ -48,6 +53,7 @@ class ViewAccountMenu(Menu):
 
         super().__init__(**kwargs)
         self.account = account
+        self.history_keys = {}
 
     def compose(self) -> ComposeResult:
         """Construct the widgets on the screen"""
@@ -261,6 +267,7 @@ class ViewAccountMenu(Menu):
                         "",
                         f"${payment.amount:,.2f}",
                         f"${running_balance:,.2f}",
+                        payment,
                     )
                 )
                 running_balance += payment.amount
@@ -274,6 +281,7 @@ class ViewAccountMenu(Menu):
                         f"${payment.amount:,.2f}",
                         "",
                         f"${running_balance:,.2f}",
+                        payment,
                     )
                 )
                 running_balance -= amount
@@ -284,14 +292,16 @@ class ViewAccountMenu(Menu):
         # Populate the table
         history_table = self.query_one("#history", DataTable)
         history_table.clear()
-        for date, description, debit, credit, balance in rows:
-            history_table.add_row(
+        for date, description, debit, credit, balance, payment in rows:
+            key = history_table.add_row(
                 Text(date, style="cyan"),
                 description,
                 Text(debit, style="red"),
                 Text(credit, style="green"),
                 balance,
             )
+
+            self.history_keys[key] = payment
 
     @on(Button.Pressed)
     def on_button_pressed(self, event: Button.Pressed):
@@ -320,6 +330,11 @@ class ViewAccountMenu(Menu):
 
             case "recalculate":
                 self.recalculate_balance()
+
+    @on(DataTable.RowSelected)
+    def on_datatable_row_selected(self, event: DataTable.RowSelected):
+        transaction = self.history_keys[event.row_key]
+        self.edit_history(transaction)
 
     @work
     async def recalculate_balance(self):
@@ -416,3 +431,7 @@ class ViewAccountMenu(Menu):
 
         self.notify("New Charge Added", timeout=5)
         self.populate_history_table()
+
+    @work
+    async def edit_history(self, history_item: Transaction):
+        await self.app.push_screen_wait(EditHistoryScreen(history_item))

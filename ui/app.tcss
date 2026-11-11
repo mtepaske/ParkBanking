@@ -237,24 +237,6 @@ ProccessUnknownScreen .row Button {
     margin: 1;
 }
 
-/* .dialog HorizontalGroup { */
-/*     align: center middle; */
-/*     width: auto; */
-/*     height: auto; */
-/* } */
-
-/* .dialog HorizontalGroup Select { */
-/*     width: 1fr; */
-/*     height: auto; */
-/*     margin: 1; */
-/* } */
-
-/* .dialog HorizontalGroup Button { */
-/*     width: 1fr; */
-/*     height: auto; */
-/*     margin: 1; */
-/* } */
-
 .test {
     border: ascii green;
 }
