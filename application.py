@@ -203,6 +203,10 @@ class AppState:
             self.add_charge(transaction)
         self.notify_changed()
 
+    def remove_unapplied(self, transaction: Transaction):
+        self.unapplied.remove(transaction)
+        self.notify_changed()
+
     def add_site(self, site: Site):
         self.sites.append(site)
         self.notify_changed()

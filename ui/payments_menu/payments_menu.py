@@ -5,6 +5,7 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import Button, DataTable, Static
 
 from models.account import Account
+from models.transactions import Transaction
 from services.match import Matcher, match_transactions
 from ui.custom_widgets import (
     AccountPicker,
@@ -25,6 +26,10 @@ class PaymentMenu(Menu):
     """
 
     CSS_PATH = "payment_menu.tcss"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.matched_keys = {}
 
     def compose(self) -> ComposeResult:
         """Construct the widgets on the screen"""
@@ -102,7 +107,7 @@ class PaymentMenu(Menu):
 
             assert payment.account is not None
 
-            payment_table.add_row(
+            key = payment_table.add_row(
                 Text(payment.date, style="cyan"),
                 Text(payment.account.site_number, style="cyan"),
                 Text(payment.account.name, style="cyan"),
@@ -110,6 +115,8 @@ class PaymentMenu(Menu):
                 payment.type,
                 payment.details,
             )
+
+            self.matched_keys[key] = payment
 
     def populate_unmatched(self) -> None:
         """Populate unmatched transactions table"""
@@ -147,6 +154,55 @@ class PaymentMenu(Menu):
 
             case "unknown":
                 self.proccess_unknown()
+
+    @on(DataTable.RowSelected)
+    def on_datatable_row_selected(self, event: DataTable.RowSelected):
+        payment = self.matched_keys[event.row_key]
+        self.change_match(payment)
+
+    @work
+    async def change_match(self, payment: Transaction):
+
+        new_account = await self.app.push_screen_wait(
+            AccountPicker(
+                "Change Matched Account",
+                f"Date: {payment.date} - Amount: {payment.amount} - Details: {payment.details}",
+                self.app_state.state.accounts,
+            )
+        )
+        if isinstance(new_account, Account):
+
+            self.notify(
+                f"Matched Account For {payment.details} Changed To {new_account}",
+                timeout=5,
+            )
+
+            payment.account = None
+            payment.account_id = None
+            payment.add_account(new_account)
+
+            self.populate_matched()
+            self.populate_unmatched()
+
+        elif new_account == "None":
+
+            self.notify(f"Matched Account For {payment.details} Removed", timeout=5)
+
+            payment.account = None
+            payment.account_id = None
+
+            self.app_state.state.remove_unapplied(payment)
+            self.app_state.state.add_transaction(payment)
+
+            self.populate_matched()
+            self.populate_unmatched()
+
+        else:
+
+            self.notify(
+                "Change Matching Account Cancelled", severity="warning", timeout=5
+            )
+            return
 
     @work
     async def match_transactions(self):
