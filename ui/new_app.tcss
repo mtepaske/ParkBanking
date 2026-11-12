@@ -50,7 +50,7 @@
 
 .row {
     align: center middle;
-    width: 100%;
+    width: 1fr;
     height: auto;
     margin: 1;
 }
@@ -87,6 +87,62 @@
 }
 
 .tree {
+    width: 95%;
+    height: auto;
+}
+
+/* Dialogs */
+/* dialog title sets the dialog width */
+/* dialog-header expands to dialog width */
+
+Dialog {
+    align: center middle;
+}
+
+Dialog > VerticalGroup {
+    align: center middle;
     width: auto;
     height: auto;
+    border: round $accent;
+    background: $surface;
+    padding: 1 2;
+}
+
+.dialog-title {
+    align-horizontal: center;
+    width: auto;
+    padding: 0 1;
+    border: round $primary;
+}
+
+.dialog-title HorizontalGroup {
+    align: center middle;
+    width: auto;
+    height: auto;
+    margin: 1;
+}
+
+.dialog-title Horizontal {
+    align: center middle;
+    width: 100%;
+    height: auto;
+    margin: 1;
+}
+
+.dialog-title Static {
+    content-align: center middle;
+    text-style: bold;
+    width: auto;
+}
+
+.dialog-title .context {
+    color: green;
+}
+
+Dialog .row Button {
+    width: 100%;
+}
+
+Dialog .tree {
+    width: 100%;
 }
